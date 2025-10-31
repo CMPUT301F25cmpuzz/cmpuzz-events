@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/event_image"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="#E0E0E0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@tools:sample/avatars" />
+
+        <TextView
+            android:id="@+id/event_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            tools:text="Event Name"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/event_image"
+            app:layout_constraintTop_toTopOf="@id/event_image" />
+
+        <TextView
+            android:id="@+id/event_host"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Hosted by: Cmpuzz"
+            app:layout_constraintStart_toStartOf="@id/event_title"
+            app:layout_constraintTop_toBottomOf="@id/event_title" />
+
+        <TextView
+            android:id="@+id/event_availability"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Status: Open"
+            app:layout_constraintStart_toStartOf="@id/event_host"
+            app:layout_constraintTop_toBottomOf="@id/event_host" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/edit_button"
+            style="@style/Widget.AppCompat.Button.Small"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Edit"
+            app:cornerRadius="100dp"
+            app:layout_constraintStart_toStartOf="@id/event_title"
+            app:layout_constraintTop_toBottomOf="@id/event_availability" />
+
+
+        <TextView
+            android:id="@+id/date_posted"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            tools:text="Date Posted: Dec 25, 2025"
+            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/edit_button" />
+
+        <TextView
+            android:id="@+id/description_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            tools:text="This is the event description"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/date_posted" />
+
+        <View
+            android:id="@+id/divider_top"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginTop="16dp"
+            android:background="#000000"
+            app:layout_constraintTop_toBottomOf="@id/description_text" />
+
+        <TextView
+            android:id="@+id/additional_actions_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Additional Actions"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textStyle="bold"
+            app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/description_text" />
+
+        <View
+            android:id="@+id/divider_top"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginTop="8dp"
+            android:background="#000000"
+            app:layout_constraintTop_toBottomOf="@id/additional_actions_button" />
+
+        <TextView
+            android:id="@+id/users_enrolled_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="23dp"
+            android:text="Users Enrolled"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/additional_actions_button" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/share_button"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            app:cornerRadius="100dp"
+            app:icon="@drawable/ic_share_white_24dp"
+            app:layout_constraintBottom_toBottomOf="@id/users_enrolled_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/users_enrolled_title" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/view_map_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="View Map"
+            app:cornerRadius="100dp"
+            app:icon="@android:drawable/ic_dialog_map"
+            app:layout_constraintBottom_toBottomOf="@id/users_enrolled_title"
+            app:layout_constraintEnd_toStartOf="@id/share_button"
+            app:layout_constraintTop_toTopOf="@id/users_enrolled_title" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/users_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/users_enrolled_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:listitem="@layout/list_attendee"
+            tools:itemCount="3" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
