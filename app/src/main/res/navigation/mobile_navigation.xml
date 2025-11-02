@@ -22,4 +22,22 @@
         android:name="com.example.cmpuzz_events.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/navigation_event_details"
+        android:name="com.example.cmpuzz_events.ui.event.EventDetailsFragment"
+        android:label="@string/title_event_details"
+        tools:layout="@layout/fragment_event_details" >
+        <action
+            android:id="@+id/action_navigation_event_details_to_navigation_event_action_menu"
+            app:destination="@id/navigation_event_action_menu" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_event_action_menu"
+        android:name="com.example.cmpuzz_events.ui.event.EventActionMenuFragment"
+        android:label="@string/title_event_action_menu"
+        tools:layout="@layout/fragment_event_action_menu" />
+
+
 </navigation>

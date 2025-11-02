@@ -1,0 +1,38 @@
+package com.example.cmpuzz_events.ui.event;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.cmpuzz_events.databinding.FragmentEventActionMenuBinding;
+
+public class EventActionMenuFragment extends Fragment {
+
+    private FragmentEventActionMenuBinding binding;
+
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+        EventActionMenuViewModel eventActionMenuViewModel =
+                new ViewModelProvider(this).get(EventActionMenuViewModel.class);
+
+        binding = FragmentEventActionMenuBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
+
+        final TextView textView = binding.textEventActionMenu;
+        // TODO: set text
+        eventActionMenuViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        return root;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+}
