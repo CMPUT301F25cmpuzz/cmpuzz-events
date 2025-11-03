@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "268691580951",
+    "project_id": "cmpuzz-events-be114",
+    "storage_bucket": "cmpuzz-events-be114.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:268691580951:android:a1ebff94209185f23e9452",
+        "android_client_info": {
+          "package_name": "com.example.cmpuzz_events"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBn0-Atk0hykBDaZ416kj7Rb9M5vFDxa0Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
