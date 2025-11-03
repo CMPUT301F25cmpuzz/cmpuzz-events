@@ -16,19 +16,19 @@ public class User implements Serializable {
         ADMIN("admin"),
         ORGANIZER("organizer");
 
-        private final String value;
+        private final String roleName;
 
         UserRole(String value) {
-            this.value = value;
+            this.roleName = value;
         }
 
-        public String getValue() {
-            return value;
+        public String getRoleName() {
+            return roleName;
         }
 
         public static UserRole fromString(String value) {
             for (UserRole role : UserRole.values()) {
-                if (role.value.equalsIgnoreCase(value)) {
+                if (role.roleName.equalsIgnoreCase(value)) {
                     return role;
                 }
             }
@@ -56,7 +56,7 @@ public class User implements Serializable {
         map.put("uid", uid);
         map.put("email", email);
         map.put("displayName", displayName);
-        map.put("role", role.getValue());
+        map.put("role", role.getRoleName());
         map.put("createdAt", createdAt);
         return map;
     }
