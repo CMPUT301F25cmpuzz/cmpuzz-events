@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -26,18 +27,25 @@
         android:layout_marginTop="4dp"
         android:background="#898989" />
 
+    <!-- This is for both waitlisted and invited entrants -->
     <TextView
-        android:id="@+id/action_cancel_unsigned"
+        android:id="@+id/action_cancel"
         style="@style/ActionMenuItem"
-        android:text="Cancel Unsigned Entrants"
+        android:text="Cancel Entrants"
         app:drawableStartCompat="@drawable/outline_cancel_24"
-        app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24"
-        />
+        app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
 
     <TextView
-        android:id="@+id/action_view_canceled"
+        android:id="@+id/action_view_declined"
         style="@style/ActionMenuItem"
-        android:text="View Canceled Entrants"
+        android:text="View Declined Entrants"
+        app:drawableStartCompat="@drawable/outline_man_24"
+        app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
+
+    <TextView
+        android:id="@+id/action_view_waitlist"
+        style="@style/ActionMenuItem"
+        android:text="View Waitlist"
         app:drawableStartCompat="@drawable/outline_man_24"
         app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
 
@@ -48,10 +56,11 @@
         app:drawableStartCompat="@drawable/outline_man_24"
         app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
 
+    <!-- This is for people who have already accepted/confirmed for the event -->
     <TextView
-        android:id="@+id/action_view_enrolled"
+        android:id="@+id/action_view_attendees"
         style="@style/ActionMenuItem"
-        android:text="View Enrolled Entrants"
+        android:text="View Attendees"
         app:drawableStartCompat="@drawable/outline_man_24"
         app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
 
@@ -75,6 +84,13 @@
         android:background="#898989" />
 
     <TextView
+        android:id="@+id/action_notify_declined"
+        style="@style/ActionMenuItem"
+        android:text="Send Notification to Declined Entrants"
+        app:drawableStartCompat="@drawable/ic_notifications_black_24dp"
+        app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
+
+    <TextView
         android:id="@+id/action_notify_waiting"
         style="@style/ActionMenuItem"
         android:text="Send Notification to Waiting List"
@@ -82,23 +98,17 @@
         app:drawableStartCompat="@drawable/ic_notifications_black_24dp" />
 
     <TextView
-        android:id="@+id/action_notify_chosen"
+        android:id="@+id/action_notify_invited"
         style="@style/ActionMenuItem"
-        android:text="Send Notification to Chosen Entrants"
+        android:text="Send Notification to Invited Entrants"
         app:drawableStartCompat="@drawable/ic_notifications_black_24dp"
         app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
 
+    <!-- This is for people who have already accepted/confirmed for the event -->
     <TextView
-        android:id="@+id/action_notify_selected"
+        android:id="@+id/action_notify_attendees"
         style="@style/ActionMenuItem"
-        android:text="Send Notification to Selected Entrants"
-        app:drawableStartCompat="@drawable/ic_notifications_black_24dp"
-        app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
-
-    <TextView
-        android:id="@+id/action_notify_cancelled"
-        style="@style/ActionMenuItem"
-        android:text="Send Notification to Cancelled Entrants"
+        android:text="Send Notification to Attendees"
         app:drawableStartCompat="@drawable/ic_notifications_black_24dp"
         app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24" />
 

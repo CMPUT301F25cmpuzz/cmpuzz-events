@@ -38,4 +38,12 @@
         <item name="android:background">?attr/selectableItemBackground</item>
     </style>
 
+
+    <!-- Event Picture/Profile Picture Rounding -->
+    <style name="ShapeAppearance.App.CornerSize8dp" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+
 </resources>

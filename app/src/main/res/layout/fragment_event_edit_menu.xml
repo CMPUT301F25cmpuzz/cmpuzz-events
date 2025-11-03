@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Edit Event"
+        android:textAppearance="?attr/textAppearanceHeadline5"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp" />
+
+
+    <!-- Geolocation Toggle -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            style="@style/ActionMenuItem"
+            android:text="Force Geolocation"
+            app:drawableStartCompat="@drawable/outline_location_on_24" />
+
+        <!-- If anyone can help me make these switches into Material 3, I will love you forever. -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/geolocation_toggle_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <!-- Max Entrant Limit Toggle -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            style="@style/ActionMenuItem"
+            android:text="Limit Max Entrants"
+            app:drawableStartCompat="@drawable/outline_groups_24" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/max_entrant_toggle_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/limitTextFieldLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:hint="Enter limit"
+        android:visibility="invisible"
+        tools:visibility="visible" >
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/entrant_limit_text_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Registration Period / Event Status -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            style="@style/ActionMenuItem"
+            android:text="Event Status: Open / Closed"
+            app:drawableStartCompat="@drawable/outline_calendar_lock_24" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/event_status_toggle_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/edit_registration_period_button"
+        style="@style/ActionMenuItem"
+        android:text="Set Registration Period"
+        app:drawableStartCompat="@drawable/outline_calendar_month_24" />
+
+    <!-- Change Event Image -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/upload_new_event_image_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Change Event Image"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            app:drawableStartCompat="@drawable/outline_image_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/upload_new_event_image_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cornerRadius="100dp"
+            app:icon="@drawable/outline_upload_24"
+            app:layout_constraintStart_toEndOf="@id/upload_new_event_image_text"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</LinearLayout>
