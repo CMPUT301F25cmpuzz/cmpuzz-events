@@ -13,6 +13,7 @@
     <string name="create_account">Create Account</string>
     <string name="signup_subtitle">Join us today</string>
     <string name="full_name">Full Name</string>
+    <string name="username">Username</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="sign_up">Sign Up</string>
     <string name="already_have_account">Already have an account?</string>

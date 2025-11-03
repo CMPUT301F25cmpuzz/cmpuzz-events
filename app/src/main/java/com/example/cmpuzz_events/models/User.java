@@ -8,6 +8,7 @@ public class User implements Serializable {
     private String uid;
     private String email;
     private String displayName;
+    private String username;
     private UserRole role;
     private long createdAt;
 
@@ -42,10 +43,11 @@ public class User implements Serializable {
         this.createdAt = System.currentTimeMillis();
     }
 
-    public User(String uid, String email, String displayName, UserRole role) {
+    public User(String uid, String email, String displayName, String username, UserRole role) {
         this.uid = uid;
         this.email = email;
         this.displayName = displayName;
+        this.username = username;
         this.role = role;
         this.createdAt = System.currentTimeMillis();
     }
@@ -56,6 +58,7 @@ public class User implements Serializable {
         map.put("uid", uid);
         map.put("email", email);
         map.put("displayName", displayName);
+        map.put("username", username);
         map.put("role", role.getRoleName());
         map.put("createdAt", createdAt);
         return map;
@@ -84,6 +87,14 @@ public class User implements Serializable {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public UserRole getRole() {

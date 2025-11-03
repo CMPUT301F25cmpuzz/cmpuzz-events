@@ -36,6 +36,7 @@ public class SignupActivity extends AppCompatActivity {
 
     private void handleSignup() {
         String name = binding.etName.getText().toString().trim();
+        String username = binding.etUsername.getText().toString().trim();
         String email = binding.etEmail.getText().toString().trim();
         String password = binding.etPassword.getText().toString().trim();
         String confirmPassword = binding.etConfirmPassword.getText().toString().trim();
@@ -44,6 +45,24 @@ public class SignupActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(name)) {
             binding.etName.setError("Name is required");
             binding.etName.requestFocus();
+            return;
+        }
+
+        if (TextUtils.isEmpty(username)) {
+            binding.etUsername.setError("Username is required");
+            binding.etUsername.requestFocus();
+            return;
+        }
+
+        if (username.length() < 3) {
+            binding.etUsername.setError("Username must be at least 3 characters");
+            binding.etUsername.requestFocus();
+            return;
+        }
+
+        if (!username.matches("^[a-zA-Z0-9_]+$")) {
+            binding.etUsername.setError("Username can only contain letters, numbers, and underscores");
+            binding.etUsername.requestFocus();
             return;
         }
 
@@ -80,7 +99,7 @@ public class SignupActivity extends AppCompatActivity {
         // Show loading
         setLoading(true);
 
-        authManager.signUp(email, password, name, new AuthManager.AuthCallback() {
+        authManager.signUp(email, password, name, username, new AuthManager.AuthCallback() {
             @Override
             public void onSuccess(User user) {
                 setLoading(false);
@@ -104,6 +123,7 @@ public class SignupActivity extends AppCompatActivity {
         binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         binding.btnSignup.setEnabled(!isLoading);
         binding.etName.setEnabled(!isLoading);
+        binding.etUsername.setEnabled(!isLoading);
         binding.etEmail.setEnabled(!isLoading);
         binding.etPassword.setEnabled(!isLoading);
         binding.etConfirmPassword.setEnabled(!isLoading);

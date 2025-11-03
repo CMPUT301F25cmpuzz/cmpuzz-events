@@ -71,7 +71,7 @@ public class AuthManager {
         }
     }
 
-    public void signUp(String email, String password, String displayName, AuthCallback callback) {
+    public void signUp(String email, String password, String displayName, String username, AuthCallback callback) {
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -82,6 +82,7 @@ public class AuthManager {
                                     firebaseUser.getUid(),
                                     email,
                                     displayName,
+                                    username,
                                     User.UserRole.USER
                             );
                             
@@ -150,6 +151,7 @@ public class AuthManager {
         user.setUid(doc.getString("uid"));
         user.setEmail(doc.getString("email"));
         user.setDisplayName(doc.getString("displayName"));
+        user.setUsername(doc.getString("username"));
         
         String roleString = doc.getString("role");
         if (roleString != null) {
