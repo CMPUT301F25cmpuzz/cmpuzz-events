@@ -13,6 +13,7 @@
         android:id="@+id/text_event_action_menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:text="Action Menu"
         android:textAppearance="?attr/textAppearanceHeadline5"
         android:textStyle="bold"

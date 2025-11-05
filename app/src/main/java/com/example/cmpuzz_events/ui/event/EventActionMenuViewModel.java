@@ -10,7 +10,7 @@ public class EventActionMenuViewModel extends ViewModel {
 
     public EventActionMenuViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is the Event Action Menu fragment");
+        mText.setValue("Action Menu");
     }
 
     public LiveData<String> getText() {

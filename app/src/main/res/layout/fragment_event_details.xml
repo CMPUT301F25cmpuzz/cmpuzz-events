@@ -15,6 +15,7 @@
             android:id="@+id/textEventDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:text="Event Details"
             android:textAppearance="?attr/textAppearanceHeadline5"
             android:textStyle="bold"
