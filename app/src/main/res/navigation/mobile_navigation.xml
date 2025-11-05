@@ -31,6 +31,9 @@
         <action
             android:id="@+id/action_navigation_event_details_to_navigation_event_action_menu"
             app:destination="@id/navigation_event_action_menu" />
+        <action
+            android:id="@+id/action_navigation_event_details_to_navigation_event_edit_menu"
+            app:destination="@id/navigation_event_edit_menu" />
     </fragment>
 
     <fragment
@@ -39,5 +42,10 @@
         android:label="@string/title_event_action_menu"
         tools:layout="@layout/fragment_event_action_menu" />
 
+    <fragment
+        android:id="@+id/navigation_event_edit_menu"
+        android:name="com.example.cmpuzz_events.ui.event.EventEditMenuFragment"
+        android:label="@string/title_event_edit_menu"
+        android:layout="@layout/fragment_event_edit_menu" />
 
 </navigation>

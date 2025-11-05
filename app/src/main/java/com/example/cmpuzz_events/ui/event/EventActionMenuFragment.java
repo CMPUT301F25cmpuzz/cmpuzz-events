@@ -25,7 +25,6 @@ public class EventActionMenuFragment extends Fragment {
         View root = binding.getRoot();
 
         final TextView textView = binding.textEventActionMenu;
-        // TODO: set text
         eventActionMenuViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }

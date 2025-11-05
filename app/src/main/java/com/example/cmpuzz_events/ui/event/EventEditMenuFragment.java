@@ -10,22 +10,22 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.cmpuzz_events.databinding.FragmentEventDetailsBinding;
+import com.example.cmpuzz_events.databinding.FragmentEventEditMenuBinding;
 
-public class EventDetailsFragment extends Fragment {
+public class EventEditMenuFragment extends Fragment {
 
-    private FragmentEventDetailsBinding binding;
+    private FragmentEventEditMenuBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        EventDetailsViewModel eventDetailsViewModel =
-                new ViewModelProvider(this).get(EventDetailsViewModel.class);
+        EventEditMenuViewModel eventEditMenuViewModel =
+                new ViewModelProvider(this).get(EventEditMenuViewModel.class);
 
-        binding = FragmentEventDetailsBinding.inflate(inflater, container, false);
+        binding = FragmentEventEditMenuBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        final TextView textView = binding.textEventDetails;
-        eventDetailsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        final TextView textView = binding.textEventEditMenu;
+        eventEditMenuViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 

@@ -5,4 +5,5 @@
     <string name="title_notifications">Notifications</string>
     <string name="title_event_action_menu">EventActionMenu</string>
     <string name="title_event_details">EventDetails</string>
+    <string name="title_event_edit_menu">EventEditMenu</string>
 </resources>

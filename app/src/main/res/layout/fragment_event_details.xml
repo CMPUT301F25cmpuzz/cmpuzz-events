@@ -4,20 +4,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".ui.event.EventDetailsFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp">
 
+        <TextView
+            android:id="@+id/textEventDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Event Details"
+            android:textAppearance="?attr/textAppearanceHeadline5"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/event_image"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:background="#E0E0E0"
+            android:layout_marginTop="10dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textEventDetails"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.App.CornerSize8dp"
             tools:src="@tools:sample/avatars" />
 
@@ -44,7 +56,7 @@
             android:id="@+id/event_availability"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="Status: Open"
+            tools:text="Open"
             app:layout_constraintStart_toStartOf="@id/event_host"
             app:layout_constraintTop_toBottomOf="@id/event_host" />
 
@@ -63,10 +75,6 @@
             app:backgroundTint="@color/purple_500"
 
             app:cornerRadius="20dp"
-            app:insetTop="4dp"
-            app:insetBottom="4dp"
-            app:insetLeft="16dp"
-            app:insetRight="16dp"
 
             app:layout_constraintStart_toStartOf="@id/event_title"
             app:layout_constraintTop_toBottomOf="@id/event_availability"/>
