@@ -81,6 +81,14 @@ public interface IEventService {
     void getAllEvents(UIEventListCallback callback);
 
     /**
+     * Get events where user is in the waitlist
+     *
+     * @param userId The user's ID
+     * @param callback Callback with list of UI Events or error
+     */
+    void getEventsUserEnrolledIn(String userId, UIEventListCallback callback);
+
+    /**
      * Update an existing event
      *
      * @param event The EventEntity to update

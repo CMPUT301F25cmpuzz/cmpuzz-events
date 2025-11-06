@@ -171,6 +171,27 @@ public class EventService implements IEventService {
     }
 
     @Override
+    public void getEventsUserEnrolledIn(String userId, UIEventListCallback callback) {
+        db.collection(COLLECTION_EVENTS)
+            .whereArrayContains("waitlist", userId)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<Event> uiEvents = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    EventEntity entity = documentToEventEntity(doc);
+                    Event uiEvent = convertToUIEvent(entity);
+                    uiEvents.add(uiEvent);
+                }
+                Log.d(TAG, "User enrolled in " + uiEvents.size() + " events");
+                callback.onSuccess(uiEvents);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting enrolled events", e);
+                callback.onError(e.getMessage());
+            });
+    }
+
+    @Override
     public void updateEvent(EventEntity event, VoidCallback callback) {
         event.setUpdatedAt(new Date());
         
