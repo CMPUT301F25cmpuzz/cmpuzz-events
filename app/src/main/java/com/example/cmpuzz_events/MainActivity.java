@@ -18,6 +18,7 @@ import com.example.cmpuzz_events.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+    private NavController navController;
     private static final String TAG = "MainActivity";
 
     @Override
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         BottomNavigationView navView = binding.navView;
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
+        navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         
         // Setup navigation based on user role
         if (currentUser.canManageEvents()) {
@@ -74,4 +75,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onSupportNavigateUp() {
+        return navController.navigateUp() || super.onSupportNavigateUp();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!navController.popBackStack()) {
+            super.onBackPressed();
+        }
+    }
 }
