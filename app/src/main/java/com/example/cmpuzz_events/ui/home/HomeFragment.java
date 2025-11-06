@@ -9,9 +9,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.databinding.FragmentHomeBinding;
 import com.example.cmpuzz_events.models.event.EventEntity;
@@ -50,6 +52,18 @@ public class HomeFragment extends Fragment {
         RecyclerView recyclerView = binding.recyclerViewMyEvents;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new MyEventsAdapter(new ArrayList<>());
+        
+        // Set click listener for viewing event details
+        adapter.setOnEventClickListener(event -> {
+            // Navigate to EventDetailsFragment
+            Bundle bundle = new Bundle();
+            bundle.putString("eventId", event.getEventId());
+            Navigation.findNavController(root).navigate(
+                R.id.action_to_event_details,
+                bundle
+            );
+        });
+        
         recyclerView.setAdapter(adapter);
         
         // Load user's events

@@ -10,7 +10,11 @@
         android:id="@+id/navigation_home"
         android:name="com.example.cmpuzz_events.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_to_event_details"
+            app:destination="@id/eventDetailsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_dashboard"
@@ -36,4 +40,15 @@
         android:name="com.example.cmpuzz_events.ui.profile.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
+
+    <!-- Event Details Fragment -->
+    <fragment
+        android:id="@+id/eventDetailsFragment"
+        android:name="com.example.cmpuzz_events.ui.event.EventDetailsFragment"
+        android:label="Event Details"
+        tools:layout="@layout/fragment_event_details">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
+    </fragment>
 </navigation>

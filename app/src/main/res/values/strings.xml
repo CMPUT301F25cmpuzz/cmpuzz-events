@@ -21,4 +21,13 @@
     <string name="status">Status: </string>
 
     <string name="delete">Delete</string>
+
+    <!-- Event Details Fragment -->
+    <string name="event_details">Event Details</string>
+    <string name="hosted_by">Hosted by: %s</string>
+    <string name="event_status">Event Status: %s</string>
+    <string name="edit">Edit</string>
+    <string name="additional_actions">Additional Actions</string>
+    <string name="users_enrolled">Users Enrolled</string>
+    <string name="view_map">View Map</string>
 </resources>
