@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.ui.event.Event;
-import com.example.cmpuzz_events.models.user.Organizer;
 import com.example.cmpuzz_events.databinding.CreateEventFragmentBinding;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
@@ -24,12 +23,12 @@ import java.util.UUID;
 
 /**
  * Controller for the Organizer "Create Event" screen.
- * Connects UI inputs to the Organizer backend logic.
+ * Connects UI inputs to EventService for Firebase storage.
  */
 public class CreateEventFragment extends Fragment {
 
     private CreateEventFragmentBinding binding;
-    private Organizer organizer;
+    private User currentUser;
     private EventService eventService;
     private AuthManager authManager;
 
@@ -50,15 +49,18 @@ public class CreateEventFragment extends Fragment {
         authManager = AuthManager.getInstance();
 
         // Get current authenticated user
-        User currentUser = authManager.getCurrentUser();
-        if (currentUser != null) {
-            organizer = new Organizer(currentUser.getUid(), 
-                                     currentUser.getDisplayName(), 
-                                     currentUser.getEmail());
-        } else {
-            // Fallback - shouldn't happen if auth is required
+        currentUser = authManager.getCurrentUser();
+        if (currentUser == null) {
+            // Shouldn't happen if auth is required
             Log.w("CreateEventFragment", "No authenticated user found");
             Toast.makeText(requireContext(), "Please log in to create events", Toast.LENGTH_SHORT).show();
+            return root;
+        }
+
+        // Check if user has permission to create events
+        if (!currentUser.canManageEvents()) {
+            Log.w("CreateEventFragment", "User does not have permission to create events");
+            Toast.makeText(requireContext(), "You don't have permission to create events", Toast.LENGTH_SHORT).show();
             return root;
         }
 
@@ -72,6 +74,16 @@ public class CreateEventFragment extends Fragment {
      * Collects all user inputs and creates an Event via EventService and saves to Firebase.
      */
     private void handleCreateEvent() {
+        Log.d("CreateEventFragment", "handleCreateEvent called");
+        
+        if (currentUser == null) {
+            Log.e("CreateEventFragment", "Current user is null!");
+            Toast.makeText(requireContext(), "Please log in to create events", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d("CreateEventFragment", "Current user: " + currentUser.getEmail() + ", Role: " + currentUser.getRole());
+
         String title = binding.etEventName.getText().toString().trim();
         String description = binding.etEventDescription.getText().toString().trim();
         boolean geoRequired = binding.toggleGeolocation.isChecked();
@@ -84,17 +96,18 @@ public class CreateEventFragment extends Fragment {
         Date end = new Date(System.currentTimeMillis() + (7L * 24 * 60 * 60 * 1000));
 
         if (title.isEmpty() || description.isEmpty()) {
+            Log.w("CreateEventFragment", "Title or description is empty");
             Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
         Log.d("CreateEventFragment",
-                "Creating event: " + title + ", GeoRequired=" + geoRequired);
+                "Creating event: " + title + " by " + currentUser.getDisplayName() + " (" + currentUser.getUid() + ")");
 
-        // Create UI Event object
+        // Create UI Event object with current user's UID as organizer
         String eventId = UUID.randomUUID().toString();
         Event uiEvent = new Event(eventId, title, description, capacity,
-                start, end, organizer.getOrganizerId(), geoRequired);
+                start, end, currentUser.getUid(), geoRequired);
         uiEvent.setMaxEntrants(maxEntrants);
 
         // Save to Firebase via EventService
@@ -102,11 +115,12 @@ public class CreateEventFragment extends Fragment {
             @Override
             public void onSuccess(com.example.cmpuzz_events.models.event.EventEntity event) {
                 Log.d("CreateEventFragment", "Event saved to Firebase: " + event.getEventId());
-                
-                // Also add to organizer's local list for backwards compatibility
-                organizer.createEvent(title, description, capacity, start, end, geoRequired);
-                
                 Toast.makeText(requireContext(), "Event created successfully!", Toast.LENGTH_SHORT).show();
+                
+                // Optional: Navigate back or clear form
+                binding.etEventName.setText("");
+                binding.etEventDescription.setText("");
+                binding.toggleGeolocation.setChecked(false);
             }
 
             @Override

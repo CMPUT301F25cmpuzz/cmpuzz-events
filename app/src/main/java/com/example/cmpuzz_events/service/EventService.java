@@ -57,9 +57,30 @@ public class EventService implements IEventService {
         );
     }
 
+    /**
+     * Convert EventEntity to UI Event
+     */
+    private Event convertToUIEvent(EventEntity entity) {
+        Event uiEvent = new Event(
+            entity.getEventId(),
+            entity.getTitle(),
+            entity.getDescription(),
+            entity.getCapacity(),
+            entity.getRegistrationStart(),
+            entity.getRegistrationEnd(),
+            entity.getOrganizerId(),
+            entity.isGeolocationRequired()
+        );
+        uiEvent.setMaxEntrants(entity.getMaxEntrants());
+        return uiEvent;
+    }
+
     @Override
     public void createEvent(Event uiEvent, EventCallback callback) {
+        Log.d(TAG, "createEvent called for: " + uiEvent.getTitle());
+        
         EventEntity entity = convertToEntity(uiEvent);
+        Log.d(TAG, "Converted to entity, ID: " + entity.getEventId() + ", OrganizerID: " + entity.getOrganizerId());
         
         db.collection(COLLECTION_EVENTS)
             .document(entity.getEventId())
@@ -69,7 +90,7 @@ public class EventService implements IEventService {
                 callback.onSuccess(entity);
             })
             .addOnFailureListener(e -> {
-                Log.e(TAG, "Error creating event", e);
+                Log.e(TAG, "Error creating event: " + e.getMessage(), e);
                 callback.onError(e.getMessage());
             });
     }
@@ -94,6 +115,22 @@ public class EventService implements IEventService {
     }
 
     @Override
+    public void getUIEvent(String eventId, UIEventCallback callback) {
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity entity) {
+                Event uiEvent = convertToUIEvent(entity);
+                callback.onSuccess(uiEvent);
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    @Override
     public void getEventsForOrganizer(String organizerId, EventListCallback callback) {
         db.collection(COLLECTION_EVENTS)
             .whereEqualTo("organizerId", organizerId)
@@ -107,6 +144,26 @@ public class EventService implements IEventService {
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error getting events for organizer", e);
+                callback.onError(e.getMessage());
+            });
+    }
+
+    @Override
+    public void getAllEvents(UIEventListCallback callback) {
+        db.collection(COLLECTION_EVENTS)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<Event> uiEvents = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    EventEntity entity = documentToEventEntity(doc);
+                    Event uiEvent = convertToUIEvent(entity);
+                    uiEvents.add(uiEvent);
+                }
+                Log.d(TAG, "Retrieved " + uiEvents.size() + " events");
+                callback.onSuccess(uiEvents);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting all events", e);
                 callback.onError(e.getMessage());
             });
     }
@@ -160,6 +217,13 @@ public class EventService implements IEventService {
                 callback.onError(error);
             }
         });
+    }
+
+    @Override
+    public void joinEvent(String eventId, String deviceId, VoidCallback callback) {
+        // joinEvent is just an alias for addToWaitlist with better logging
+        Log.d(TAG, "User joining event: " + eventId);
+        addToWaitlist(eventId, deviceId, callback);
     }
 
     @Override
