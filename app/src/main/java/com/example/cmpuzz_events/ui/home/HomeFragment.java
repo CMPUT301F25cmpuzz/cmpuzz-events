@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.databinding.FragmentHomeBinding;
-import com.example.cmpuzz_events.models.User;
+import com.example.cmpuzz_events.models.user.User;
 
 public class HomeFragment extends Fragment {
 

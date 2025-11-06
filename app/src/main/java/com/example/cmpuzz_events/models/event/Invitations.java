@@ -1,4 +1,4 @@
-package com.example.cmpuzz_events.models;
+package com.example.cmpuzz_events.models.event;
 
 import java.util.ArrayList;
 

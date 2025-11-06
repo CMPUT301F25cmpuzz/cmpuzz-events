@@ -1,14 +1,14 @@
-package com.example.cmpuzz_events.models;
+package com.example.cmpuzz_events.models.event;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Event_History {
+public class EventsHistory {
     // key String in the hashmap holds the ID of the event
     // value String in the hashmap holds whether the user was selected or not (US 01.02.03)
     private ArrayList<HashMap<String, String>> ShowHistory;
 
-    public Event_History() {
+    public EventsHistory() {
         ShowHistory = new ArrayList<>();
     }
     public void addEvent(String eventName, String selectionStatus) {

@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.cmpuzz_events.MainActivity;
 import com.example.cmpuzz_events.databinding.ActivitySignupBinding;
-import com.example.cmpuzz_events.models.User;
+import com.example.cmpuzz_events.models.user.User;
 
 public class SignupActivity extends AppCompatActivity {
     private ActivitySignupBinding binding;

@@ -1,10 +1,10 @@
-package com.example.cmpuzz_events.models;
+package com.example.cmpuzz_events.models.event;
 
 import java.util.ArrayList;
 
-public class Events_List {
+public class EventsList {
     private ArrayList<Events> Events;
-    public Events_List() {
+    public EventsList() {
         Events = new ArrayList<Events>();
     }
 }

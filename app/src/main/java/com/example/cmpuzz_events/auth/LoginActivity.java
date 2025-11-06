@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.cmpuzz_events.MainActivity;
 import com.example.cmpuzz_events.databinding.ActivityLoginBinding;
-import com.example.cmpuzz_events.models.User;
+import com.example.cmpuzz_events.models.user.User;
 
 public class LoginActivity extends AppCompatActivity {
     private ActivityLoginBinding binding;

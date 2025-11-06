@@ -1,11 +1,8 @@
 package com.example.cmpuzz_events.auth;
 
-import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
-import com.example.cmpuzz_events.models.User;
+import com.example.cmpuzz_events.models.user.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
