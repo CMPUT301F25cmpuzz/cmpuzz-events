@@ -324,6 +324,10 @@ public class EventService implements IEventService {
         List<String> attendees = (List<String>) doc.get("attendees");
         if (attendees != null) entity.setAttendees(attendees);
         
+        // Declined
+        List<String> declined = (List<String>) doc.get("declined");
+        if (declined != null) entity.setDeclined(declined);
+        
         // Invitations
         List<Map<String, Object>> invitationMaps = (List<Map<String, Object>>) doc.get("invitations");
         if (invitationMaps != null) {

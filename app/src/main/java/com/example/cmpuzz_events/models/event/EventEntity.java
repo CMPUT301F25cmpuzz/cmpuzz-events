@@ -27,6 +27,7 @@ public class EventEntity {
     private List<String> waitlist;           // Array of device IDs on waitlist (ALL entrants)
     private List<Invitation> invitations;    // Array of Invitation objects (invited entrants)
     private List<String> attendees;          // Array of device IDs who are confirmed attendees
+    private List<String> declined;           // Array of device IDs who declined invitations
     private String qrCodeUrl;                // Unique URL for QR code
     private Date createdAt;
     private Date updatedAt;
@@ -38,6 +39,7 @@ public class EventEntity {
         this.waitlist = new ArrayList<>();
         this.invitations = new ArrayList<>();
         this.attendees = new ArrayList<>();
+        this.declined = new ArrayList<>();
         this.createdAt = new Date();
         this.updatedAt = new Date();
     }
@@ -61,6 +63,7 @@ public class EventEntity {
         this.waitlist = new ArrayList<>();
         this.invitations = new ArrayList<>();
         this.attendees = new ArrayList<>();
+        this.declined = new ArrayList<>();
         this.qrCodeUrl = generateQRCodeUrl(eventId);
         this.createdAt = new Date();
         this.updatedAt = new Date();
@@ -91,6 +94,7 @@ public class EventEntity {
         map.put("maxEntrants", maxEntrants);
         map.put("waitlist", waitlist);
         map.put("attendees", attendees);
+        map.put("declined", declined);
         
         // Convert invitations to list of maps
         List<Map<String, Object>> invitationMaps = new ArrayList<>();
@@ -265,6 +269,15 @@ public class EventEntity {
 
     public void setAttendees(List<String> attendees) {
         this.attendees = attendees;
+        this.updatedAt = new Date();
+    }
+
+    public List<String> getDeclined() {
+        return declined;
+    }
+
+    public void setDeclined(List<String> declined) {
+        this.declined = declined;
         this.updatedAt = new Date();
     }
 
