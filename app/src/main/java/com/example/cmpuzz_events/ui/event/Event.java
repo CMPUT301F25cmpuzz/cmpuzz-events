@@ -10,12 +10,12 @@ public class Event {
     private String eventId;
     private String title;
     private String description;
-    private int capacity;
+    private int capacity;                    // Max attendees (attendance limit)
     private Date registrationStart;
     private Date registrationEnd;
     private String organizerId;
     private boolean geolocationRequired;
-    private int maxEntrants;
+    private int maxEntrants;                 // Max people who can enroll
     private List<Entrant> waitingList;
 
     public Event(String eventId, String title, String description, int capacity,
@@ -33,14 +33,18 @@ public class Event {
     }
 
     public String getEventId() { return eventId; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public int getCapacity() { return capacity; }
+    public Date getRegistrationStart() { return registrationStart; }
+    public Date getRegistrationEnd() { return registrationEnd; }
+    public String getOrganizerId() { return organizerId; }
+    public boolean isGeolocationRequired() { return geolocationRequired; }
+    public int getMaxEntrants() { return maxEntrants; }
+    public List<Entrant> getWaitingList() { return waitingList; }
+    
     public void setRegistrationStart(Date date) { this.registrationStart = date; }
     public void setRegistrationEnd(Date date) { this.registrationEnd = date; }
     public void setGeolocationRequired(boolean required) { this.geolocationRequired = required; }
     public void setMaxEntrants(int n) { this.maxEntrants = n; }
-    public List<Entrant> getWaitingList() { return waitingList; }
-
-    public String getTitle() {
-        return title;
-    }
-
 }

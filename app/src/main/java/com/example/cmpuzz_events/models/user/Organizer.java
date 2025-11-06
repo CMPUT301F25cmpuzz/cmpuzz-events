@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.example.cmpuzz_events.Entrant;
 import com.example.cmpuzz_events.ui.event.Event;
+import com.example.cmpuzz_events.service.EventService;
+import com.example.cmpuzz_events.service.IEventService;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,6 +48,9 @@ public class Organizer {
     /** List of events created by this organizer. */
     private List<Event> createdEvents;
 
+    /** Event service for Firebase operations (optional). */
+    private transient EventService eventService;
+
     /** Default constructor required for Firebase deserialization. */
     public Organizer() {
         this.createdEvents = new ArrayList<>();
@@ -57,6 +62,7 @@ public class Organizer {
         this.name = name;
         this.email = email;
         this.createdEvents = new ArrayList<>();
+        this.eventService = EventService.getInstance();
     }
 
     // ------------------------------------------------------------
@@ -89,7 +95,8 @@ public class Organizer {
         if (createdEvents == null) createdEvents = new ArrayList<>();
         createdEvents.add(event);
 
-        // TODO: integrate with Firestore
+        // Note: Firebase integration should be done via EventService in the UI layer
+        // See CreateEventFragment for example usage
         return event;
     }
 
