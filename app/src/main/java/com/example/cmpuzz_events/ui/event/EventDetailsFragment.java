@@ -144,13 +144,37 @@ public class EventDetailsFragment extends Fragment {
             @Override
             public void onSuccess() {
                 Toast.makeText(getContext(), "Successfully joined event!", Toast.LENGTH_SHORT).show();
-                joinButton.setEnabled(false);
-                joinButton.setText("Joined");
+                // Reload event details to update button state
+                loadEventDetails();
             }
 
             @Override
             public void onError(String error) {
                 Toast.makeText(getContext(), "Failed to join: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void leaveEvent() {
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(getContext(), "Please log in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        String deviceId = currentUser.getUid();
+        
+        eventService.removeFromWaitlist(eventId, deviceId, new IEventService.VoidCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(getContext(), "Left the waitlist", Toast.LENGTH_SHORT).show();
+                // Reload event details to update button state
+                loadEventDetails();
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getContext(), "Failed to leave: " + error, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -201,8 +225,13 @@ public class EventDetailsFragment extends Fragment {
             if (currentUser != null && event.getWaitlist() != null) {
                 boolean isInWaitlist = event.getWaitlist().contains(currentUser.getUid());
                 if (isInWaitlist) {
-                    joinButton.setText("Joined");
-                    joinButton.setEnabled(false);
+                    joinButton.setText("Leave Waitlist");
+                    joinButton.setEnabled(true);
+                    joinButton.setOnClickListener(v -> leaveEvent());
+                } else {
+                    joinButton.setText("Join Event");
+                    joinButton.setEnabled(true);
+                    joinButton.setOnClickListener(v -> joinEvent());
                 }
             }
             
