@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Organizer Navigation Graph -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -22,4 +23,17 @@
         android:name="com.example.cmpuzz_events.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <!-- User Fragments -->
+    <fragment
+        android:id="@+id/navigation_browse"
+        android:name="com.example.cmpuzz_events.ui.browse.BrowseEventsFragment"
+        android:label="Browse Events"
+        tools:layout="@layout/fragment_browse_events" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.example.cmpuzz_events.ui.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
 </navigation>
