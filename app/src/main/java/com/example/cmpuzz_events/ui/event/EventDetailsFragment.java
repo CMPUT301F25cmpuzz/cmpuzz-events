@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.models.event.EventEntity;
@@ -35,6 +36,7 @@ public class EventDetailsFragment extends Fragment {
     private MaterialButton editButton;
     private MaterialButton shareButton;
     private MaterialButton viewMapButton;
+    private TextView additionalActionsButton;
 
     public static EventDetailsFragment newInstance(String eventId) {
         EventDetailsFragment fragment = new EventDetailsFragment();
@@ -67,6 +69,17 @@ public class EventDetailsFragment extends Fragment {
         editButton = root.findViewById(R.id.edit_button);
         shareButton = root.findViewById(R.id.share_button);
         viewMapButton = root.findViewById(R.id.view_map_button);
+        additionalActionsButton = root.findViewById(R.id.additional_actions_button);
+        
+        // Navigate to Action Menu
+        additionalActionsButton.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("eventId", eventId);
+            Navigation.findNavController(root).navigate(
+                R.id.action_to_event_action_menu,
+                bundle
+            );
+        });
         
         loadEventDetails();
         

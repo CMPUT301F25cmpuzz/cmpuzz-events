@@ -320,6 +320,10 @@ public class EventService implements IEventService {
         List<String> waitlist = (List<String>) doc.get("waitlist");
         if (waitlist != null) entity.setWaitlist(waitlist);
         
+        // Attendees
+        List<String> attendees = (List<String>) doc.get("attendees");
+        if (attendees != null) entity.setAttendees(attendees);
+        
         // Invitations
         List<Map<String, Object>> invitationMaps = (List<Map<String, Object>>) doc.get("invitations");
         if (invitationMaps != null) {

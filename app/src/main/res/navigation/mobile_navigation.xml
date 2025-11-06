@@ -50,5 +50,19 @@
         <argument
             android:name="eventId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_to_event_action_menu"
+            app:destination="@id/eventActionMenuFragment" />
+    </fragment>
+
+    <!-- Event Action Menu Fragment -->
+    <fragment
+        android:id="@+id/eventActionMenuFragment"
+        android:name="com.example.cmpuzz_events.ui.event.EventActionMenuFragment"
+        android:label="Action Menu"
+        tools:layout="@layout/fragment_event_action_menu">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
     </fragment>
 </navigation>
