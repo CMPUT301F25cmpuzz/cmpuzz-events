@@ -25,6 +25,7 @@ public class EventEntity {
     // Backend-specific fields
     private List<String> waitlist;           // Array of device IDs on waitlist
     private List<Invitation> invitations;    // Array of Invitation objects
+    private String qrCodeUrl;                // Unique URL for QR code
     private Date createdAt;
     private Date updatedAt;
 
@@ -55,8 +56,17 @@ public class EventEntity {
         this.maxEntrants = maxEntrants;
         this.waitlist = new ArrayList<>();
         this.invitations = new ArrayList<>();
+        this.qrCodeUrl = generateQRCodeUrl(eventId);
         this.createdAt = new Date();
         this.updatedAt = new Date();
+    }
+
+    /**
+     * Generate unique URL for QR code
+     */
+    private static String generateQRCodeUrl(String eventId) {
+        // Deep link format that your app can handle
+        return "cmpuzzevents://event/" + eventId;
     }
 
     /**
@@ -82,6 +92,7 @@ public class EventEntity {
         }
         map.put("invitations", invitationMaps);
         
+        map.put("qrCodeUrl", qrCodeUrl);
         map.put("createdAt", createdAt);
         map.put("updatedAt", updatedAt);
         
@@ -247,5 +258,13 @@ public class EventEntity {
 
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getQrCodeUrl() {
+        return qrCodeUrl;
+    }
+
+    public void setQrCodeUrl(String qrCodeUrl) {
+        this.qrCodeUrl = qrCodeUrl;
     }
 }

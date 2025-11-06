@@ -339,8 +339,12 @@ public class EventService implements IEventService {
                 
                 invitations.add(inv);
             }
-            entity.setInvitations(invitations);
+        entity.setInvitations(invitations);
         }
+        
+        // QR Code URL
+        String qrCodeUrl = doc.getString("qrCodeUrl");
+        if (qrCodeUrl != null) entity.setQrCodeUrl(qrCodeUrl);
         
         entity.setCreatedAt(doc.getDate("createdAt"));
         entity.setUpdatedAt(doc.getDate("updatedAt"));
