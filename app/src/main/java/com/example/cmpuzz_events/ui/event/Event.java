@@ -1,4 +1,6 @@
-package com.example.cmpuzz_events;
+package com.example.cmpuzz_events.ui.event;
+
+import com.example.cmpuzz_events.Entrant;
 
 import java.util.ArrayList;
 import java.util.Date;

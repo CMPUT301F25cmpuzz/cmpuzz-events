@@ -1,6 +1,9 @@
-package com.example.cmpuzz_events;
+package com.example.cmpuzz_events.models.user;
 
 import android.util.Log;
+
+import com.example.cmpuzz_events.Entrant;
+import com.example.cmpuzz_events.ui.event.Event;
 
 import java.util.ArrayList;
 import java.util.Date;

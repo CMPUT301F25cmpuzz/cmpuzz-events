@@ -11,8 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.cmpuzz_events.Event;
-import com.example.cmpuzz_events.Organizer;
+import com.example.cmpuzz_events.ui.event.Event;
+import com.example.cmpuzz_events.models.user.Organizer;
 import com.example.cmpuzz_events.databinding.CreateEventFragmentBinding;
 
 import java.util.Date;
