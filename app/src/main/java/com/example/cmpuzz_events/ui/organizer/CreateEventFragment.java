@@ -104,10 +104,10 @@ public class CreateEventFragment extends Fragment {
         Log.d("CreateEventFragment",
                 "Creating event: " + title + " by " + currentUser.getDisplayName() + " (" + currentUser.getUid() + ")");
 
-        // Create UI Event object with current user's UID as organizer
+        // Create UI Event object with current user's UID and name as organizer
         String eventId = UUID.randomUUID().toString();
         Event uiEvent = new Event(eventId, title, description, capacity,
-                start, end, currentUser.getUid(), geoRequired);
+                start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired);
         uiEvent.setMaxEntrants(maxEntrants);
 
         // Save to Firebase via EventService

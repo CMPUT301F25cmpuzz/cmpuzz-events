@@ -19,6 +19,7 @@ public class EventEntity {
     private Date registrationStart;
     private Date registrationEnd;
     private String organizerId;
+    private String organizerName;            // Display name of organizer
     private boolean geolocationRequired;
     private int maxEntrants;                 // Max people who can ENROLL into the event
     
@@ -44,7 +45,7 @@ public class EventEntity {
      */
     public EventEntity(String eventId, String title, String description, int capacity,
                        Date registrationStart, Date registrationEnd,
-                       String organizerId, boolean geolocationRequired, int maxEntrants) {
+                       String organizerId, String organizerName, boolean geolocationRequired, int maxEntrants) {
         this.eventId = eventId;
         this.title = title;
         this.description = description;
@@ -52,6 +53,7 @@ public class EventEntity {
         this.registrationStart = registrationStart;
         this.registrationEnd = registrationEnd;
         this.organizerId = organizerId;
+        this.organizerName = organizerName;
         this.geolocationRequired = geolocationRequired;
         this.maxEntrants = maxEntrants;
         this.waitlist = new ArrayList<>();
@@ -81,6 +83,7 @@ public class EventEntity {
         map.put("registrationStart", registrationStart);
         map.put("registrationEnd", registrationEnd);
         map.put("organizerId", organizerId);
+        map.put("organizerName", organizerName);
         map.put("geolocationRequired", geolocationRequired);
         map.put("maxEntrants", maxEntrants);
         map.put("waitlist", waitlist);
@@ -206,6 +209,14 @@ public class EventEntity {
 
     public void setOrganizerId(String organizerId) {
         this.organizerId = organizerId;
+    }
+
+    public String getOrganizerName() {
+        return organizerName;
+    }
+
+    public void setOrganizerName(String organizerName) {
+        this.organizerName = organizerName;
     }
 
     public boolean isGeolocationRequired() {

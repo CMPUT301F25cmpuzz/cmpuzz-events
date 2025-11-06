@@ -98,7 +98,11 @@ public class EventDetailsFragment extends Fragment {
         
         getActivity().runOnUiThread(() -> {
             eventTitle.setText(event.getTitle());
-            eventHost.setText("Hosted by: " + event.getOrganizerId());
+            // Display organizer name if available, otherwise fall back to ID
+            String hostText = event.getOrganizerName() != null && !event.getOrganizerName().isEmpty()
+                    ? "Hosted by: " + event.getOrganizerName()
+                    : "Hosted by: " + event.getOrganizerId();
+            eventHost.setText(hostText);
             descriptionText.setText(event.getDescription());
             
             // Format dates

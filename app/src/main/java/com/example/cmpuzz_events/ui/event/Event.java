@@ -14,13 +14,14 @@ public class Event {
     private Date registrationStart;
     private Date registrationEnd;
     private String organizerId;
+    private String organizerName;            // Display name of organizer
     private boolean geolocationRequired;
     private int maxEntrants;                 // Max people who can enroll
     private List<Entrant> waitingList;
 
     public Event(String eventId, String title, String description, int capacity,
                  Date registrationStart, Date registrationEnd,
-                 String organizerId, boolean geolocationRequired) {
+                 String organizerId, String organizerName, boolean geolocationRequired) {
         this.eventId = eventId;
         this.title = title;
         this.description = description;
@@ -28,6 +29,7 @@ public class Event {
         this.registrationStart = registrationStart;
         this.registrationEnd = registrationEnd;
         this.organizerId = organizerId;
+        this.organizerName = organizerName;
         this.geolocationRequired = geolocationRequired;
         this.waitingList = new ArrayList<>();
     }
@@ -39,6 +41,7 @@ public class Event {
     public Date getRegistrationStart() { return registrationStart; }
     public Date getRegistrationEnd() { return registrationEnd; }
     public String getOrganizerId() { return organizerId; }
+    public String getOrganizerName() { return organizerName; }
     public boolean isGeolocationRequired() { return geolocationRequired; }
     public int getMaxEntrants() { return maxEntrants; }
     public List<Entrant> getWaitingList() { return waitingList; }

@@ -103,6 +103,7 @@ public class HomeFragment extends Fragment {
                         entity.getRegistrationStart(),
                         entity.getRegistrationEnd(),
                         entity.getOrganizerId(),
+                        entity.getOrganizerName(),
                         entity.isGeolocationRequired()
                     );
                     uiEvent.setMaxEntrants(entity.getMaxEntrants());
