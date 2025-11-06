@@ -29,6 +29,10 @@ public class EventDetailsFragment extends Fragment {
         final TextView textView = binding.textEventDetails;
         eventDetailsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
 
+        // TODO: Fix/Implement? these statements are just placeholders
+        binding.eventHost.setText(getString(R.string.hosted_by, "Cmpuzz"));
+        binding.eventAvailability.setText(getString(R.string.event_status, "Open"));
+
         // Additional Actions Button
         binding.additionalActionsButton.setOnClickListener(new View.OnClickListener() {
             @Override

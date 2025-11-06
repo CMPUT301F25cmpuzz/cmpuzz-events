@@ -27,9 +27,9 @@
         <TextView
             style="@style/ActionMenuItem"
             android:text="Force Geolocation"
-            app:drawableStartCompat="@drawable/outline_location_on_24" />
+            app:drawableStartCompat="@drawable/outline_location_on_24"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- If anyone can help me make these switches into Material 3, I will love you forever. -->
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/geolocation_toggle_button"
             android:layout_width="wrap_content"
@@ -70,8 +70,8 @@
         android:layout_marginStart="40dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
-        android:hint="Enter limit"
-        android:visibility="invisible"
+        android:hint="@string/enter_limit"
+        android:visibility="gone"
         tools:visibility="visible" >
 
         <com.google.android.material.textfield.TextInputEditText

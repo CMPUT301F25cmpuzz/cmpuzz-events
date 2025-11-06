@@ -6,4 +6,12 @@
     <string name="title_event_action_menu">EventActionMenu</string>
     <string name="title_event_details">EventDetails</string>
     <string name="title_event_edit_menu">EventEditMenu</string>
+    <string name="hosted_by">Hosted by: %1$s</string>
+    <string name="edit">Edit</string>
+    <string name="additional_actions">Additional Actions</string>
+    <string name="users_enrolled">Users Enrolled</string>
+    <string name="view_map">View Map</string>
+    <string name="event_details">Event Details</string>
+    <string name="event_status">Event Status: %1$s</string>
+    <string name="enter_limit">Enter limit</string>
 </resources>
