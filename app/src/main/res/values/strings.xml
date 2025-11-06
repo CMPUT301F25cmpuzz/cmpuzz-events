@@ -1,8 +1,24 @@
 <resources>
     <string name="app_name">Cmpuzz-Events</string>
-    <string name="title_home">My Events</string>
-    <string name="title_dashboard">Create Event</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <!--fragment_organizer dashboard strings/content descriptions -->
     <string name="header_organizer_navbar">Organizer Dashboard</string>
+    <string name="events_created">Events Created</string>
 
+    <!--item_events_created xml strings/content descriptions-->
+    <string name="leave">Leave</string>
+    <string name="event_time">Event Time</string>
+    <string name="event_image">Event Image</string>
+    <string name="view_event">View Event</string>
+
+    <!--item_event.xml-->
+    <string name="more_options">More Options</string>
+    <string name="max_attendees_placeholder">Maximum Attendees: </string>
+    <string name="description">Description: </string>
+    <string name="draw_attendees">Draw Attendees</string>
+    <string name="status">Status: </string>
+
+    <string name="delete">Delete</string>
 </resources>
