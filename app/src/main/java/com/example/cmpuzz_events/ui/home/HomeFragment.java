@@ -25,6 +25,7 @@ import java.util.List;
 
 public class HomeFragment extends Fragment {
 
+    private static final String TAG = "HomeFragment";
     private FragmentHomeBinding binding;
     private EventService eventService;
     private MyEventsAdapter adapter;
@@ -34,6 +35,14 @@ public class HomeFragment extends Fragment {
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        // Check if user should see this fragment
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        if (currentUser == null || !currentUser.canManageEvents()) {
+            // This fragment should only be visible to organizers
+            Log.w(TAG, "HomeFragment accessed by non-organizer user");
+            return root;
+        }
 
         eventService = EventService.getInstance();
         
@@ -54,6 +63,12 @@ public class HomeFragment extends Fragment {
         
         if (currentUser == null) {
             Toast.makeText(getContext(), "Please log in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Only load events for organizers/admins
+        if (!currentUser.canManageEvents()) {
+            Log.w(TAG, "User is not an organizer, skipping event load");
             return;
         }
 
