@@ -17,6 +17,7 @@ import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 
 public class EventDetailsFragment extends Fragment {
@@ -79,6 +80,14 @@ public class EventDetailsFragment extends Fragment {
                 R.id.action_to_event_action_menu,
                 bundle
             );
+        });
+
+//        // Setup toolbar
+        MaterialToolbar toolbar = root.findViewById(R.id.toolbar);
+        toolbar.setNavigationOnClickListener(v -> {
+            if (getActivity() != null) {
+                Navigation.findNavController(root).navigate(R.id.action_to_event_home);
+            }
         });
         
         loadEventDetails();

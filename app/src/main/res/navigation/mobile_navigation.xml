@@ -53,6 +53,9 @@
         <action
             android:id="@+id/action_to_event_action_menu"
             app:destination="@id/eventActionMenuFragment" />
+        <action
+            android:id="@+id/action_to_event_home"
+            app:destination="@id/navigation_home" />
     </fragment>
 
     <!-- Event Action Menu Fragment -->
@@ -64,5 +67,8 @@
         <argument
             android:name="eventId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_to_event_action_menu"
+            app:destination="@id/eventActionMenuFragment" />
     </fragment>
 </navigation>

@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.cmpuzz_events.R;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -44,7 +45,7 @@ public class EventActionMenuFragment extends Fragment {
         MaterialToolbar toolbar = root.findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> {
             if (getActivity() != null) {
-                getActivity().onBackPressed();
+                Navigation.findNavController(root).navigate(R.id.action_to_event_details);
             }
         });
 
