@@ -1,7 +1,6 @@
-package com.example.cmpuzz_events;
+package com.example.cmpuzz_events.events;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Events {
     private ArrayList<String> waitlist;
