@@ -45,4 +45,6 @@
     <string name="description">Description: </string>
     <string name="draw_attendees">Draw Attendees</string>
     <string name="status">Status: </string>
+
+    <string name="delete">Delete</string>
 </resources>
