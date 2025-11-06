@@ -1,4 +1,4 @@
-package com.example.cmpuzz_events.models;
+package com.example.cmpuzz_events.models.user;
 
 import java.io.Serializable;
 import java.util.HashMap;
