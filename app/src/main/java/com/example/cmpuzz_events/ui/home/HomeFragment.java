@@ -51,7 +51,7 @@ public class HomeFragment extends Fragment {
         // Setup RecyclerView
         RecyclerView recyclerView = binding.recyclerViewMyEvents;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new MyEventsAdapter(new ArrayList<>());
+        adapter = new MyEventsAdapter(new ArrayList<>(), true); // true = organizer view
         
         // Set click listener for viewing event details
         adapter.setOnEventClickListener(event -> {

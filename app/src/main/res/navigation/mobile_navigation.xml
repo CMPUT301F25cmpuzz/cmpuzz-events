@@ -34,7 +34,11 @@
         android:id="@+id/navigation_browse"
         android:name="com.example.cmpuzz_events.ui.browse.BrowseEventsFragment"
         android:label="Browse Events"
-        tools:layout="@layout/fragment_browse_events" />
+        tools:layout="@layout/fragment_browse_events">
+        <action
+            android:id="@+id/action_browse_to_event_details"
+            app:destination="@id/eventDetailsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_profile"
