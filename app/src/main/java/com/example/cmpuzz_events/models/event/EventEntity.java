@@ -19,12 +19,14 @@ public class EventEntity {
     private Date registrationStart;
     private Date registrationEnd;
     private String organizerId;
+    private String organizerName;            // Display name of organizer
     private boolean geolocationRequired;
     private int maxEntrants;                 // Max people who can ENROLL into the event
     
     // Backend-specific fields
-    private List<String> waitlist;           // Array of device IDs on waitlist
-    private List<Invitation> invitations;    // Array of Invitation objects
+    private List<String> waitlist;           // Array of device IDs on waitlist (ALL entrants)
+    private List<Invitation> invitations;    // Array of Invitation objects (invited entrants)
+    private List<String> attendees;          // Array of device IDs who are confirmed attendees
     private String qrCodeUrl;                // Unique URL for QR code
     private Date createdAt;
     private Date updatedAt;
@@ -35,6 +37,7 @@ public class EventEntity {
     public EventEntity() {
         this.waitlist = new ArrayList<>();
         this.invitations = new ArrayList<>();
+        this.attendees = new ArrayList<>();
         this.createdAt = new Date();
         this.updatedAt = new Date();
     }
@@ -44,7 +47,7 @@ public class EventEntity {
      */
     public EventEntity(String eventId, String title, String description, int capacity,
                        Date registrationStart, Date registrationEnd,
-                       String organizerId, boolean geolocationRequired, int maxEntrants) {
+                       String organizerId, String organizerName, boolean geolocationRequired, int maxEntrants) {
         this.eventId = eventId;
         this.title = title;
         this.description = description;
@@ -52,10 +55,12 @@ public class EventEntity {
         this.registrationStart = registrationStart;
         this.registrationEnd = registrationEnd;
         this.organizerId = organizerId;
+        this.organizerName = organizerName;
         this.geolocationRequired = geolocationRequired;
         this.maxEntrants = maxEntrants;
         this.waitlist = new ArrayList<>();
         this.invitations = new ArrayList<>();
+        this.attendees = new ArrayList<>();
         this.qrCodeUrl = generateQRCodeUrl(eventId);
         this.createdAt = new Date();
         this.updatedAt = new Date();
@@ -81,9 +86,11 @@ public class EventEntity {
         map.put("registrationStart", registrationStart);
         map.put("registrationEnd", registrationEnd);
         map.put("organizerId", organizerId);
+        map.put("organizerName", organizerName);
         map.put("geolocationRequired", geolocationRequired);
         map.put("maxEntrants", maxEntrants);
         map.put("waitlist", waitlist);
+        map.put("attendees", attendees);
         
         // Convert invitations to list of maps
         List<Map<String, Object>> invitationMaps = new ArrayList<>();
@@ -208,6 +215,14 @@ public class EventEntity {
         this.organizerId = organizerId;
     }
 
+    public String getOrganizerName() {
+        return organizerName;
+    }
+
+    public void setOrganizerName(String organizerName) {
+        this.organizerName = organizerName;
+    }
+
     public boolean isGeolocationRequired() {
         return geolocationRequired;
     }
@@ -241,6 +256,15 @@ public class EventEntity {
 
     public void setInvitations(List<Invitation> invitations) {
         this.invitations = invitations;
+        this.updatedAt = new Date();
+    }
+
+    public List<String> getAttendees() {
+        return attendees;
+    }
+
+    public void setAttendees(List<String> attendees) {
+        this.attendees = attendees;
         this.updatedAt = new Date();
     }
 

@@ -1,0 +1,144 @@
+package com.example.cmpuzz_events.ui.event;
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
+
+import com.example.cmpuzz_events.R;
+import com.example.cmpuzz_events.models.event.EventEntity;
+import com.example.cmpuzz_events.service.EventService;
+import com.example.cmpuzz_events.service.IEventService;
+import com.google.android.material.button.MaterialButton;
+
+public class EventDetailsFragment extends Fragment {
+
+    private static final String TAG = "EventDetailsFragment";
+    private static final String ARG_EVENT_ID = "eventId";
+
+    private String eventId;
+    private EventService eventService;
+    
+    // Views
+    private TextView eventTitle;
+    private TextView eventHost;
+    private TextView eventAvailability;
+    private TextView datePosted;
+    private TextView descriptionText;
+    private MaterialButton editButton;
+    private MaterialButton shareButton;
+    private MaterialButton viewMapButton;
+    private TextView additionalActionsButton;
+
+    public static EventDetailsFragment newInstance(String eventId) {
+        EventDetailsFragment fragment = new EventDetailsFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_EVENT_ID, eventId);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            eventId = getArguments().getString(ARG_EVENT_ID);
+        }
+        eventService = EventService.getInstance();
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View root = inflater.inflate(R.layout.fragment_event_details, container, false);
+        
+        // Initialize views
+        eventTitle = root.findViewById(R.id.event_title);
+        eventHost = root.findViewById(R.id.event_host);
+        eventAvailability = root.findViewById(R.id.event_availability);
+        datePosted = root.findViewById(R.id.date_posted);
+        descriptionText = root.findViewById(R.id.description_text);
+        editButton = root.findViewById(R.id.edit_button);
+        shareButton = root.findViewById(R.id.share_button);
+        viewMapButton = root.findViewById(R.id.view_map_button);
+        additionalActionsButton = root.findViewById(R.id.additional_actions_button);
+        
+        // Navigate to Action Menu
+        additionalActionsButton.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("eventId", eventId);
+            Navigation.findNavController(root).navigate(
+                R.id.action_to_event_action_menu,
+                bundle
+            );
+        });
+        
+        loadEventDetails();
+        
+        return root;
+    }
+
+    private void loadEventDetails() {
+        if (eventId == null || eventId.isEmpty()) {
+            Toast.makeText(getContext(), "Invalid event", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        eventService.getEvent(eventId, new IEventService.EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                displayEventDetails(event);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error loading event: " + error);
+                Toast.makeText(getContext(), "Failed to load event details", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void displayEventDetails(EventEntity event) {
+        if (getActivity() == null) return;
+        
+        getActivity().runOnUiThread(() -> {
+            eventTitle.setText(event.getTitle());
+            // Display organizer name if available, otherwise fall back to ID
+            String hostText = event.getOrganizerName() != null && !event.getOrganizerName().isEmpty()
+                    ? "Hosted by: " + event.getOrganizerName()
+                    : "Hosted by: " + event.getOrganizerId();
+            eventHost.setText(hostText);
+            descriptionText.setText(event.getDescription());
+            
+            // Format dates
+            if (event.getRegistrationStart() != null) {
+                datePosted.setText("Registration Start: " + event.getRegistrationStart());
+            }
+            
+            // Display availability
+            int capacity = event.getCapacity();
+            eventAvailability.setText("Capacity: " + capacity);
+            
+            // Setup buttons (placeholder functionality for now)
+            editButton.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Edit functionality coming soon", Toast.LENGTH_SHORT).show();
+            });
+            
+            shareButton.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Share functionality coming soon", Toast.LENGTH_SHORT).show();
+            });
+            
+            viewMapButton.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Map functionality coming soon", Toast.LENGTH_SHORT).show();
+            });
+        });
+    }
+}

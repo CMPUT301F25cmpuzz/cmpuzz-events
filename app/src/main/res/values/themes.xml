@@ -12,4 +12,9 @@
         <item name="android:statusBarColor">@color/primary</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
     </style>
+
+    <!-- Shape Appearance for rounded corners -->
+    <style name="ShapeAppearance.App.CornerSize8dp" parent="">
+        <item name="cornerSize">8dp</item>
+    </style>
 </resources>

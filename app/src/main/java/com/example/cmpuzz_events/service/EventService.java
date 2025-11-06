@@ -52,6 +52,7 @@ public class EventService implements IEventService {
             uiEvent.getRegistrationStart(),
             uiEvent.getRegistrationEnd(),
             uiEvent.getOrganizerId(),
+            uiEvent.getOrganizerName(),
             uiEvent.isGeolocationRequired(),
             uiEvent.getMaxEntrants()
         );
@@ -69,6 +70,7 @@ public class EventService implements IEventService {
             entity.getRegistrationStart(),
             entity.getRegistrationEnd(),
             entity.getOrganizerId(),
+            entity.getOrganizerName(),
             entity.isGeolocationRequired()
         );
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
@@ -306,6 +308,7 @@ public class EventService implements IEventService {
         entity.setRegistrationStart(doc.getDate("registrationStart"));
         entity.setRegistrationEnd(doc.getDate("registrationEnd"));
         entity.setOrganizerId(doc.getString("organizerId"));
+        entity.setOrganizerName(doc.getString("organizerName"));
         
         Boolean geoRequired = doc.getBoolean("geolocationRequired");
         if (geoRequired != null) entity.setGeolocationRequired(geoRequired);
@@ -316,6 +319,10 @@ public class EventService implements IEventService {
         // Waitlist
         List<String> waitlist = (List<String>) doc.get("waitlist");
         if (waitlist != null) entity.setWaitlist(waitlist);
+        
+        // Attendees
+        List<String> attendees = (List<String>) doc.get("attendees");
+        if (attendees != null) entity.setAttendees(attendees);
         
         // Invitations
         List<Map<String, Object>> invitationMaps = (List<Map<String, Object>>) doc.get("invitations");
