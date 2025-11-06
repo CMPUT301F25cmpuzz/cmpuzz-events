@@ -196,6 +196,16 @@ public class EventDetailsFragment extends Fragment {
             int capacity = event.getCapacity();
             eventAvailability.setText("Capacity: " + capacity);
             
+            // Check if user is already in waitlist and update Join button
+            User currentUser = AuthManager.getInstance().getCurrentUser();
+            if (currentUser != null && event.getWaitlist() != null) {
+                boolean isInWaitlist = event.getWaitlist().contains(currentUser.getUid());
+                if (isInWaitlist) {
+                    joinButton.setText("Joined");
+                    joinButton.setEnabled(false);
+                }
+            }
+            
             // Setup buttons (placeholder functionality for now)
             editButton.setOnClickListener(v -> {
                 Toast.makeText(getContext(), "Edit functionality coming soon", Toast.LENGTH_SHORT).show();
