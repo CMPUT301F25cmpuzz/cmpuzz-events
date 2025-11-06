@@ -10,7 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.databinding.FragmentHomeBinding;
+import com.example.cmpuzz_events.models.User;
 
 public class HomeFragment extends Fragment {
 
@@ -25,7 +27,15 @@ public class HomeFragment extends Fragment {
         View root = binding.getRoot();
 
         final TextView textView = binding.textHome;
-        homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        
+        // Look how simple AuthManager makes.. It's DEPENDENCY INJECTION AND I LOVEEE ITTTT - Andy
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        if (currentUser != null && currentUser.getUsername() != null) {
+            textView.setText("Welcome " + currentUser.getUsername() + "!");
+        } else {
+            homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        }
+        
         return root;
     }
 
