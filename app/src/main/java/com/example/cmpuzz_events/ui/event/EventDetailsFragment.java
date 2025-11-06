@@ -14,6 +14,8 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.cmpuzz_events.R;
+import com.example.cmpuzz_events.auth.AuthManager;
+import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
@@ -37,7 +39,11 @@ public class EventDetailsFragment extends Fragment {
     private MaterialButton editButton;
     private MaterialButton shareButton;
     private MaterialButton viewMapButton;
+    private MaterialButton joinButton;
     private TextView additionalActionsButton;
+    private View dividerTop;
+    private View dividerBottom;
+    private TextView usersEnrolledTitle;
 
     public static EventDetailsFragment newInstance(String eventId) {
         EventDetailsFragment fragment = new EventDetailsFragment();
@@ -70,8 +76,67 @@ public class EventDetailsFragment extends Fragment {
         editButton = root.findViewById(R.id.edit_button);
         shareButton = root.findViewById(R.id.share_button);
         viewMapButton = root.findViewById(R.id.view_map_button);
+        joinButton = root.findViewById(R.id.join_button);
         additionalActionsButton = root.findViewById(R.id.additional_actions_button);
-        
+        dividerTop = root.findViewById(R.id.divider_top);
+        dividerBottom = root.findViewById(R.id.divider_bottom);
+        usersEnrolledTitle = root.findViewById(R.id.users_enrolled_title);
+
+        // Setup UI based on user role
+        setupRoleBasedUI(root);
+
+        loadEventDetails();
+
+        return root;
+    }
+
+    private void setupRoleBasedUI(View root) {
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        boolean isOrganizer = currentUser != null && currentUser.canManageEvents();
+
+        if (isOrganizer) {
+            // Organizer view - show all management controls
+            editButton.setVisibility(View.VISIBLE);
+            shareButton.setVisibility(View.VISIBLE);
+            viewMapButton.setVisibility(View.VISIBLE);
+            additionalActionsButton.setVisibility(View.VISIBLE);
+            dividerTop.setVisibility(View.VISIBLE);
+            dividerBottom.setVisibility(View.VISIBLE);
+            usersEnrolledTitle.setVisibility(View.VISIBLE);
+            joinButton.setVisibility(View.GONE);
+
+            // Navigate to Action Menu
+            additionalActionsButton.setOnClickListener(v -> {
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", eventId);
+                Navigation.findNavController(root).navigate(
+                    R.id.action_to_event_action_menu,
+                    bundle
+                );
+            });
+
+        } else {
+            // User view - show only Join button and essential info
+            editButton.setVisibility(View.GONE);
+            shareButton.setVisibility(View.GONE);
+            viewMapButton.setVisibility(View.GONE);
+            additionalActionsButton.setVisibility(View.GONE);
+            dividerTop.setVisibility(View.GONE);
+            dividerBottom.setVisibility(View.GONE);
+            usersEnrolledTitle.setVisibility(View.GONE);
+            joinButton.setVisibility(View.VISIBLE);
+
+            // Join event functionality
+            joinButton.setOnClickListener(v -> joinEvent());
+        }
+    }
+
+    private void joinEvent() {
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(getContext(), "Please log in to join events", Toast.LENGTH_SHORT).show();
+            return;
+        }
         // Navigate to Action Menu
         additionalActionsButton.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
@@ -89,9 +154,24 @@ public class EventDetailsFragment extends Fragment {
                 Navigation.findNavController(root).navigate(R.id.action_to_event_home);
             }
         });
+
+        // Use device ID or user ID to join waitlist
+        String deviceId = currentUser.getUid();
         
-        loadEventDetails();
-        
+        eventService.joinEvent(eventId, deviceId, new IEventService.VoidCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(getContext(), "Successfully joined event!", Toast.LENGTH_SHORT).show();
+                joinButton.setEnabled(false);
+                joinButton.setText("Joined");
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getContext(), "Failed to join: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+
         return root;
     }
 

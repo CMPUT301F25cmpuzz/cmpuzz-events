@@ -16,13 +16,15 @@ public class MyEventsAdapter extends RecyclerView.Adapter<EventViewHolder> {
 
     private List<Event> events;
     private OnEventClickListener listener;
+    private boolean isOrganizerView;
 
     public interface OnEventClickListener {
         void onViewEventClick(Event event);
     }
 
-    public MyEventsAdapter(List<Event> events) {
+    public MyEventsAdapter(List<Event> events, boolean isOrganizerView) {
         this.events = events;
+        this.isOrganizerView = isOrganizerView;
     }
 
     public void setOnEventClickListener(OnEventClickListener listener) {
@@ -44,7 +46,7 @@ public class MyEventsAdapter extends RecyclerView.Adapter<EventViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
-        holder.bind(events.get(position), listener);
+        holder.bind(events.get(position), listener, isOrganizerView);
     }
 
     @Override
