@@ -86,7 +86,7 @@ public class Organizer {
         if (createdEvents == null) createdEvents = new ArrayList<>();
         createdEvents.add(event);
 
-        // TODO: integrate with Firestore (handled by Andy)
+        // TODO: integrate with Firestore
         return event;
     }
 
