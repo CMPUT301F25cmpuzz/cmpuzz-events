@@ -57,7 +57,9 @@ dependencies {
     // QR Code generation
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
-    
+    implementation(libs.navigation.testing)
+    implementation(libs.fragment.testing)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
