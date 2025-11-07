@@ -315,17 +315,45 @@ public class EventDetailsFragment extends Fragment {
             int capacity = event.getCapacity();
             eventAvailability.setText("Capacity: " + capacity);
             
-            // Check if user is already in waitlist and update Join button
+            // Check user's status and update Join button accordingly
             User currentUser = AuthManager.getInstance().getCurrentUser();
-            if (currentUser != null && event.getWaitlist() != null) {
-                boolean isInWaitlist = event.getWaitlist().contains(currentUser.getUid());
-                if (isInWaitlist) {
+            if (currentUser != null) {
+                String userId = currentUser.getUid();
+                boolean isInWaitlist = event.getWaitlist() != null && event.getWaitlist().contains(userId);
+                
+                // Check if user has an invitation (invited or attending)
+                boolean hasInvitation = false;
+                boolean isAttending = false;
+                if (event.getInvitations() != null) {
+                    for (Invitation inv : event.getInvitations()) {
+                        if (inv.getUserId() != null && inv.getUserId().equals(userId)) {
+                            hasInvitation = true;
+                            if (inv.isAccepted()) {
+                                isAttending = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+                
+                // Configure button based on status
+                if (isAttending) {
+                    joinButton.setText("Attending");
+                    joinButton.setEnabled(false);
+                    joinButton.setAlpha(0.6f);
+                } else if (hasInvitation) {
+                    joinButton.setText("Already Invited");
+                    joinButton.setEnabled(false);
+                    joinButton.setAlpha(0.6f);
+                } else if (isInWaitlist) {
                     joinButton.setText("Leave Waitlist");
                     joinButton.setEnabled(true);
+                    joinButton.setAlpha(1.0f);
                     joinButton.setOnClickListener(v -> leaveEvent());
                 } else {
-                    joinButton.setText("Join Event");
+                    joinButton.setText("Join Waitlist");
                     joinButton.setEnabled(true);
+                    joinButton.setAlpha(1.0f);
                     joinButton.setOnClickListener(v -> joinEvent());
                 }
             }
