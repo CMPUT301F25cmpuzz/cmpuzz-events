@@ -325,9 +325,20 @@ public class EventService implements IEventService {
         
         Long capacity = doc.getLong("capacity");
         if (capacity != null) entity.setCapacity(capacity.intValue());
-        
-        entity.setRegistrationStart(doc.getDate("registrationStart"));
-        entity.setRegistrationEnd(doc.getDate("registrationEnd"));
+
+        Object regStartObj = doc.get("registrationStart");
+        if (regStartObj instanceof com.google.firebase.Timestamp) {
+            entity.setRegistrationStart(((com.google.firebase.Timestamp) regStartObj).toDate());
+        } else if (regStartObj instanceof Date) {
+            entity.setRegistrationStart((Date) regStartObj);
+        }
+
+        Object regEndObj = doc.get("registrationEnd");
+        if (regEndObj instanceof com.google.firebase.Timestamp) {
+            entity.setRegistrationEnd(((com.google.firebase.Timestamp) regEndObj).toDate());
+        } else if (regEndObj instanceof Date) {
+            entity.setRegistrationEnd((Date) regEndObj);
+        }
         entity.setOrganizerId(doc.getString("organizerId"));
         entity.setOrganizerName(doc.getString("organizerName"));
         
@@ -362,12 +373,20 @@ public class EventService implements IEventService {
                 if (statusStr != null) {
                     inv.setStatus(Invitation.InvitationStatus.fromString(statusStr));
                 }
-                
-                Date invitedAt = (Date) invMap.get("invitedAt");
-                if (invitedAt != null) inv.setInvitedAt(invitedAt);
-                
-                Date respondedAt = (Date) invMap.get("respondedAt");
-                if (respondedAt != null) inv.setRespondedAt(respondedAt);
+
+                Object invitedAtObj = invMap.get("invitedAt");
+                if (invitedAtObj instanceof com.google.firebase.Timestamp) {
+                    inv.setInvitedAt(((com.google.firebase.Timestamp) invitedAtObj).toDate());
+                } else if (invitedAtObj instanceof Date) {
+                    inv.setInvitedAt((Date) invitedAtObj);
+                }
+
+                Object respondedAtObj = invMap.get("respondedAt");
+                if (respondedAtObj instanceof com.google.firebase.Timestamp) {
+                    inv.setRespondedAt(((com.google.firebase.Timestamp) respondedAtObj).toDate());
+                } else if (respondedAtObj instanceof Date) {
+                    inv.setRespondedAt((Date) respondedAtObj);
+                }
                 
                 invitations.add(inv);
             }
@@ -377,10 +396,22 @@ public class EventService implements IEventService {
         // QR Code URL
         String qrCodeUrl = doc.getString("qrCodeUrl");
         if (qrCodeUrl != null) entity.setQrCodeUrl(qrCodeUrl);
-        
-        entity.setCreatedAt(doc.getDate("createdAt"));
-        entity.setUpdatedAt(doc.getDate("updatedAt"));
-        
+
+        Object createdAtObj = doc.get("createdAt");
+        if (createdAtObj instanceof com.google.firebase.Timestamp) {
+            entity.setCreatedAt(((com.google.firebase.Timestamp) createdAtObj).toDate());
+        } else if (createdAtObj instanceof Date) {
+            entity.setCreatedAt((Date) createdAtObj);
+        }
+
+        Object updatedAtObj = doc.get("updatedAt");
+        if (updatedAtObj instanceof com.google.firebase.Timestamp) {
+            entity.setUpdatedAt(((com.google.firebase.Timestamp) updatedAtObj).toDate());
+        } else if (updatedAtObj instanceof Date) {
+            entity.setUpdatedAt((Date) updatedAtObj);
+        }
+
+
         return entity;
     }
 }
