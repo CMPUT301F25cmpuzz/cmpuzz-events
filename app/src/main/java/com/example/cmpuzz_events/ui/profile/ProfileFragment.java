@@ -179,7 +179,12 @@ public class ProfileFragment extends Fragment {
     }
 
     private String determineUserStatus(EventEntity entity, String userId) {
-        // Check if user has an invitation first
+        // Check if user has declined
+        if (entity.getDeclined() != null && entity.getDeclined().contains(userId)) {
+            return "declined";
+        }
+        
+        // Check if user has an invitation
         if (entity.getInvitations() != null) {
             for (Invitation inv : entity.getInvitations()) {
                 if (inv.getUserId() != null && inv.getUserId().equals(userId)) {
@@ -187,14 +192,14 @@ public class ProfileFragment extends Fragment {
                         return "attending";
                     } else if (inv.isPending()) {
                         return "invited";
+                    } else if (inv.isDeclined()) {
+                        return "declined";
                     }
-                    // If declined, still show as invited (they can see they declined)
-                    return "invited";
                 }
             }
         }
         
-        // If not invited, must be in waitlist
+        // If not invited or declined, must be in waitlist
         return "waitlist";
     }
 

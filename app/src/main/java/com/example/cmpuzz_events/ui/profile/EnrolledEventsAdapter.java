@@ -24,7 +24,7 @@ public class EnrolledEventsAdapter extends RecyclerView.Adapter<EnrolledEventsAd
 
     public static class EventWithStatus {
         public Event event;
-        public String status; // "waitlist", "invited", "attending"
+        public String status; // "waitlist", "invited", "attending", "declined"
         
         public EventWithStatus(Event event, String status) {
             this.event = event;
@@ -134,6 +134,13 @@ public class EnrolledEventsAdapter extends RecyclerView.Adapter<EnrolledEventsAd
                 case "attending":
                     tvStatusBadge.setText("Attending");
                     tvStatusBadge.setBackgroundColor(Color.parseColor("#4CAF50")); // Green
+                    btnActionPrimary.setVisibility(View.GONE);
+                    btnActionSecondary.setVisibility(View.GONE);
+                    break;
+                    
+                case "declined":
+                    tvStatusBadge.setText("Declined");
+                    tvStatusBadge.setBackgroundColor(Color.parseColor("#9E9E9E")); // Gray
                     btnActionPrimary.setVisibility(View.GONE);
                     btnActionSecondary.setVisibility(View.GONE);
                     break;

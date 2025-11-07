@@ -321,6 +321,9 @@ public class EventDetailsFragment extends Fragment {
                 String userId = currentUser.getUid();
                 boolean isInWaitlist = event.getWaitlist() != null && event.getWaitlist().contains(userId);
                 
+                // Check if user has declined
+                boolean hasDeclined = event.getDeclined() != null && event.getDeclined().contains(userId);
+                
                 // Check if user has an invitation (invited or attending)
                 boolean hasInvitation = false;
                 boolean isAttending = false;
@@ -337,7 +340,11 @@ public class EventDetailsFragment extends Fragment {
                 }
                 
                 // Configure button based on status
-                if (isAttending) {
+                if (hasDeclined) {
+                    joinButton.setText("Declined");
+                    joinButton.setEnabled(false);
+                    joinButton.setAlpha(0.6f);
+                } else if (isAttending) {
                     joinButton.setText("Attending");
                     joinButton.setEnabled(false);
                     joinButton.setAlpha(0.6f);

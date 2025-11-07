@@ -212,6 +212,10 @@ public class EventService implements IEventService {
                     boolean inWaitlist = entity.getWaitlist() != null && 
                                         entity.getWaitlist().contains(userId);
                     
+                    // Check if user has declined
+                    boolean hasDeclined = entity.getDeclined() != null &&
+                                         entity.getDeclined().contains(userId);
+                    
                     // Check if user has an invitation
                     boolean hasInvitation = false;
                     if (entity.getInvitations() != null) {
@@ -224,7 +228,7 @@ public class EventService implements IEventService {
                     }
                     
                     // Include event if user is involved in any way
-                    if (inWaitlist || hasInvitation) {
+                    if (inWaitlist || hasInvitation || hasDeclined) {
                         Event uiEvent = convertToUIEvent(entity);
                         uiEvents.add(uiEvent);
                     }
@@ -252,6 +256,10 @@ public class EventService implements IEventService {
                     boolean inWaitlist = entity.getWaitlist() != null && 
                                         entity.getWaitlist().contains(userId);
                     
+                    // Check if user has declined
+                    boolean hasDeclined = entity.getDeclined() != null &&
+                                         entity.getDeclined().contains(userId);
+                    
                     // Check if user has an invitation
                     boolean hasInvitation = false;
                     if (entity.getInvitations() != null) {
@@ -264,7 +272,7 @@ public class EventService implements IEventService {
                     }
                     
                     // Include event if user is involved in any way
-                    if (inWaitlist || hasInvitation) {
+                    if (inWaitlist || hasInvitation || hasDeclined) {
                         entities.add(entity);
                     }
                 }
@@ -383,8 +391,16 @@ public class EventService implements IEventService {
                 if (invitation != null) {
                     if (accept) {
                         invitation.accept();
+                        // Add user to attendees list
+                        if (event.getAttendees() != null && !event.getAttendees().contains(userId)) {
+                            event.getAttendees().add(userId);
+                        }
                     } else {
                         invitation.decline();
+                        // Add user to declined list
+                        if (event.getDeclined() != null && !event.getDeclined().contains(userId)) {
+                            event.getDeclined().add(userId);
+                        }
                     }
                     updateEvent(event, callback);
                 } else {
