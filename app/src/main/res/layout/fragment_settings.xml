@@ -92,6 +92,66 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Account Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Account"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_500"
+                android:paddingTop="24dp"
+                android:paddingBottom="8dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardDeleteAccount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_delete"
+                        android:layout_marginEnd="16dp"
+                        app:tint="#D32F2F" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Delete Account"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#D32F2F" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Permanently delete your account and all data"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/darker_gray"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
     </ScrollView>
 

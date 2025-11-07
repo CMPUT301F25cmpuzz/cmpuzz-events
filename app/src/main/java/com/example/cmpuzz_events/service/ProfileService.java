@@ -94,4 +94,24 @@ public class ProfileService {
         }
         return fu.updateEmail(newEmail);
     }
+
+    /**
+     * Deletes the user account completely:
+     * 1. Deletes user document from Firestore
+     * 2. Deletes the Firebase Auth user (including email)
+     */
+    public Task<Void> deleteAccount(@NonNull String uid) {
+        FirebaseUser fu = auth.getCurrentUser();
+        if (fu == null) {
+            return Tasks.forException(new IllegalStateException("Not signed in"));
+        }
+        
+        // First delete from Firestore
+        return db.collection("users").document(uid)
+                .delete()
+                .onSuccessTask(v -> {
+                    // Then delete from Firebase Auth (this removes email and everything)
+                    return fu.delete();
+                });
+    }
 }

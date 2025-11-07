@@ -1,6 +1,8 @@
 package com.example.cmpuzz_events.ui.settings;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,13 +12,16 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.example.cmpuzz_events.auth.AuthManager;
+import com.example.cmpuzz_events.auth.LoginActivity;
 import com.example.cmpuzz_events.databinding.FragmentSettingsBinding;
 import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.service.INotificationService;
 import com.example.cmpuzz_events.service.NotificationService;
+import com.example.cmpuzz_events.service.ProfileService;
 import com.google.android.material.appbar.MaterialToolbar;
 
 public class SettingsFragment extends Fragment {
@@ -24,6 +29,7 @@ public class SettingsFragment extends Fragment {
     private FragmentSettingsBinding binding;
     private SharedPreferences preferences;
     private NotificationService notificationService;
+    private ProfileService profileService;
     private User currentUser;
 
     @Nullable
@@ -35,6 +41,7 @@ public class SettingsFragment extends Fragment {
         preferences = requireContext().getSharedPreferences("user_preferences", Context.MODE_PRIVATE);
         notificationService = NotificationService.getInstance();
         notificationService.setContext(requireContext().getApplicationContext());
+        profileService = new ProfileService();
         currentUser = AuthManager.getInstance().getCurrentUser();
 
         // Setup toolbar
@@ -46,6 +53,7 @@ public class SettingsFragment extends Fragment {
         });
 
         setupNotificationsToggle();
+        setupDeleteAccount();
 
         return root;
     }
@@ -98,6 +106,53 @@ public class SettingsFragment extends Fragment {
                     Toast.makeText(getContext(), "Error loading preference", Toast.LENGTH_SHORT).show();
                 }
             });
+    }
+
+    private void setupDeleteAccount() {
+        binding.cardDeleteAccount.setOnClickListener(v -> showDeleteAccountConfirmation());
+    }
+
+    private void showDeleteAccountConfirmation() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete Account")
+                .setMessage("Are you sure you want to delete your account? This action is PERMANENT and cannot be undone. All your data will be deleted.")
+                .setPositiveButton("DELETE", (dialog, which) -> deleteAccount())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void deleteAccount() {
+        if (currentUser == null) {
+            Toast.makeText(getContext(), "No user signed in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Show progress
+        Toast.makeText(getContext(), "Deleting account...", Toast.LENGTH_SHORT).show();
+
+        profileService.deleteAccount(currentUser.getUid())
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                    
+                    // Sign out (auth is already cleared by delete, but this cleans up state)
+                    AuthManager.getInstance().signOut();
+                    
+                    // Navigate back to login
+                    if (getActivity() != null) {
+                        Intent intent = new Intent(getActivity(), LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                        getActivity().finish();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    String errorMsg = e.getMessage();
+                    if (errorMsg != null && errorMsg.toLowerCase().contains("recent")) {
+                        Toast.makeText(getContext(), "Please sign in again before deleting your account", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getContext(), "Failed to delete account: " + errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     @Override
