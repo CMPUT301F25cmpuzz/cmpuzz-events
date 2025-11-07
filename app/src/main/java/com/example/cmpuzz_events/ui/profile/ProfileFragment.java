@@ -186,6 +186,11 @@ public class ProfileFragment extends Fragment {
     }
 
     private String determineUserStatus(EventEntity entity, String userId) {
+        // Check if user is an attendee (accepted invitation)
+        if (entity.getAttendees() != null && entity.getAttendees().contains(userId)) {
+            return "attending";
+        }
+        
         // Check if user has declined
         if (entity.getDeclined() != null && entity.getDeclined().contains(userId)) {
             return "declined";
@@ -195,18 +200,14 @@ public class ProfileFragment extends Fragment {
         if (entity.getInvitations() != null) {
             for (Invitation inv : entity.getInvitations()) {
                 if (inv.getUserId() != null && inv.getUserId().equals(userId)) {
-                    if (inv.isAccepted()) {
-                        return "attending";
-                    } else if (inv.isPending()) {
+                    if (inv.isPending()) {
                         return "invited";
-                    } else if (inv.isDeclined()) {
-                        return "declined";
                     }
                 }
             }
         }
         
-        // If not invited or declined, must be in waitlist
+        // If not attending, invited, or declined, must be in waitlist
         return "waitlist";
     }
 

@@ -167,6 +167,21 @@ public class EventEntity {
         return null;
     }
 
+    /**
+     * Remove an invitation by user ID
+     */
+    public boolean removeInvitation(String userId) {
+        Invitation toRemove = getInvitationByUserId(userId);
+        if (toRemove != null) {
+            boolean removed = invitations.remove(toRemove);
+            if (removed) {
+                this.updatedAt = new Date();
+            }
+            return removed;
+        }
+        return false;
+    }
+
     // Getters and Setters
 
     public String getEventId() {
