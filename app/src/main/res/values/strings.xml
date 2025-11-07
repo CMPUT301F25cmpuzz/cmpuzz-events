@@ -31,4 +31,17 @@
     <string name="additional_actions">Additional Actions</string>
     <string name="users_enrolled">Users Enrolled</string>
     <string name="view_map">View Map</string>
+
+    <!-- notifications fragment -->
+    <string name="decline">DECLINE</string>
+    <string name="join">JOIN</string>
+    <string name="congratulations">Congratulations!</string>
+    <string name="invited_notification">You were sampled in the draw. Please accept or decline your registration to the event.</string>
+    <string name="waitlisted_notification">Unfortunately, you were not selected in the random draw to join this event. However, there\'s still a chance of being sampled in another draw if a person from the first draw declines, so don\'t give up yet!</string>
+    <string name="better_luck_next_time">Better luck next time... Unless?</string>
+    <string name="user_declined_event">Another user declined their invitation!</string>
+    <string name="second_chance_notification">You have a chance of being drawn in another lottery round. Would you like to be considered for a second chance in the lottery?</string>
+    <string name="cancelled">EVENT CANCELLED</string>
+    <string name="cancelled_notification">This event has been cancelled due to unforseen circumstances. We sincrely apologize for any inconveniences this may cause. Thank you for understanding! - Event Coordinators</string>
+
 </resources>
