@@ -1,6 +1,8 @@
 package com.example.cmpuzz_events.ui.profile;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -48,6 +50,11 @@ import com.google.firebase.firestore.SetOptions;
 
 import java.util.Map;
 import java.util.HashMap;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+
 
 public class ProfileFragment extends Fragment {
 
@@ -284,9 +291,14 @@ public class ProfileFragment extends Fragment {
         etUser.setText(currentUser.getUsername());
         etEmail.setText(currentUser.getEmail());
 
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+        // Build dialog and make the window background transparent
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
                 .setView(dialogView)
+                .setCancelable(true)
                 .create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
         dialog.show();
 
         dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
@@ -319,13 +331,41 @@ public class ProfileFragment extends Fragment {
                         dialog.dismiss();
                     })
                     .addOnFailureListener(e -> {
+                        // Case 1: needs re-auth → show password dialog
                         if (ProfileService.isRecentLoginRequired(e)) {
                             dialogView.findViewById(R.id.btnSave).setEnabled(true);
                             dialog.dismiss();
                             showReauthDialogAndRetry(email, full, user);
+                            return;
+                        }
+
+                        // Case 2: best-effort — if Auth email already matches, treat as success
+                        com.google.firebase.auth.FirebaseUser fu =
+                                com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+                        boolean authEmailMatches = fu != null && fu.getEmail() != null
+                                && fu.getEmail().equalsIgnoreCase(email);
+
+                        if (authEmailMatches) {
+                            // Retry Firestore email field quietly so UI/DB stay in sync
+                            java.util.Map<String, Object> up = new java.util.HashMap<>();
+                            up.put("email", email);
+                            com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                                    .collection("users").document(currentUser.getUid())
+                                    .set(up, com.google.firebase.firestore.SetOptions.merge());
+
+                            // Update UI & local cache, then close dialog
+                            binding.tvUserName.setText(full);
+                            binding.tvUserEmail.setText(email);
+                            currentUser.setDisplayName(full);
+                            currentUser.setUsername(user);
+
+                            Snackbar.make(binding.getRoot(), "Profile updated", Snackbar.LENGTH_LONG).show();
+                            dialog.dismiss();
                         } else {
                             dialogView.findViewById(R.id.btnSave).setEnabled(true);
-                            Snackbar.make(binding.getRoot(), e.getMessage(), Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(binding.getRoot(),
+                                    (e.getMessage() != null ? e.getMessage() : "Update failed"),
+                                    Snackbar.LENGTH_LONG).show();
                         }
                     });
         });
