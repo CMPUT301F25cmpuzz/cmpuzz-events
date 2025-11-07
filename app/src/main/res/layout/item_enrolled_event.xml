@@ -15,14 +15,38 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvEnrolledEventTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Event Title"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvEnrolledEventTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Event Title"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/tvStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Waitlist"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:background="@color/purple_500"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:layout_marginStart="8dp" />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvEnrolledEventDescription"
@@ -60,7 +84,7 @@
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLeaveEnrolled"
+                android:id="@+id/btnActionPrimary"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -69,6 +93,18 @@
                 android:minWidth="0dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnActionSecondary"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Accept"
+                android:textColor="@android:color/holo_green_dark"
+                android:minWidth="0dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 

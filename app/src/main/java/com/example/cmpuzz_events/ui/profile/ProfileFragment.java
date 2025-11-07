@@ -16,10 +16,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.databinding.FragmentProfileBinding;
+import com.example.cmpuzz_events.models.event.EventEntity;
+import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
 import com.example.cmpuzz_events.ui.event.Event;
+import com.example.cmpuzz_events.ui.profile.EnrolledEventsAdapter.EventWithStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,8 +66,18 @@ public class ProfileFragment extends Fragment {
         
         adapter.setOnEventActionListener(new EnrolledEventsAdapter.OnEventActionListener() {
             @Override
-            public void onLeaveEvent(Event event) {
-                leaveEvent(event, currentUser);
+            public void onLeaveWaitlist(Event event) {
+                leaveWaitlist(event, currentUser);
+            }
+
+            @Override
+            public void onAcceptInvitation(Event event) {
+                acceptInvitation(event, currentUser);
+            }
+
+            @Override
+            public void onDeclineInvitation(Event event) {
+                declineInvitation(event, currentUser);
             }
 
             @Override
@@ -84,13 +97,23 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadEnrolledEvents(String userId) {
-        eventService.getEventsUserEnrolledIn(userId, new IEventService.UIEventListCallback() {
+        // Use getEventsForUserWithEntities to get full event data with invitations
+        eventService.getEventsForUserWithEntities(userId, new IEventService.EventListCallback() {
             @Override
-            public void onSuccess(List<Event> events) {
-                Log.d(TAG, "Loaded " + events.size() + " enrolled events");
-                adapter.updateEvents(events);
+            public void onSuccess(List<EventEntity> entities) {
+                Log.d(TAG, "Loaded " + entities.size() + " events for user");
                 
-                if (events.isEmpty()) {
+                // Convert to EventWithStatus
+                List<EventWithStatus> eventsWithStatus = new ArrayList<>();
+                for (EventEntity entity : entities) {
+                    Event uiEvent = convertToUIEvent(entity);
+                    String status = determineUserStatus(entity, userId);
+                    eventsWithStatus.add(new EventWithStatus(uiEvent, status));
+                }
+                
+                adapter.updateEvents(eventsWithStatus);
+                
+                if (eventsWithStatus.isEmpty()) {
                     binding.recyclerViewEnrolledEvents.setVisibility(View.GONE);
                     binding.tvEmptyEnrolled.setVisibility(View.VISIBLE);
                 } else {
@@ -101,24 +124,89 @@ public class ProfileFragment extends Fragment {
 
             @Override
             public void onError(String error) {
-                Log.e(TAG, "Error loading enrolled events: " + error);
-                Toast.makeText(getContext(), "Error loading enrolled events", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error loading events: " + error);
+                Toast.makeText(getContext(), "Error loading events", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void leaveEvent(Event event, User currentUser) {
+    private Event convertToUIEvent(EventEntity entity) {
+        Event uiEvent = new Event(
+            entity.getEventId(),
+            entity.getTitle(),
+            entity.getDescription(),
+            entity.getCapacity(),
+            entity.getRegistrationStart(),
+            entity.getRegistrationEnd(),
+            entity.getOrganizerId(),
+            entity.getOrganizerName(),
+            entity.isGeolocationRequired()
+        );
+        uiEvent.setMaxEntrants(entity.getMaxEntrants());
+        return uiEvent;
+    }
+
+    private String determineUserStatus(EventEntity entity, String userId) {
+        // Check if user has an invitation first
+        if (entity.getInvitations() != null) {
+            for (Invitation inv : entity.getInvitations()) {
+                if (inv.getUserId() != null && inv.getUserId().equals(userId)) {
+                    if (inv.isAccepted()) {
+                        return "attending";
+                    } else if (inv.isPending()) {
+                        return "invited";
+                    }
+                    // If declined, still show as invited (they can see they declined)
+                    return "invited";
+                }
+            }
+        }
+        
+        // If not invited, must be in waitlist
+        return "waitlist";
+    }
+
+    private void leaveWaitlist(Event event, User currentUser) {
         eventService.removeFromWaitlist(event.getEventId(), currentUser.getUid(), new IEventService.VoidCallback() {
             @Override
             public void onSuccess() {
-                Toast.makeText(getContext(), "Left " + event.getTitle(), Toast.LENGTH_SHORT).show();
-                // Reload enrolled events
+                Toast.makeText(getContext(), "Left waitlist for " + event.getTitle(), Toast.LENGTH_SHORT).show();
                 loadEnrolledEvents(currentUser.getUid());
             }
 
             @Override
             public void onError(String error) {
                 Toast.makeText(getContext(), "Failed to leave: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void acceptInvitation(Event event, User currentUser) {
+        eventService.respondToInvitation(event.getEventId(), currentUser.getUid(), true, new IEventService.VoidCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(getContext(), "Accepted invitation to " + event.getTitle(), Toast.LENGTH_SHORT).show();
+                loadEnrolledEvents(currentUser.getUid());
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getContext(), "Failed to accept: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void declineInvitation(Event event, User currentUser) {
+        eventService.respondToInvitation(event.getEventId(), currentUser.getUid(), false, new IEventService.VoidCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(getContext(), "Declined invitation to " + event.getTitle(), Toast.LENGTH_SHORT).show();
+                loadEnrolledEvents(currentUser.getUid());
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getContext(), "Failed to decline: " + error, Toast.LENGTH_SHORT).show();
             }
         });
     }

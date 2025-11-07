@@ -89,6 +89,24 @@ public interface IEventService {
     void getEventsUserEnrolledIn(String userId, UIEventListCallback callback);
 
     /**
+     * Get all events where user is involved in any capacity:
+     * - In waitlist
+     * - Has an invitation (pending, accepted, or declined)
+     *
+     * @param userId The user's ID
+     * @param callback Callback with list of UI Events or error
+     */
+    void getEventsForUser(String userId, UIEventListCallback callback);
+
+    /**
+     * Get all EventEntity objects where user is involved (for status checking)
+     *
+     * @param userId The user's ID
+     * @param callback Callback with list of EventEntity or error
+     */
+    void getEventsForUserWithEntities(String userId, EventListCallback callback);
+
+    /**
      * Update an existing event
      *
      * @param event The EventEntity to update
