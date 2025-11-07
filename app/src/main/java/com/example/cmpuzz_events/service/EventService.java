@@ -17,6 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
+import java.util.Date;
+
 /**
  * Implementation of IEventService.
  * Handles Event CRUD operations with Firebase Firestore.

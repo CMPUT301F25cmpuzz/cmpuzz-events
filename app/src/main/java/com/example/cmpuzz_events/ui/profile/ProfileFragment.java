@@ -24,12 +24,37 @@ import com.example.cmpuzz_events.ui.event.Event;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
+import androidx.appcompat.app.AlertDialog;
+import android.widget.EditText;
+
+import com.google.android.material.snackbar.Snackbar;
+
+import com.example.cmpuzz_events.auth.AuthManager;
+import com.example.cmpuzz_events.models.user.User;
+import com.example.cmpuzz_events.service.ProfileService;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
+
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.Map;
+import java.util.HashMap;
+
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
     private EventService eventService;
     private EnrolledEventsAdapter adapter;
     private static final String TAG = "ProfileFragment";
+
+    private ProfileService profileService;
+    private User currentUser;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -41,7 +66,7 @@ public class ProfileFragment extends Fragment {
         eventService = EventService.getInstance();
 
         // Display user info
-        User currentUser = AuthManager.getInstance().getCurrentUser();
+        currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser != null) {
             binding.tvUserName.setText(currentUser.getDisplayName());
             binding.tvUserEmail.setText(currentUser.getEmail());
@@ -50,6 +75,13 @@ public class ProfileFragment extends Fragment {
             // Setup enrolled events RecyclerView
             setupEnrolledEvents(root, currentUser);
         }
+
+
+        profileService = new ProfileService();
+        if (currentUser == null) {
+            currentUser = AuthManager.getInstance().getCurrentUser();
+        }
+        binding.btnEditProfile.setOnClickListener(v -> showEditDialog());
 
         // Setup logout button
         binding.btnLogout.setOnClickListener(v -> logout());
@@ -138,6 +170,127 @@ public class ProfileFragment extends Fragment {
         if (getActivity() != null) {
             getActivity().finish();
         }
+    }
+
+
+    private void showEditDialog() {
+        if (currentUser == null) {
+            Toast.makeText(requireContext(), "Not signed in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_edit_profile, null, false);
+
+        EditText etFull   = dialogView.findViewById(R.id.etFullName);
+        EditText etUser   = dialogView.findViewById(R.id.etUsername);
+        EditText etEmail  = dialogView.findViewById(R.id.etEmail);
+
+        // Pre-fill from current user
+        etFull.setText(currentUser.getDisplayName());
+        etUser.setText(currentUser.getUsername());
+        etEmail.setText(currentUser.getEmail());
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+        dialog.show();
+
+        dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
+
+        dialogView.findViewById(R.id.btnSave).setOnClickListener(v -> {
+            String full  = etFull.getText()  != null ? etFull.getText().toString().trim()  : "";
+            String user  = etUser.getText()  != null ? etUser.getText().toString().trim()  : "";
+            String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+
+            if (full.isEmpty()) { etFull.setError("Full name required"); return; }
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                etEmail.setError("Invalid email"); return;
+            }
+
+            dialogView.findViewById(R.id.btnSave).setEnabled(false);
+
+            // Firestore merge + Auth displayName + Auth email
+            profileService.updateProfile(currentUser.getUid(), full, user, email)
+                    .addOnSuccessListener(vv -> {
+                        // Update header UI
+                        binding.tvUserName.setText(full);
+                        binding.tvUserEmail.setText(email);
+
+                        // Keep local cache consistent if your model exposes setters
+                        currentUser.setDisplayName(full);
+                        currentUser.setUsername(user);
+                        // if you have setEmail(): currentUser.setEmail(email);
+
+                        Snackbar.make(binding.getRoot(), "Profile updated", Snackbar.LENGTH_LONG).show();
+                        dialog.dismiss();
+                    })
+                    .addOnFailureListener(e -> {
+                        if (ProfileService.isRecentLoginRequired(e)) {
+                            dialogView.findViewById(R.id.btnSave).setEnabled(true);
+                            dialog.dismiss();
+                            showReauthDialogAndRetry(email, full, user);
+                        } else {
+                            dialogView.findViewById(R.id.btnSave).setEnabled(true);
+                            Snackbar.make(binding.getRoot(), e.getMessage(), Snackbar.LENGTH_LONG).show();
+                        }
+                    });
+        });
+    }
+
+    private void showReauthDialogAndRetry(String newEmail, String fullName, String username) {
+        View v = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_reauth_password, null, false);
+        EditText etPassword = v.findViewById(R.id.etPassword);
+
+        AlertDialog d = new AlertDialog.Builder(requireContext())
+                .setView(v)
+                .create();
+        d.show();
+
+        v.findViewById(R.id.btnCancel).setOnClickListener(x -> d.dismiss());
+        v.findViewById(R.id.btnConfirm).setOnClickListener(x -> {
+            String pass = etPassword.getText() != null ? etPassword.getText().toString() : "";
+            if (pass.isEmpty()) { etPassword.setError("Required"); return; }
+
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            FirebaseUser user = auth.getCurrentUser();
+            if (user == null || user.getEmail() == null) {
+                Snackbar.make(binding.getRoot(), "Not signed in", Snackbar.LENGTH_LONG).show();
+                d.dismiss();
+                return;
+            }
+
+            AuthCredential cred = EmailAuthProvider.getCredential(user.getEmail(), pass);
+            user.reauthenticate(cred).addOnSuccessListener(r -> {
+                // Retry only the Auth email change
+                profileService.updateAuthEmailOnly(newEmail)
+                        .addOnSuccessListener(vv -> {
+                            // Keep Firestore profile's email in sync
+                            Map<String, Object> up = new HashMap<>();
+                            up.put("email", newEmail);
+                            FirebaseFirestore.getInstance()
+                                    .collection("users").document(user.getUid())
+                                    .set(up, SetOptions.merge())
+                                    .addOnSuccessListener(v3 -> {
+                                        binding.tvUserEmail.setText(newEmail);
+
+                                        // Ensure name/username persisted too (safe even if email already changed)
+                                        profileService.updateProfile(user.getUid(), fullName, username, newEmail);
+
+                                        Snackbar.make(binding.getRoot(), "Email updated", Snackbar.LENGTH_LONG).show();
+                                        d.dismiss();
+                                    })
+                                    .addOnFailureListener(err -> {
+                                        Snackbar.make(binding.getRoot(), err.getMessage(), Snackbar.LENGTH_LONG).show();
+                                    });
+                        })
+                        .addOnFailureListener(err -> {
+                            Snackbar.make(binding.getRoot(), err.getMessage(), Snackbar.LENGTH_LONG).show();
+                        });
+            }).addOnFailureListener(err -> {
+                Snackbar.make(binding.getRoot(), err.getMessage(), Snackbar.LENGTH_LONG).show();
+            });
+        });
     }
 
     @Override
