@@ -55,6 +55,7 @@ public class EventActionMenuFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_event_action_menu, container, false);
 
         notificationService = NotificationService.getInstance();
+        notificationService.setContext(requireContext().getApplicationContext());
         eventService = EventService.getInstance();
 
         // Setup toolbar

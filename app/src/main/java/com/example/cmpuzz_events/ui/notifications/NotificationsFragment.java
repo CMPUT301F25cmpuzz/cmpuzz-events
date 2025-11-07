@@ -38,6 +38,7 @@ public class NotificationsFragment extends Fragment {
         View root = binding.getRoot();
 
         notificationService = NotificationService.getInstance();
+        notificationService.setContext(requireContext().getApplicationContext());
         eventService = EventService.getInstance();
         currentUser = AuthManager.getInstance().getCurrentUser();
 

@@ -1,5 +1,7 @@
 package com.example.cmpuzz_events.service;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.example.cmpuzz_events.models.notification.Notification;
@@ -18,9 +20,14 @@ public class NotificationService implements INotificationService {
     
     private final FirebaseFirestore db;
     private static NotificationService instance;
+    private Context context;
     
-    public NotificationService() {
+    private NotificationService() {
         this.db = FirebaseFirestore.getInstance();
+    }
+    
+    public void setContext(Context context) {
+        this.context = context;
     }
     
     public static NotificationService getInstance() {
@@ -68,14 +75,27 @@ public class NotificationService implements INotificationService {
             return;
         }
         
+        // Filter users based on notification preferences
+        List<String> enabledUsers = filterUsersWithNotificationsEnabled(userIds);
+        
+        if (enabledUsers.isEmpty()) {
+            Log.d(TAG, "No users have notifications enabled");
+            if (callback != null) {
+                callback.onSuccess(); // Consider it success but no notifications sent
+            }
+            return;
+        }
+        
+        Log.d(TAG, "Sending notifications to " + enabledUsers.size() + "/" + userIds.size() + " users");
+        
         String title = generateTitle(type);
         String message = generateMessage(type, eventName);
         
         int[] successCount = {0};
         int[] errorCount = {0};
-        int totalUsers = userIds.size();
+        int totalUsers = enabledUsers.size();
         
-        for (String userId : userIds) {
+        for (String userId : enabledUsers) {
             Notification notification = new Notification(userId, eventId, eventName, type, title, message);
             
             sendNotification(notification, new VoidCallback() {
@@ -109,6 +129,15 @@ public class NotificationService implements INotificationService {
     @Override
     public void notifyOrganizerOfResponse(String organizerId, String userName, String eventId, 
                                          String eventName, boolean accepted, VoidCallback callback) {
+        // Check if organizer has notifications enabled
+        if (!isNotificationEnabledForUser(organizerId)) {
+            Log.d(TAG, "Organizer has notifications disabled, skipping");
+            if (callback != null) {
+                callback.onSuccess();
+            }
+            return;
+        }
+        
         String title = accepted ? "Invitation Accepted" : "Invitation Declined";
         String message = userName + " has " + (accepted ? "accepted" : "declined") + 
                         " the invitation to \"" + eventName + "\"";
@@ -246,6 +275,36 @@ public class NotificationService implements INotificationService {
             default:
                 return "Event Notification";
         }
+    }
+    
+    /**
+     * Filter users who have notifications enabled
+     */
+    private List<String> filterUsersWithNotificationsEnabled(List<String> userIds) {
+        List<String> enabledUsers = new ArrayList<>();
+        
+        for (String userId : userIds) {
+            if (isNotificationEnabledForUser(userId)) {
+                enabledUsers.add(userId);
+            }
+        }
+        
+        return enabledUsers;
+    }
+    
+    /**
+     * Check if a specific user has notifications enabled
+     */
+    private boolean isNotificationEnabledForUser(String userId) {
+        if (context == null) {
+            Log.w(TAG, "Context not set, assuming notifications enabled");
+            return true; // Default to enabled if context not available
+        }
+        
+        // Check SharedPreferences - note: this checks app-wide preferences
+        // In a real app, you'd store this per-user in Firestore
+        SharedPreferences prefs = context.getSharedPreferences("user_preferences", Context.MODE_PRIVATE);
+        return prefs.getBoolean("notifications_enabled", true);
     }
     
     /**

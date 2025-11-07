@@ -1,6 +1,8 @@
 package com.example.cmpuzz_events.ui.profile;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -12,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -68,6 +71,7 @@ public class ProfileFragment extends Fragment {
 
     private ProfileService profileService;
     private User currentUser;
+    private SharedPreferences preferences;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -78,6 +82,8 @@ public class ProfileFragment extends Fragment {
 
         eventService = EventService.getInstance();
         notificationService = NotificationService.getInstance();
+        notificationService.setContext(requireContext().getApplicationContext());
+        preferences = requireContext().getSharedPreferences("user_preferences", Context.MODE_PRIVATE);
 
         // Display user info
         currentUser = AuthManager.getInstance().getCurrentUser();
@@ -89,6 +95,12 @@ public class ProfileFragment extends Fragment {
             // Setup enrolled events RecyclerView
             setupEnrolledEvents(root, currentUser);
         }
+        
+        // Setup settings button
+        binding.btnSettings.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.action_profile_to_settings);
+        });
 
 
         profileService = new ProfileService();
