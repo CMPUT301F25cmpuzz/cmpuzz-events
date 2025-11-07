@@ -363,8 +363,28 @@ public class EventDetailsFragment extends Fragment {
                     }
                 }
                 
+                // Check if registration has started
+                boolean registrationStarted = true;
+                if (event.getRegistrationStart() != null) {
+                    registrationStarted = new java.util.Date().getTime() >= event.getRegistrationStart().getTime();
+                }
+                
+                // Check if registration has ended
+                boolean registrationEnded = false;
+                if (event.getRegistrationEnd() != null) {
+                    registrationEnded = new java.util.Date().getTime() > event.getRegistrationEnd().getTime();
+                }
+                
                 // Configure button based on status
-                if (hasDeclined) {
+                if (!registrationStarted) {
+                    joinButton.setText("Registration Not Started");
+                    joinButton.setEnabled(false);
+                    joinButton.setAlpha(0.6f);
+                } else if (registrationEnded) {
+                    joinButton.setText("Registration Ended");
+                    joinButton.setEnabled(false);
+                    joinButton.setAlpha(0.6f);
+                } else if (hasDeclined) {
                     joinButton.setText("Declined");
                     joinButton.setEnabled(false);
                     joinButton.setAlpha(0.6f);
