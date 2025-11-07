@@ -357,11 +357,11 @@ public class EventService implements IEventService {
                 // Randomly sample from waitlist
                 List<String> shuffledWaitlist = new ArrayList<>(waitlist);
                 Collections.shuffle(shuffledWaitlist);
-                List<String> selectedDeviceIds = shuffledWaitlist.subList(0, finalNumToSample);
+                List<String> selectedUserIds = shuffledWaitlist.subList(0, finalNumToSample);
                 
                 // Create invitations for selected attendees
                 List<Invitation> invitations = new ArrayList<>();
-                for (String userId : selectedDeviceIds) {
+                for (String userId : selectedUserIds) {
                     Invitation invitation = new Invitation(userId, null); // username can be null
                     invitations.add(invitation);
                 }

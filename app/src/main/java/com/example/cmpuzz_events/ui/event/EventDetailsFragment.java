@@ -144,10 +144,10 @@ public class EventDetailsFragment extends Fragment {
             return;
         }
         
-        // Use device ID or user ID to join waitlist
-        String deviceId = currentUser.getUid();
+        // Use user ID to join waitlist
+        String userId = currentUser.getUid();
         
-        eventService.joinEvent(eventId, deviceId, new IEventService.VoidCallback() {
+        eventService.joinEvent(eventId, userId, new IEventService.VoidCallback() {
             @Override
             public void onSuccess() {
                 Toast.makeText(getContext(), "Successfully joined event!", Toast.LENGTH_SHORT).show();
@@ -169,9 +169,9 @@ public class EventDetailsFragment extends Fragment {
             return;
         }
         
-        String deviceId = currentUser.getUid();
+        String userId = currentUser.getUid();
         
-        eventService.removeFromWaitlist(eventId, deviceId, new IEventService.VoidCallback() {
+        eventService.removeFromWaitlist(eventId, userId, new IEventService.VoidCallback() {
             @Override
             public void onSuccess() {
                 Toast.makeText(getContext(), "Left the waitlist", Toast.LENGTH_SHORT).show();
