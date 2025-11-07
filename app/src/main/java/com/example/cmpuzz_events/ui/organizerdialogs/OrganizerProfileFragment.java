@@ -1,10 +1,12 @@
 package com.example.cmpuzz_events.ui.organizerdialogs;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,7 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class organizerProfileFragment extends Fragment {
+public class OrganizerProfileFragment extends Fragment {
 
     @Nullable
     @Override
@@ -37,34 +39,18 @@ public class organizerProfileFragment extends Fragment {
         // Load and display organizer data from Firebase
         loadOrganizerData(view);
 
-        // Listen for result from confirm delete dialog
-        getParentFragmentManager().setFragmentResultListener(
-                confirmDeleteDialogFragment.REQUEST_KEY,
-                getViewLifecycleOwner(),
-                (key, bundle) -> {
-                    boolean confirmed =
-                            bundle.getBoolean(confirmDeleteDialogFragment.RESULT_CONFIRMED, false);
-                    if (confirmed) {
-                        // TODO: Hook to ViewModel or Repo to delete profile
-                        // viewModel.deleteProfile();
-                    }
-                }
-        );
-
-        // DELETE button opens the dialog
-        view.findViewById(R.id.btnDelete).setOnClickListener(v ->
-                new confirmDeleteDialogFragment().show(
-                        getParentFragmentManager(),
-                        "confirm_delete"
-                )
-        );
-
         // EDIT button (optional for later)
         View edit = view.findViewById(R.id.btnEdit);
         if (edit != null) {
             edit.setOnClickListener(v -> {
                 // TODO: navigate to edit profile screen
             });
+        }
+
+        // Setup logout button
+        View logoutButton = view.findViewById(R.id.btnLogout);
+        if (logoutButton != null) {
+            logoutButton.setOnClickListener(v -> logout());
         }
     }
 
@@ -92,6 +78,23 @@ public class organizerProfileFragment extends Fragment {
         TextView tvBio = view.findViewById(R.id.tvBio);
         if (tvBio != null && currentUser.getEmail() != null) {
             tvBio.setText(currentUser.getEmail());
+        }
+    }
+
+    private void logout() {
+        // Clear user session
+        AuthManager.getInstance().signOut();
+        
+        // Show toast
+        Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
+        
+        // Redirect to LoginActivity
+        Intent intent = new Intent(getActivity(), com.example.cmpuzz_events.auth.LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        
+        if (getActivity() != null) {
+            getActivity().finish();
         }
     }
 }

@@ -9,7 +9,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-public class confirmDeleteDialogFragment extends DialogFragment {
+public class ConfirmDeleteDialogFragment extends DialogFragment {
 
     public static final String REQUEST_KEY = "confirm_delete_request";
     public static final String RESULT_CONFIRMED = "confirmed";

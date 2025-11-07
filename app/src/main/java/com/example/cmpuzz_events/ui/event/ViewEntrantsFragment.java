@@ -79,6 +79,7 @@ public class ViewEntrantsFragment extends Fragment {
         tabLayout.addTab(tabLayout.newTab().setText("Waitlist"));
         tabLayout.addTab(tabLayout.newTab().setText("Invited"));
         tabLayout.addTab(tabLayout.newTab().setText("Attendees"));
+        tabLayout.addTab(tabLayout.newTab().setText("Declined"));
         
         // Tab selection listener
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -129,6 +130,9 @@ public class ViewEntrantsFragment extends Fragment {
                 break;
             case 2: // Attendees
                 loadAttendees();
+                break;
+            case 3: // Declined
+                loadDeclined();
                 break;
         }
     }
@@ -187,6 +191,16 @@ public class ViewEntrantsFragment extends Fragment {
         }
 
         loadUsers(userIds);
+    }
+
+    private void loadDeclined() {
+        List<String> declined = currentEvent.getDeclined();
+        if (declined == null || declined.isEmpty()) {
+            showEmptyState("No declined users");
+            return;
+        }
+
+        loadUsers(declined);
     }
 
     private void loadUsers(List<String> userIds) {
