@@ -19,6 +19,7 @@ import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 
 public class EventDetailsFragment extends Fragment {
@@ -62,7 +63,6 @@ public class EventDetailsFragment extends Fragment {
         if (getArguments() != null) {
             eventId = getArguments().getString(ARG_EVENT_ID);
         }
-
         eventService = EventService.getInstance();
     }
 
@@ -85,19 +85,19 @@ public class EventDetailsFragment extends Fragment {
         dividerTop = root.findViewById(R.id.divider_top);
         dividerBottom = root.findViewById(R.id.divider_bottom);
         usersEnrolledTitle = root.findViewById(R.id.users_enrolled_title);
-        
+
         // Setup UI based on user role
         setupRoleBasedUI(root);
-        
+
         loadEventDetails();
-        
+
         return root;
     }
 
     private void setupRoleBasedUI(View root) {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         boolean isOrganizer = currentUser != null && currentUser.canManageEvents();
-        
+
         if (isOrganizer) {
             // Organizer view - show all management controls
             editButton.setVisibility(View.VISIBLE);
@@ -108,7 +108,7 @@ public class EventDetailsFragment extends Fragment {
             dividerBottom.setVisibility(View.VISIBLE);
             usersEnrolledTitle.setVisibility(View.VISIBLE);
             joinButton.setVisibility(View.GONE);
-            
+
             // Navigate to Action Menu, and pass the event object
             additionalActionsButton.setOnClickListener(v -> {
                 if (currentEvent != null) {
@@ -120,7 +120,7 @@ public class EventDetailsFragment extends Fragment {
                     );
                 }
             });
-            
+
         } else {
             // User view - show only Join button and essential info
             editButton.setVisibility(View.GONE);
@@ -131,7 +131,7 @@ public class EventDetailsFragment extends Fragment {
             dividerBottom.setVisibility(View.GONE);
             usersEnrolledTitle.setVisibility(View.GONE);
             joinButton.setVisibility(View.VISIBLE);
-            
+
             // Join event functionality
             joinButton.setOnClickListener(v -> joinEvent());
         }
@@ -143,7 +143,7 @@ public class EventDetailsFragment extends Fragment {
             Toast.makeText(getContext(), "Please log in to join events", Toast.LENGTH_SHORT).show();
             return;
         }
-        
+
         // Use device ID or user ID to join waitlist
         String deviceId = currentUser.getUid();
         
@@ -168,9 +168,9 @@ public class EventDetailsFragment extends Fragment {
             Toast.makeText(getContext(), "Please log in", Toast.LENGTH_SHORT).show();
             return;
         }
-        
+
         String deviceId = currentUser.getUid();
-        
+
         eventService.removeFromWaitlist(eventId, deviceId, new IEventService.VoidCallback() {
             @Override
             public void onSuccess() {
@@ -208,7 +208,7 @@ public class EventDetailsFragment extends Fragment {
                     eventEntity.isGeolocationRequired()
                 );
                 currentEvent.setMaxEntrants(eventEntity.getMaxEntrants());
-                
+
                 displayEventDetails(eventEntity);
             }
 

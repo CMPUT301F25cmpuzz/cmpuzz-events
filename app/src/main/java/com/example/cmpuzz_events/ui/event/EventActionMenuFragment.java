@@ -1,6 +1,9 @@
 package com.example.cmpuzz_events.ui.event;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,8 +12,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.cmpuzz_events.R;
+import com.example.cmpuzz_events.models.event.EventEntity;
+import com.example.cmpuzz_events.service.EventService;
+import com.example.cmpuzz_events.service.IEventService;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.card.MaterialCardView;
 
@@ -18,6 +25,7 @@ public class EventActionMenuFragment extends Fragment {
 
     private static final String ARG_EVENT = "event";
     private Event event;
+    private IEventService eventService;
 
     public static EventActionMenuFragment newInstance(Event event) {
         EventActionMenuFragment fragment = new EventActionMenuFragment();
@@ -33,6 +41,7 @@ public class EventActionMenuFragment extends Fragment {
         if (getArguments() != null) {
             event = (Event) getArguments().getSerializable(ARG_EVENT);
         }
+        eventService = EventService.getInstance();
     }
 
     @Nullable
@@ -57,10 +66,12 @@ public class EventActionMenuFragment extends Fragment {
     private void setupClickListeners(View root) {
         // Now you have access to the event object!
         String eventTitle = event != null ? event.getTitle() : "Unknown";
-        
+
         // Entrants section
-        root.findViewById(R.id.cardCancelEntrants).setOnClickListener(v ->
-                showToast("Cancel Entrants for: " + eventTitle));
+        root.findViewById(R.id.cardCancelEntrants).setOnClickListener(v -> {
+                showToast("Cancel Entrants for: " + eventTitle);
+                showCancelConfirmation();
+        });
 
         root.findViewById(R.id.cardViewDeclinedEntrants).setOnClickListener(v ->
                 showToast("View Declined Entrants for: " + eventTitle));
@@ -86,6 +97,31 @@ public class EventActionMenuFragment extends Fragment {
 
         root.findViewById(R.id.cardNotifyAttendees).setOnClickListener(v ->
                 showToast("Send Notification to Attendees - Coming soon"));
+    }
+
+    private void showCancelConfirmation()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Are you sure?");
+        builder.setMessage("This will cancel ALL entrants. This can not be undone.");
+
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                eventService.getEvent(event.getEventId(), new IEventService.EventCallback() {
+                    @Override
+                    public void onSuccess(EventEntity event) {
+
+                    }
+
+                    @Override
+                    public void onError(String error) {
+
+                    }
+                });
+                dialog.dismiss();
+            }
+        });
     }
 
     private void showToast(String message) {
