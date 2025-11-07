@@ -23,6 +23,8 @@ import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.example.cmpuzz_events.service.INotificationService;
+import com.example.cmpuzz_events.service.NotificationService;
 import com.example.cmpuzz_events.ui.event.Event;
 import com.example.cmpuzz_events.ui.profile.EnrolledEventsAdapter.EventWithStatus;
 
@@ -60,6 +62,7 @@ public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
     private EventService eventService;
+    private NotificationService notificationService;
     private EnrolledEventsAdapter adapter;
     private static final String TAG = "ProfileFragment";
 
@@ -74,6 +77,7 @@ public class ProfileFragment extends Fragment {
         View root = binding.getRoot();
 
         eventService = EventService.getInstance();
+        notificationService = NotificationService.getInstance();
 
         // Display user info
         currentUser = AuthManager.getInstance().getCurrentUser();
@@ -231,6 +235,29 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onSuccess() {
                 Toast.makeText(getContext(), "Accepted invitation to " + event.getTitle(), Toast.LENGTH_SHORT).show();
+                
+                // Notify organizer
+                String userName = currentUser.getDisplayName() != null ? 
+                                currentUser.getDisplayName() : "A user";
+                notificationService.notifyOrganizerOfResponse(
+                    event.getOrganizerId(),
+                    userName,
+                    event.getEventId(),
+                    event.getTitle(),
+                    true,
+                    new INotificationService.VoidCallback() {
+                        @Override
+                        public void onSuccess() {
+                            Log.d(TAG, "Organizer notified of acceptance");
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Error notifying organizer: " + error);
+                        }
+                    }
+                );
+                
                 loadEnrolledEvents(currentUser.getUid());
             }
 
@@ -246,6 +273,29 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onSuccess() {
                 Toast.makeText(getContext(), "Declined invitation to " + event.getTitle(), Toast.LENGTH_SHORT).show();
+                
+                // Notify organizer
+                String userName = currentUser.getDisplayName() != null ? 
+                                currentUser.getDisplayName() : "A user";
+                notificationService.notifyOrganizerOfResponse(
+                    event.getOrganizerId(),
+                    userName,
+                    event.getEventId(),
+                    event.getTitle(),
+                    false,
+                    new INotificationService.VoidCallback() {
+                        @Override
+                        public void onSuccess() {
+                            Log.d(TAG, "Organizer notified of decline");
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Error notifying organizer: " + error);
+                        }
+                    }
+                );
+                
                 loadEnrolledEvents(currentUser.getUid());
             }
 

@@ -274,7 +274,7 @@ public class EventDetailsFragment extends Fragment {
                 if (event.getInvitations() != null) {
                     for (Invitation invitation : event.getInvitations()) {
                         String userId = invitation.getUserId();
-                        if (!allUserIds.contains(userId)) {
+                        if (userId != null && !userId.isEmpty() && !allUserIds.contains(userId)) {
                             allUserIds.add(userId);
                         }
                     }
@@ -283,7 +283,7 @@ public class EventDetailsFragment extends Fragment {
                 // Add attendees (users who accepted invitations)
                 if (event.getAttendees() != null) {
                     for (String userId : event.getAttendees()) {
-                        if (!allUserIds.contains(userId)) {
+                        if (userId != null && !userId.isEmpty() && !allUserIds.contains(userId)) {
                             allUserIds.add(userId);
                         }
                     }

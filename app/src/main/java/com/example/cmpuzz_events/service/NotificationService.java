@@ -138,7 +138,9 @@ public class NotificationService implements INotificationService {
                     notification.setTypeString(document.getString("type"));
                     notification.setTitle(document.getString("title"));
                     notification.setMessage(document.getString("message"));
-                    notification.setTimestamp(document.getLong("timestamp"));
+                    
+                    Long timestamp = document.getLong("timestamp");
+                    notification.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
                     notification.setRead(Boolean.TRUE.equals(document.getBoolean("isRead")));
                     notifications.add(notification);
                 });
