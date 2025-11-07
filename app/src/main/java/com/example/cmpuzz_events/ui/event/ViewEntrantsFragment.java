@@ -1,0 +1,219 @@
+package com.example.cmpuzz_events.ui.event;
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.cmpuzz_events.R;
+import com.example.cmpuzz_events.auth.AuthManager;
+import com.example.cmpuzz_events.models.event.EventEntity;
+import com.example.cmpuzz_events.models.event.Invitation;
+import com.example.cmpuzz_events.models.user.User;
+import com.example.cmpuzz_events.service.EventService;
+import com.example.cmpuzz_events.service.IEventService;
+import com.google.android.material.tabs.TabLayout;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Fragment to view different categories of entrants:
+ * - Waitlist: Users waiting for invitation
+ * - Invited: Users who have been sent invitations
+ * - Attendees: Users who accepted invitations
+ */
+public class ViewEntrantsFragment extends Fragment {
+
+    private static final String TAG = "ViewEntrantsFragment";
+    private static final String ARG_EVENT_ID = "eventId";
+    
+    private String eventId;
+    private EventEntity currentEvent;
+    
+    private TabLayout tabLayout;
+    private RecyclerView recyclerView;
+    private EnrolledUsersAdapter adapter;
+    private TextView emptyStateText;
+
+    public static ViewEntrantsFragment newInstance(String eventId) {
+        ViewEntrantsFragment fragment = new ViewEntrantsFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_EVENT_ID, eventId);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            eventId = getArguments().getString(ARG_EVENT_ID);
+        }
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View root = inflater.inflate(R.layout.fragment_view_entrants, container, false);
+        
+        // Initialize views
+        tabLayout = root.findViewById(R.id.tabLayout);
+        recyclerView = root.findViewById(R.id.recyclerView);
+        emptyStateText = root.findViewById(R.id.tvEmptyState);
+        
+        // Setup RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new EnrolledUsersAdapter(new ArrayList<>());
+        recyclerView.setAdapter(adapter);
+        
+        // Setup tabs
+        tabLayout.addTab(tabLayout.newTab().setText("Waitlist"));
+        tabLayout.addTab(tabLayout.newTab().setText("Invited"));
+        tabLayout.addTab(tabLayout.newTab().setText("Attendees"));
+        
+        // Tab selection listener
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                loadEntrantsForTab(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+        
+        // Load event data
+        loadEventData();
+        
+        return root;
+    }
+
+    private void loadEventData() {
+        EventService.getInstance().getEvent(eventId, new IEventService.EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                currentEvent = event;
+                // Load data for the first tab (Waitlist)
+                loadEntrantsForTab(0);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error loading event: " + error);
+                showEmptyState("Error loading event data");
+            }
+        });
+    }
+
+    private void loadEntrantsForTab(int position) {
+        if (currentEvent == null) return;
+
+        switch (position) {
+            case 0: // Waitlist
+                loadWaitlist();
+                break;
+            case 1: // Invited
+                loadInvited();
+                break;
+            case 2: // Attendees
+                loadAttendees();
+                break;
+        }
+    }
+
+    private void loadWaitlist() {
+        List<String> waitlist = currentEvent.getWaitlist();
+        if (waitlist == null || waitlist.isEmpty()) {
+            showEmptyState("No users in waitlist");
+            return;
+        }
+
+        loadUsers(waitlist);
+    }
+
+    private void loadInvited() {
+        List<Invitation> invitations = currentEvent.getInvitations();
+        if (invitations == null || invitations.isEmpty()) {
+            showEmptyState("No invited users");
+            return;
+        }
+
+        // Extract user IDs from invitations
+        List<String> userIds = new ArrayList<>();
+        for (Invitation invitation : invitations) {
+            if (invitation.isPending()) {
+                userIds.add(invitation.getUserId());
+            }
+        }
+
+        if (userIds.isEmpty()) {
+            showEmptyState("No pending invitations");
+            return;
+        }
+
+        loadUsers(userIds);
+    }
+
+    private void loadAttendees() {
+        List<Invitation> invitations = currentEvent.getInvitations();
+        if (invitations == null || invitations.isEmpty()) {
+            showEmptyState("No attendees yet");
+            return;
+        }
+
+        // Extract user IDs from accepted invitations
+        List<String> userIds = new ArrayList<>();
+        for (Invitation invitation : invitations) {
+            if (invitation.isAccepted()) {
+                userIds.add(invitation.getUserId());
+            }
+        }
+
+        if (userIds.isEmpty()) {
+            showEmptyState("No confirmed attendees");
+            return;
+        }
+
+        loadUsers(userIds);
+    }
+
+    private void loadUsers(List<String> userIds) {
+        AuthManager.getInstance().getUsersByIds(userIds, new AuthManager.UsersCallback() {
+            @Override
+            public void onSuccess(List<User> users) {
+                if (users.isEmpty()) {
+                    showEmptyState("No users found");
+                } else {
+                    adapter.updateUsers(users);
+                    recyclerView.setVisibility(View.VISIBLE);
+                    emptyStateText.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error loading users: " + error);
+                showEmptyState("Error loading users");
+            }
+        });
+    }
+
+    private void showEmptyState(String message) {
+        adapter.updateUsers(new ArrayList<>());
+        recyclerView.setVisibility(View.GONE);
+        emptyStateText.setVisibility(View.VISIBLE);
+        emptyStateText.setText(message);
+    }
+}

@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.cmpuzz_events.R;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -65,14 +66,38 @@ public class EventActionMenuFragment extends Fragment {
         root.findViewById(R.id.cardViewDeclinedEntrants).setOnClickListener(v ->
                 showToast("View Declined Entrants for: " + eventTitle));
 
-        root.findViewById(R.id.cardViewWaitlist).setOnClickListener(v ->
-                showToast("View Waitlist for: " + eventTitle));
+        root.findViewById(R.id.cardViewWaitlist).setOnClickListener(v -> {
+            if (event != null) {
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", event.getEventId());
+                Navigation.findNavController(root).navigate(
+                    R.id.action_to_view_entrants,
+                    bundle
+                );
+            }
+        });
 
-        root.findViewById(R.id.cardViewInvitedEntrants).setOnClickListener(v ->
-                showToast("View Invited Entrants - Coming soon"));
+        root.findViewById(R.id.cardViewInvitedEntrants).setOnClickListener(v -> {
+            if (event != null) {
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", event.getEventId());
+                Navigation.findNavController(root).navigate(
+                    R.id.action_to_view_entrants,
+                    bundle
+                );
+            }
+        });
 
-        root.findViewById(R.id.cardViewAttendees).setOnClickListener(v ->
-                showToast("View Attendees - Coming soon"));
+        root.findViewById(R.id.cardViewAttendees).setOnClickListener(v -> {
+            if (event != null) {
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", event.getEventId());
+                Navigation.findNavController(root).navigate(
+                    R.id.action_to_view_entrants,
+                    bundle
+                );
+            }
+        });
 
         // Notifications section
         root.findViewById(R.id.cardNotifyDeclined).setOnClickListener(v ->

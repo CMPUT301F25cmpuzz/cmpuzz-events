@@ -19,6 +19,7 @@ import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.models.event.EventEntity;
+import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
 import com.google.android.material.button.MaterialButton;
@@ -241,25 +242,54 @@ public class EventDetailsFragment extends Fragment {
         });
     }
 
-    private void loadEnrolledUsers(List<String> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            usersAdapter.updateUsers(new ArrayList<>());
-            usersRecyclerView.setVisibility(View.GONE);
-            return;
+    private void loadEnrolledUsers(List<String> waitlist) {
+        // Combine all user IDs: waitlist + invited + attendees
+        List<String> allUserIds = new ArrayList<>();
+        
+        // Add waitlist users
+        if (waitlist != null) {
+            allUserIds.addAll(waitlist);
         }
-
-        AuthManager.getInstance().getUsersByIds(userIds, new AuthManager.UsersCallback() {
+        
+        // Add invited and attendee users from invitations
+        EventService.getInstance().getEvent(eventId, new IEventService.EventCallback() {
             @Override
-            public void onSuccess(List<User> users) {
-                Log.d(TAG, "Loaded " + users.size() + " enrolled users");
-                usersAdapter.updateUsers(users);
-                usersRecyclerView.setVisibility(View.VISIBLE);
+            public void onSuccess(EventEntity event) {
+                if (event.getInvitations() != null) {
+                    for (Invitation invitation : event.getInvitations()) {
+                        String userId = invitation.getUserId();
+                        if (!allUserIds.contains(userId)) {
+                            allUserIds.add(userId);
+                        }
+                    }
+                }
+                
+                // Now load all users
+                if (allUserIds.isEmpty()) {
+                    usersAdapter.updateUsers(new ArrayList<>());
+                    usersRecyclerView.setVisibility(View.GONE);
+                    return;
+                }
+                
+                AuthManager.getInstance().getUsersByIds(allUserIds, new AuthManager.UsersCallback() {
+                    @Override
+                    public void onSuccess(List<User> users) {
+                        Log.d(TAG, "Loaded " + users.size() + " total entrants");
+                        usersAdapter.updateUsers(users);
+                        usersRecyclerView.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "Error loading users: " + error);
+                        usersAdapter.updateUsers(new ArrayList<>());
+                    }
+                });
             }
 
             @Override
             public void onError(String error) {
-                Log.e(TAG, "Error loading enrolled users: " + error);
-                usersAdapter.updateUsers(new ArrayList<>());
+                Log.e(TAG, "Error loading event for entrants: " + error);
             }
         });
     }

@@ -80,5 +80,19 @@
         <argument
             android:name="eventId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_to_view_entrants"
+            app:destination="@id/viewEntrantsFragment" />
+    </fragment>
+
+    <!-- View Entrants Fragment -->
+    <fragment
+        android:id="@+id/viewEntrantsFragment"
+        android:name="com.example.cmpuzz_events.ui.event.ViewEntrantsFragment"
+        android:label="View Entrants"
+        tools:layout="@layout/fragment_view_entrants">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
     </fragment>
 </navigation>
