@@ -63,7 +63,7 @@ public interface IEventService {
      * @param eventId The event ID
      * @param callback Callback with the UI Event or error
      */
-    void getUIEvent(String eventId, UIEventCallback callback);
+    void getUIEventById(String eventId, UIEventCallback callback);
 
     /**
      * Get all events for an organizer
