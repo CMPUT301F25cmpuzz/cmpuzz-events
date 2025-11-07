@@ -124,7 +124,7 @@ public class EventService implements IEventService {
     }
 
     @Override
-    public void getUIEvent(String eventId, UIEventCallback callback) {
+    public void getUIEventById(String eventId, UIEventCallback callback) {
         getEvent(eventId, new EventCallback() {
             @Override
             public void onSuccess(EventEntity entity) {
