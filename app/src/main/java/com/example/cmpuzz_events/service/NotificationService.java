@@ -404,7 +404,8 @@ public class NotificationService implements INotificationService {
             case ACCEPTED:
                 return "You have successfully accepted the invitation to \"" + eventName + "\".";
             case DECLINED:
-                return "You have declined the invitation to \"" + eventName + "\".";
+                return "Thank you for your interest in \"" + eventName + 
+                       "\". Unfortunately, you were not selected at this time. We appreciate your participation and encourage you to apply for future events.";
             case CONFIRMED:
                 return "Congratulations! Your attendance has been confirmed for \"" + eventName + 
                        "\". We look forward to seeing you at the event!";
