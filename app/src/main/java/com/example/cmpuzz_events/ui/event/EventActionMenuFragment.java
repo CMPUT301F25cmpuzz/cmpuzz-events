@@ -16,13 +16,13 @@ import com.google.android.material.card.MaterialCardView;
 
 public class EventActionMenuFragment extends Fragment {
 
-    private static final String ARG_EVENT_ID = "eventId";
-    private String eventId;
+    private static final String ARG_EVENT = "event";
+    private Event event;
 
-    public static EventActionMenuFragment newInstance(String eventId) {
+    public static EventActionMenuFragment newInstance(Event event) {
         EventActionMenuFragment fragment = new EventActionMenuFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_EVENT_ID, eventId);
+        args.putSerializable(ARG_EVENT, event);
         fragment.setArguments(args);
         return fragment;
     }
@@ -31,7 +31,7 @@ public class EventActionMenuFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            eventId = getArguments().getString(ARG_EVENT_ID);
+            event = (Event) getArguments().getSerializable(ARG_EVENT);
         }
     }
 
@@ -55,15 +55,18 @@ public class EventActionMenuFragment extends Fragment {
     }
 
     private void setupClickListeners(View root) {
+        // Now you have access to the event object!
+        String eventTitle = event != null ? event.getTitle() : "Unknown";
+        
         // Entrants section
         root.findViewById(R.id.cardCancelEntrants).setOnClickListener(v ->
-                showToast("Cancel Entrants - Coming soon"));
+                showToast("Cancel Entrants for: " + eventTitle));
 
         root.findViewById(R.id.cardViewDeclinedEntrants).setOnClickListener(v ->
-                showToast("View Declined Entrants - Coming soon"));
+                showToast("View Declined Entrants for: " + eventTitle));
 
         root.findViewById(R.id.cardViewWaitlist).setOnClickListener(v ->
-                showToast("View Waitlist - Coming soon"));
+                showToast("View Waitlist for: " + eventTitle));
 
         root.findViewById(R.id.cardViewInvitedEntrants).setOnClickListener(v ->
                 showToast("View Invited Entrants - Coming soon"));

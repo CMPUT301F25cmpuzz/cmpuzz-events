@@ -27,7 +27,11 @@ public class EventDetailsFragment extends Fragment {
     private static final String ARG_EVENT_ID = "eventId";
 
     private String eventId;
-    private EventService eventService;
+
+    private IEventService eventService;
+
+    // Store the UI Event
+    private Event currentEvent;
     
     // Views
     private TextView eventTitle;
@@ -58,6 +62,7 @@ public class EventDetailsFragment extends Fragment {
         if (getArguments() != null) {
             eventId = getArguments().getString(ARG_EVENT_ID);
         }
+
         eventService = EventService.getInstance();
     }
 
@@ -104,14 +109,16 @@ public class EventDetailsFragment extends Fragment {
             usersEnrolledTitle.setVisibility(View.VISIBLE);
             joinButton.setVisibility(View.GONE);
             
-            // Navigate to Action Menu
+            // Navigate to Action Menu, and pass the event object
             additionalActionsButton.setOnClickListener(v -> {
-                Bundle bundle = new Bundle();
-                bundle.putString("eventId", eventId);
-                Navigation.findNavController(root).navigate(
-                    R.id.action_to_event_action_menu,
-                    bundle
-                );
+                if (currentEvent != null) {
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable("event", currentEvent);
+                    Navigation.findNavController(root).navigate(
+                        R.id.action_to_event_action_menu,
+                        bundle
+                    );
+                }
             });
             
         } else {
@@ -187,8 +194,22 @@ public class EventDetailsFragment extends Fragment {
 
         eventService.getEvent(eventId, new IEventService.EventCallback() {
             @Override
-            public void onSuccess(EventEntity event) {
-                displayEventDetails(event);
+            public void onSuccess(EventEntity eventEntity) {
+                // Convert to UI Event and store
+                currentEvent = new Event(
+                    eventEntity.getEventId(),
+                    eventEntity.getTitle(),
+                    eventEntity.getDescription(),
+                    eventEntity.getCapacity(),
+                    eventEntity.getRegistrationStart(),
+                    eventEntity.getRegistrationEnd(),
+                    eventEntity.getOrganizerId(),
+                    eventEntity.getOrganizerName(),
+                    eventEntity.isGeolocationRequired()
+                );
+                currentEvent.setMaxEntrants(eventEntity.getMaxEntrants());
+                
+                displayEventDetails(eventEntity);
             }
 
             @Override
