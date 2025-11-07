@@ -63,8 +63,16 @@ public class EventActionMenuFragment extends Fragment {
         root.findViewById(R.id.cardCancelEntrants).setOnClickListener(v ->
                 showToast("Cancel Entrants for: " + eventTitle));
 
-        root.findViewById(R.id.cardViewDeclinedEntrants).setOnClickListener(v ->
-                showToast("View Declined Entrants for: " + eventTitle));
+        root.findViewById(R.id.cardViewDeclinedEntrants).setOnClickListener(v -> {
+            if (event != null) {
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", event.getEventId());
+                Navigation.findNavController(root).navigate(
+                    R.id.action_to_view_entrants,
+                    bundle
+                );
+            }
+        });
 
         root.findViewById(R.id.cardViewWaitlist).setOnClickListener(v -> {
             if (event != null) {
