@@ -8,10 +8,11 @@ import com.example.cmpuzz_events.models.notification.Notification;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 
 public class NotificationService implements INotificationService {
     
@@ -75,79 +76,100 @@ public class NotificationService implements INotificationService {
             return;
         }
         
-        // Filter users based on notification preferences
-        List<String> enabledUsers = filterUsersWithNotificationsEnabled(userIds);
-        
-        if (enabledUsers.isEmpty()) {
-            Log.d(TAG, "No users have notifications enabled");
-            if (callback != null) {
-                callback.onSuccess(); // Consider it success but no notifications sent
+        // Filter users based on notification preferences from Firestore
+        filterUsersWithNotificationsEnabledFromFirestore(userIds, enabledUsers -> {
+            if (enabledUsers.isEmpty()) {
+                Log.d(TAG, "No users have notifications enabled");
+                if (callback != null) {
+                    callback.onSuccess(); // Consider it success but no notifications sent
+                }
+                return;
             }
-            return;
-        }
-        
-        Log.d(TAG, "Sending notifications to " + enabledUsers.size() + "/" + userIds.size() + " users");
-        
-        String title = generateTitle(type);
-        String message = generateMessage(type, eventName);
-        
-        int[] successCount = {0};
-        int[] errorCount = {0};
-        int totalUsers = enabledUsers.size();
-        
-        for (String userId : enabledUsers) {
-            Notification notification = new Notification(userId, eventId, eventName, type, title, message);
             
-            sendNotification(notification, new VoidCallback() {
-                @Override
-                public void onSuccess() {
-                    successCount[0]++;
-                    checkCompletion();
-                }
+            Log.d(TAG, "Sending notifications to " + enabledUsers.size() + "/" + userIds.size() + " users");
+            
+            String title = generateTitle(type);
+            String message = generateMessage(type, eventName);
+            
+            int[] successCount = {0};
+            int[] errorCount = {0};
+            int totalUsers = enabledUsers.size();
+            
+            for (String userId : enabledUsers) {
+                Notification notification = new Notification(userId, eventId, eventName, type, title, message);
                 
-                @Override
-                public void onError(String error) {
-                    errorCount[0]++;
-                    checkCompletion();
-                }
-                
-                private void checkCompletion() {
-                    if (successCount[0] + errorCount[0] == totalUsers) {
-                        if (callback != null) {
-                            if (errorCount[0] == 0) {
-                                callback.onSuccess();
-                            } else {
-                                callback.onError(errorCount[0] + " notifications failed");
+                sendNotification(notification, new VoidCallback() {
+                    @Override
+                    public void onSuccess() {
+                        successCount[0]++;
+                        checkCompletion();
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        errorCount[0]++;
+                        checkCompletion();
+                    }
+                    
+                    private void checkCompletion() {
+                        if (successCount[0] + errorCount[0] == totalUsers) {
+                            if (callback != null) {
+                                if (errorCount[0] == 0) {
+                                    callback.onSuccess();
+                                } else {
+                                    callback.onError(errorCount[0] + " notifications failed");
+                                }
                             }
                         }
                     }
-                }
-            });
-        }
+                });
+            }
+        });
     }
     
     @Override
     public void notifyOrganizerOfResponse(String organizerId, String userName, String eventId, 
                                          String eventName, boolean accepted, VoidCallback callback) {
-        // Check if organizer has notifications enabled
-        if (!isNotificationEnabledForUser(organizerId)) {
-            Log.d(TAG, "Organizer has notifications disabled, skipping");
-            if (callback != null) {
-                callback.onSuccess();
-            }
-            return;
-        }
-        
-        String title = accepted ? "Invitation Accepted" : "Invitation Declined";
-        String message = userName + " has " + (accepted ? "accepted" : "declined") + 
-                        " the invitation to \"" + eventName + "\"";
-        
-        Notification.NotificationType type = accepted ? 
-                                            Notification.NotificationType.ACCEPTED : 
-                                            Notification.NotificationType.DECLINED;
-        
-        Notification notification = new Notification(organizerId, eventId, eventName, type, title, message);
-        sendNotification(notification, callback);
+        // Check if organizer has notifications enabled in Firestore
+        db.collection("users").document(organizerId)
+            .get()
+            .addOnSuccessListener(documentSnapshot -> {
+                boolean notificationsEnabled = documentSnapshot.getBoolean("notificationsEnabled") != null 
+                    ? documentSnapshot.getBoolean("notificationsEnabled") : true;
+                
+                if (!notificationsEnabled) {
+                    Log.d(TAG, "Organizer has notifications disabled, skipping");
+                    if (callback != null) {
+                        callback.onSuccess();
+                    }
+                    return;
+                }
+                
+                String title = accepted ? "Invitation Accepted" : "Invitation Declined";
+                String message = userName + " has " + (accepted ? "accepted" : "declined") + 
+                                " the invitation to \"" + eventName + "\"";
+                
+                Notification.NotificationType type = accepted ? 
+                                                    Notification.NotificationType.ACCEPTED : 
+                                                    Notification.NotificationType.DECLINED;
+                
+                Notification notification = new Notification(organizerId, eventId, eventName, type, title, message);
+                sendNotification(notification, callback);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error checking organizer notification preference, sending anyway", e);
+                // Send notification on error (fail-safe)
+                String title = accepted ? "Invitation Accepted" : "Invitation Declined";
+                String message = userName + " has " + (accepted ? "accepted" : "declined") + 
+                                " the invitation to \"" + eventName + "\"";
+                
+                Notification.NotificationType type = accepted ? 
+                                                    Notification.NotificationType.ACCEPTED : 
+                                                    Notification.NotificationType.DECLINED;
+                
+                Notification notification = new Notification(organizerId, eventId, eventName, type, title, message);
+                sendNotification(notification, callback);
+            });
     }
     
     @Override
@@ -278,33 +300,62 @@ public class NotificationService implements INotificationService {
     }
     
     /**
-     * Filter users who have notifications enabled
+     * Filter users who have notifications enabled from Firestore
      */
-    private List<String> filterUsersWithNotificationsEnabled(List<String> userIds) {
-        List<String> enabledUsers = new ArrayList<>();
-        
-        for (String userId : userIds) {
-            if (isNotificationEnabledForUser(userId)) {
-                enabledUsers.add(userId);
-            }
+    private void filterUsersWithNotificationsEnabledFromFirestore(List<String> userIds, UserFilterCallback callback) {
+        if (userIds.isEmpty()) {
+            callback.onFiltered(new ArrayList<>());
+            return;
         }
         
-        return enabledUsers;
+        List<String> enabledUsers = Collections.synchronizedList(new ArrayList<>());
+        int[] checkedCount = {0};
+        
+        Log.d(TAG, "Filtering " + userIds.size() + " users for notification preferences");
+        
+        for (String userId : userIds) {
+            db.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    Boolean notifPref = documentSnapshot.getBoolean("notificationsEnabled");
+                    boolean notificationsEnabled = notifPref != null ? notifPref : true;
+                    
+                    Log.d(TAG, "User " + userId + " notifications: " + notificationsEnabled);
+                    
+                    synchronized (enabledUsers) {
+                        if (notificationsEnabled) {
+                            enabledUsers.add(userId);
+                        }
+                        
+                        checkedCount[0]++;
+                        if (checkedCount[0] == userIds.size()) {
+                            Log.d(TAG, "Filtering complete: " + enabledUsers.size() + "/" + userIds.size() + " users have notifications enabled");
+                            callback.onFiltered(new ArrayList<>(enabledUsers));
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error checking notification preference for user " + userId + ", including anyway", e);
+                    
+                    synchronized (enabledUsers) {
+                        // Include user on error (fail-safe)
+                        enabledUsers.add(userId);
+                        
+                        checkedCount[0]++;
+                        if (checkedCount[0] == userIds.size()) {
+                            Log.d(TAG, "Filtering complete: " + enabledUsers.size() + "/" + userIds.size() + " users have notifications enabled");
+                            callback.onFiltered(new ArrayList<>(enabledUsers));
+                        }
+                    }
+                });
+        }
     }
     
     /**
-     * Check if a specific user has notifications enabled
+     * Callback for filtering users
      */
-    private boolean isNotificationEnabledForUser(String userId) {
-        if (context == null) {
-            Log.w(TAG, "Context not set, assuming notifications enabled");
-            return true; // Default to enabled if context not available
-        }
-        
-        // Check SharedPreferences - note: this checks app-wide preferences
-        // In a real app, you'd store this per-user in Firestore
-        SharedPreferences prefs = context.getSharedPreferences("user_preferences", Context.MODE_PRIVATE);
-        return prefs.getBoolean("notifications_enabled", true);
+    private interface UserFilterCallback {
+        void onFiltered(List<String> enabledUserIds);
     }
     
     /**

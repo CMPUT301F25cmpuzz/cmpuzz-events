@@ -11,6 +11,7 @@ public class User implements Serializable {
     private String username;
     private UserRole role;
     private long createdAt;
+    private boolean notificationsEnabled;
 
     public enum UserRole {
         USER("user"),
@@ -41,6 +42,7 @@ public class User implements Serializable {
     public User() {
         this.role = UserRole.USER;
         this.createdAt = System.currentTimeMillis();
+        this.notificationsEnabled = true; // Default to enabled
     }
 
     public User(String uid, String email, String displayName, String username, UserRole role) {
@@ -50,6 +52,7 @@ public class User implements Serializable {
         this.username = username;
         this.role = role;
         this.createdAt = System.currentTimeMillis();
+        this.notificationsEnabled = true; // Default to enabled
     }
 
     // Convert to Map for Firebase
@@ -61,6 +64,7 @@ public class User implements Serializable {
         map.put("username", username);
         map.put("role", role.getRoleName());
         map.put("createdAt", createdAt);
+        map.put("notificationsEnabled", notificationsEnabled);
         return map;
     }
 
@@ -128,5 +132,13 @@ public class User implements Serializable {
 
     public boolean canManageEvents() {
         return role == UserRole.ADMIN || role == UserRole.ORGANIZER;
+    }
+
+    public boolean isNotificationsEnabled() {
+        return notificationsEnabled;
+    }
+
+    public void setNotificationsEnabled(boolean notificationsEnabled) {
+        this.notificationsEnabled = notificationsEnabled;
     }
 }
