@@ -199,6 +199,85 @@ public class EventService implements IEventService {
     }
 
     @Override
+    public void getEventsForUser(String userId, UIEventListCallback callback) {
+        // Get all events and filter for user involvement
+        db.collection(COLLECTION_EVENTS)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<Event> uiEvents = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    EventEntity entity = documentToEventEntity(doc);
+                    
+                    // Check if user is in waitlist
+                    boolean inWaitlist = entity.getWaitlist() != null && 
+                                        entity.getWaitlist().contains(userId);
+                    
+                    // Check if user has an invitation
+                    boolean hasInvitation = false;
+                    if (entity.getInvitations() != null) {
+                        for (Invitation inv : entity.getInvitations()) {
+                            if (inv.getUserId() != null && inv.getUserId().equals(userId)) {
+                                hasInvitation = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Include event if user is involved in any way
+                    if (inWaitlist || hasInvitation) {
+                        Event uiEvent = convertToUIEvent(entity);
+                        uiEvents.add(uiEvent);
+                    }
+                }
+                Log.d(TAG, "User involved in " + uiEvents.size() + " events total");
+                callback.onSuccess(uiEvents);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting user events", e);
+                callback.onError(e.getMessage());
+            });
+    }
+
+    @Override
+    public void getEventsForUserWithEntities(String userId, EventListCallback callback) {
+        // Get all events and filter for user involvement - return EventEntity
+        db.collection(COLLECTION_EVENTS)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<EventEntity> entities = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    EventEntity entity = documentToEventEntity(doc);
+                    
+                    // Check if user is in waitlist
+                    boolean inWaitlist = entity.getWaitlist() != null && 
+                                        entity.getWaitlist().contains(userId);
+                    
+                    // Check if user has an invitation
+                    boolean hasInvitation = false;
+                    if (entity.getInvitations() != null) {
+                        for (Invitation inv : entity.getInvitations()) {
+                            if (inv.getUserId() != null && inv.getUserId().equals(userId)) {
+                                hasInvitation = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Include event if user is involved in any way
+                    if (inWaitlist || hasInvitation) {
+                        entities.add(entity);
+                    }
+                }
+                Log.d(TAG, "User involved in " + entities.size() + " events (entities)");
+                callback.onSuccess(entities);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting user event entities", e);
+                callback.onError(e.getMessage());
+            });
+    }
+
+    @Override
     public void updateEvent(EventEntity event, VoidCallback callback) {
         event.setUpdatedAt(new Date());
         
