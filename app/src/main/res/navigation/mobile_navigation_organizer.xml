@@ -10,7 +10,7 @@
 
     <fragment
         android:id="@+id/navigation_organizer_profile"
-        android:name="com.example.cmpuzz_events.ui.organizerdialogs.organizerProfileFragment"
+        android:name="com.example.cmpuzz_events.ui.organizerdialogs.OrganizerProfileFragment"
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_organizer_profile" />
 
