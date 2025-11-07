@@ -99,29 +99,5 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Section label -->
-        <TextView
-            android:id="@+id/labelEventsCreated"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/events_created"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            app:layout_constraintTop_toBottomOf="@id/cardProfile"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginTop="16dp"/>
-
-        <!-- List of events -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvCreatedEvents"
-            android:layout_width="382dp"
-            android:layout_height="196dp"
-            android:layout_marginTop="8dp"
-            android:nestedScrollingEnabled="false"
-            android:overScrollMode="never"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/labelEventsCreated" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
