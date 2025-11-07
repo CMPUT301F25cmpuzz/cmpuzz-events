@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
             // ORGANIZER or ADMIN - show organizer navigation
             Log.d(TAG, "Setting up ORGANIZER navigation");
             navView.getMenu().clear();
-            navView.inflateMenu(R.menu.bottom_nav_menu);
+            navView.inflateMenu(R.menu.bottom_nav_menu_organizer);
             
             AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
