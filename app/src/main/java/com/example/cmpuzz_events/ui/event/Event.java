@@ -1,6 +1,7 @@
 package com.example.cmpuzz_events.ui.event;
 
 import com.example.cmpuzz_events.Entrant;
+import com.example.cmpuzz_events.models.event.Invitation;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -18,7 +19,10 @@ public class Event implements Serializable {
     private String organizerName;            // Display name of organizer
     private boolean geolocationRequired;
     private int maxEntrants;                 // Max people who can enroll
-    private List<Entrant> waitingList;
+    private List<String> waitlist;           // Array of device IDs on waitlist (ALL entrants)
+    private List<Invitation> invitations;    // Array of Invitation objects (invited entrants)
+    private List<String> attendees;          // Array of device IDs who are confirmed attendees
+    private List<String> declined;
 
     public Event(String eventId, String title, String description, int capacity,
                  Date registrationStart, Date registrationEnd,
@@ -32,7 +36,10 @@ public class Event implements Serializable {
         this.organizerId = organizerId;
         this.organizerName = organizerName;
         this.geolocationRequired = geolocationRequired;
-        this.waitingList = new ArrayList<>();
+        this.waitlist = new ArrayList<>();
+        this.invitations = new ArrayList<>();
+        this.attendees = new ArrayList<>();
+        this.declined = new ArrayList<>();
     }
 
     public String getEventId() { return eventId; }
@@ -45,10 +52,23 @@ public class Event implements Serializable {
     public String getOrganizerName() { return organizerName; }
     public boolean isGeolocationRequired() { return geolocationRequired; }
     public int getMaxEntrants() { return maxEntrants; }
-    public List<Entrant> getWaitingList() { return waitingList; }
+    public List<String> getWaitlist() { return waitlist; }
+    public void setWaitlist(List<String> waitlist) {
+        this.waitlist = waitlist;
+    }
+
+    public List<Invitation> getInvitations() { return invitations; }
+    public void setInvitations(List<Invitation> invitations) {
+        this.invitations = invitations;
+    }
     
     public void setRegistrationStart(Date date) { this.registrationStart = date; }
     public void setRegistrationEnd(Date date) { this.registrationEnd = date; }
     public void setGeolocationRequired(boolean required) { this.geolocationRequired = required; }
     public void setMaxEntrants(int n) { this.maxEntrants = n; }
+
+    public void clearEntrants()
+    {
+
+    }
 }

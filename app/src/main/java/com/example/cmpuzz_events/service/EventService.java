@@ -54,7 +54,8 @@ public class EventService implements IEventService {
             uiEvent.getOrganizerId(),
             uiEvent.getOrganizerName(),
             uiEvent.isGeolocationRequired(),
-            uiEvent.getMaxEntrants()
+            uiEvent.getMaxEntrants(),
+            uiEvent.getWaitlist()
         );
     }
 

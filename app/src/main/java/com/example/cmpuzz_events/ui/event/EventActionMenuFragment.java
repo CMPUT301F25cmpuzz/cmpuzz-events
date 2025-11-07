@@ -111,7 +111,7 @@ public class EventActionMenuFragment extends Fragment {
                 eventService.getEvent(event.getEventId(), new IEventService.EventCallback() {
                     @Override
                     public void onSuccess(EventEntity event) {
-
+                        eventService.
                     }
 
                     @Override
