@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -54,12 +55,12 @@ public class NotificationsFragment extends Fragment {
         adapter.setOnNotificationActionListener(new NotificationAdapter.OnNotificationActionListener() {
             @Override
             public void onAcceptInvitation(Notification notification) {
-                handleAcceptInvitation(notification);
+                showConfirmationDialog(notification, true);
             }
 
             @Override
             public void onDeclineInvitation(Notification notification) {
-                handleDeclineInvitation(notification);
+                showConfirmationDialog(notification, false);
             }
 
             @Override
@@ -98,6 +99,26 @@ public class NotificationsFragment extends Fragment {
             });
     }
 
+    private void showConfirmationDialog(Notification notification, boolean isAccept) {
+        String title = isAccept ? "Accept Invitation" : "Decline Invitation";
+        String message = isAccept ? 
+                "Are you sure you want to accept the invitation to \"" + notification.getEventName() + "\"?" :
+                "Are you sure you want to decline the invitation to \"" + notification.getEventName() + "\"?";
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(isAccept ? "Accept" : "Decline", (dialog, which) -> {
+                    if (isAccept) {
+                        handleAcceptInvitation(notification);
+                    } else {
+                        handleDeclineInvitation(notification);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
     private void handleAcceptInvitation(Notification notification) {
         eventService.respondToInvitation(notification.getEventId(), currentUser.getUid(), true,
             new IEventService.VoidCallback() {
@@ -105,16 +126,21 @@ public class NotificationsFragment extends Fragment {
                 public void onSuccess() {
                     Toast.makeText(getContext(), "Invitation accepted!", Toast.LENGTH_SHORT).show();
                     
+                    // Mark notification as read to hide buttons
+                    markAsRead(notification);
+                    
                     // Notify organizer
                     notifyOrganizerOfResponse(notification, true);
                     
-                    // Remove notification from list
+                    // Reload to update UI
                     loadNotifications();
                 }
 
                 @Override
                 public void onError(String error) {
                     Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                    // Reload to re-enable buttons if there was an error
+                    loadNotifications();
                 }
             });
     }
@@ -126,16 +152,21 @@ public class NotificationsFragment extends Fragment {
                 public void onSuccess() {
                     Toast.makeText(getContext(), "Invitation declined", Toast.LENGTH_SHORT).show();
                     
+                    // Mark notification as read to hide buttons
+                    markAsRead(notification);
+                    
                     // Notify organizer
                     notifyOrganizerOfResponse(notification, false);
                     
-                    // Remove notification from list
+                    // Reload to update UI
                     loadNotifications();
                 }
 
                 @Override
                 public void onError(String error) {
                     Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                    // Reload to re-enable buttons if there was an error
+                    loadNotifications();
                 }
             });
     }
@@ -180,8 +211,7 @@ public class NotificationsFragment extends Fragment {
             notificationService.markAsRead(notification.getId(), new INotificationService.VoidCallback() {
                 @Override
                 public void onSuccess() {
-                    // Refresh to update UI
-                    loadNotifications();
+                    Log.d(TAG, "Notification marked as read");
                 }
 
                 @Override

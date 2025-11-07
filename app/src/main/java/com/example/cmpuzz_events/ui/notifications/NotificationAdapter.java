@@ -97,18 +97,27 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             // Show unread indicator
             unreadIndicator.setVisibility(notification.isRead() ? View.GONE : View.VISIBLE);
             
-            // Show action buttons only for INVITED notifications that haven't been responded to
-            if (notification.getType() == Notification.NotificationType.INVITED) {
+            // Show action buttons only for INVITED notifications
+            // Hide them if notification is read (means they already responded)
+            if (notification.getType() == Notification.NotificationType.INVITED && !notification.isRead()) {
                 layoutActionButtons.setVisibility(View.VISIBLE);
+                btnAccept.setEnabled(true);
+                btnDecline.setEnabled(true);
                 
                 btnAccept.setOnClickListener(v -> {
                     if (listener != null) {
+                        // Disable buttons immediately to prevent double-clicks
+                        btnAccept.setEnabled(false);
+                        btnDecline.setEnabled(false);
                         listener.onAcceptInvitation(notification);
                     }
                 });
                 
                 btnDecline.setOnClickListener(v -> {
                     if (listener != null) {
+                        // Disable buttons immediately to prevent double-clicks
+                        btnAccept.setEnabled(false);
+                        btnDecline.setEnabled(false);
                         listener.onDeclineInvitation(notification);
                     }
                 });
