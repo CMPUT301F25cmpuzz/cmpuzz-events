@@ -45,6 +45,14 @@ public class User implements Serializable {
         this.notificationsEnabled = true; // Default to enabled
     }
 
+    /**
+     * Constructor for User with known data to parse
+     * @param uid
+     * @param email
+     * @param displayName
+     * @param username
+     * @param role
+     */
     public User(String uid, String email, String displayName, String username, UserRole role) {
         this.uid = uid;
         this.email = email;
@@ -56,6 +64,11 @@ public class User implements Serializable {
     }
 
     // Convert to Map for Firebase
+
+    /**
+     * Convert User object to a Map to be added to firebase
+     * @return map
+     */
     public Map<String, Object> toMap() {
         Map<String, Object> map = new HashMap<>();
         map.put("uid", uid);
