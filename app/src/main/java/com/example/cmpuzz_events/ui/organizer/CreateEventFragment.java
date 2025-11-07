@@ -20,6 +20,10 @@ import com.example.cmpuzz_events.service.IEventService;
 
 import java.util.Date;
 import java.util.UUID;
+import android.app.DatePickerDialog;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * Controller for the Organizer "Create Event" screen.
@@ -31,6 +35,9 @@ public class CreateEventFragment extends Fragment {
     private User currentUser;
     private EventService eventService;
     private AuthManager authManager;
+    private Date registrationStart;
+    private Date registrationEnd;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
 
     @Nullable
     @Override
@@ -67,6 +74,32 @@ public class CreateEventFragment extends Fragment {
         // Handle Finish button click
         binding.btnFinish.setOnClickListener(v -> handleCreateEvent());
 
+        // Handle Finish button click
+        binding.btnFinish.setOnClickListener(v -> handleCreateEvent());
+
+        // Handle registration period picker
+        binding.rowSetRegistrationPeriod.setOnClickListener(v -> {
+            Log.d("CreateEventFragment", "Row clicked!");
+            Toast.makeText(requireContext(), "Select registration dates", Toast.LENGTH_SHORT).show();
+            showDatePicker();
+        });
+
+        // Enable/disable numeric inputs based on toggles
+        binding.setAttendeesInput.setEnabled(binding.toggleSetAttendees.isChecked());
+        binding.setEntrantsInput.setEnabled(binding.toggleMaxEntrants.isChecked());
+
+        // When "Set Attendees" toggle changes
+        binding.toggleSetAttendees.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            binding.setAttendeesInput.setEnabled(isChecked);
+            if (!isChecked) binding.setAttendeesInput.setText("");
+        });
+
+        // When "Limit Max Entrants" toggle changes
+        binding.toggleMaxEntrants.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            binding.setEntrantsInput.setEnabled(isChecked);
+            if (!isChecked) binding.setEntrantsInput.setText("");
+        });
+
         return root;
     }
 
@@ -88,12 +121,42 @@ public class CreateEventFragment extends Fragment {
         String description = binding.etEventDescription.getText().toString().trim();
         boolean geoRequired = binding.toggleGeolocation.isChecked();
 
-        // Temporary demo: capacity = 20, registration = now → +7 days
-        // TODO: Get these from UI inputs
-        int capacity = 20;        // Max attendees (attendance limit)
-        int maxEntrants = 100;    // Max people who can enroll
-        Date start = new Date();
-        Date end = new Date(System.currentTimeMillis() + (7L * 24 * 60 * 60 * 1000));
+        // Get values from UI
+        String capacityStr = binding.setAttendeesInput.getText().toString().trim();
+        String maxEntrantsStr = binding.setEntrantsInput.getText().toString().trim();
+
+        // Validate required fields
+        if (title.isEmpty() || description.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (capacityStr.isEmpty() || maxEntrantsStr.isEmpty()) {
+            Toast.makeText(requireContext(), "Please enter attendee and entrant limits", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (registrationStart == null || registrationEnd == null) {
+            Toast.makeText(requireContext(), "Please set a registration period", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int capacity;
+        int maxEntrants;
+        try {
+            capacity = Integer.parseInt(capacityStr);
+            maxEntrants = Integer.parseInt(maxEntrantsStr);
+        } catch (NumberFormatException e) {
+            Toast.makeText(requireContext(), "Please enter valid numbers", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (registrationEnd.before(registrationStart)) {
+            Toast.makeText(requireContext(), "End date cannot be before start date", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Use selected registration period
+        Date start = registrationStart;
+        Date end = registrationEnd;
 
         if (title.isEmpty() || description.isEmpty()) {
             Log.w("CreateEventFragment", "Title or description is empty");
@@ -130,6 +193,47 @@ public class CreateEventFragment extends Fragment {
             }
         });
     }
+
+    private void showDatePicker() {
+        Calendar calendar = Calendar.getInstance();
+
+        // Start date picker
+        DatePickerDialog startPicker = new DatePickerDialog(
+                requireContext(),
+                (view, year, month, dayOfMonth) -> {
+                    Calendar startDate = Calendar.getInstance();
+                    startDate.set(year, month, dayOfMonth, 0, 0, 0);
+                    registrationStart = startDate.getTime();
+
+                    // Now open the end date picker
+                    DatePickerDialog endPicker = new DatePickerDialog(
+                            requireContext(),
+                            (view2, year2, month2, day2) -> {
+                                Calendar endDate = Calendar.getInstance();
+                                endDate.set(year2, month2, day2, 0, 0, 0);
+                                registrationEnd = endDate.getTime();
+
+                                // Update summary text
+                                String summary = "Start: " + dateFormat.format(registrationStart)
+                                        + " → End: " + dateFormat.format(registrationEnd);
+                                binding.tvRegistrationSummary.setText(summary);
+                            },
+                            startDate.get(Calendar.YEAR),
+                            startDate.get(Calendar.MONTH),
+                            startDate.get(Calendar.DAY_OF_MONTH)
+                    );
+                    endPicker.setTitle("Select Registration End Date");
+                    endPicker.show();
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        startPicker.setTitle("Select Registration Start Date");
+        startPicker.show();
+    }
+
 
     @Override
     public void onDestroyView() {
