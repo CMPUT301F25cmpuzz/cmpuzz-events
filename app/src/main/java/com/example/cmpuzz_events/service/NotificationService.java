@@ -358,6 +358,35 @@ public class NotificationService implements INotificationService {
         void onFiltered(List<String> enabledUserIds);
     }
     
+    @Override
+    public void getNotificationPreference(String userId, NotificationPreferenceCallback callback) {
+        db.collection("users").document(userId)
+            .get()
+            .addOnSuccessListener(documentSnapshot -> {
+                Boolean notifPref = documentSnapshot.getBoolean("notificationsEnabled");
+                boolean enabled = notifPref != null ? notifPref : true;
+                callback.onSuccess(enabled);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting notification preference", e);
+                callback.onError(e.getMessage());
+            });
+    }
+    
+    @Override
+    public void updateNotificationPreference(String userId, boolean enabled, VoidCallback callback) {
+        db.collection("users").document(userId)
+            .update("notificationsEnabled", enabled)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Notification preference updated for user " + userId + ": " + enabled);
+                callback.onSuccess();
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error updating notification preference", e);
+                callback.onError(e.getMessage());
+            });
+    }
+    
     /**
      * Generate professional message based on notification type
      */

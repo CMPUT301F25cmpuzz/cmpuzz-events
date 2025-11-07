@@ -44,6 +44,16 @@ public interface INotificationService {
      */
     void deleteNotification(String notificationId, VoidCallback callback);
     
+    /**
+     * Get notification preference for a user
+     */
+    void getNotificationPreference(String userId, NotificationPreferenceCallback callback);
+    
+    /**
+     * Update notification preference for a user
+     */
+    void updateNotificationPreference(String userId, boolean enabled, VoidCallback callback);
+    
     // Callback interfaces
     interface VoidCallback {
         void onSuccess();
@@ -52,6 +62,11 @@ public interface INotificationService {
     
     interface NotificationListCallback {
         void onSuccess(List<Notification> notifications);
+        void onError(String error);
+    }
+    
+    interface NotificationPreferenceCallback {
+        void onSuccess(boolean enabled);
         void onError(String error);
     }
 }

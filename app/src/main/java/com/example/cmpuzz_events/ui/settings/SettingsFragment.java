@@ -15,14 +15,15 @@ import androidx.fragment.app.Fragment;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.databinding.FragmentSettingsBinding;
 import com.example.cmpuzz_events.models.user.User;
+import com.example.cmpuzz_events.service.INotificationService;
+import com.example.cmpuzz_events.service.NotificationService;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 public class SettingsFragment extends Fragment {
 
     private FragmentSettingsBinding binding;
     private SharedPreferences preferences;
-    private FirebaseFirestore db;
+    private NotificationService notificationService;
     private User currentUser;
 
     @Nullable
@@ -32,7 +33,8 @@ public class SettingsFragment extends Fragment {
         View root = binding.getRoot();
 
         preferences = requireContext().getSharedPreferences("user_preferences", Context.MODE_PRIVATE);
-        db = FirebaseFirestore.getInstance();
+        notificationService = NotificationService.getInstance();
+        notificationService.setContext(requireContext().getApplicationContext());
         currentUser = AuthManager.getInstance().getCurrentUser();
 
         // Setup toolbar
@@ -53,43 +55,48 @@ public class SettingsFragment extends Fragment {
             return;
         }
 
-        // Load saved preference from Firestore
-        db.collection("users").document(currentUser.getUid())
-            .get()
-            .addOnSuccessListener(documentSnapshot -> {
-                boolean notificationsEnabled = documentSnapshot.getBoolean("notificationsEnabled") != null 
-                    ? documentSnapshot.getBoolean("notificationsEnabled") : true;
-                
-                // Set the switch WITHOUT triggering the listener
-                binding.switchNotifications.setOnCheckedChangeListener(null);
-                binding.switchNotifications.setChecked(notificationsEnabled);
-                
-                // Also save to local preferences for fallback
-                preferences.edit().putBoolean("notifications_enabled", notificationsEnabled).apply();
-                
-                // NOW set up the listener after loading the initial value
-                binding.switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                    // Save to local preferences
-                    preferences.edit().putBoolean("notifications_enabled", isChecked).apply();
+        // Load saved preference from service
+        notificationService.getNotificationPreference(currentUser.getUid(), 
+            new INotificationService.NotificationPreferenceCallback() {
+                @Override
+                public void onSuccess(boolean enabled) {
+                    // Set the switch WITHOUT triggering the listener
+                    binding.switchNotifications.setOnCheckedChangeListener(null);
+                    binding.switchNotifications.setChecked(enabled);
                     
-                    // Save to Firestore
-                    db.collection("users").document(currentUser.getUid())
-                        .update("notificationsEnabled", isChecked)
-                        .addOnSuccessListener(aVoid -> {
-                            String message = isChecked ? "Notifications enabled" : "Notifications disabled";
-                            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-                        })
-                        .addOnFailureListener(e -> {
-                            Toast.makeText(getContext(), "Error saving preference", Toast.LENGTH_SHORT).show();
-                            // Revert the switch
-                            binding.switchNotifications.setOnCheckedChangeListener(null);
-                            binding.switchNotifications.setChecked(!isChecked);
-                            binding.switchNotifications.setOnCheckedChangeListener((buttonView2, isChecked2) -> {
-                                // Re-attach listener after reverting
-                                setupNotificationsToggle();
+                    // Also save to local preferences for fallback
+                    preferences.edit().putBoolean("notifications_enabled", enabled).apply();
+                    
+                    // NOW set up the listener after loading the initial value
+                    binding.switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                        // Save to local preferences
+                        preferences.edit().putBoolean("notifications_enabled", isChecked).apply();
+                        
+                        // Save via service
+                        notificationService.updateNotificationPreference(currentUser.getUid(), isChecked,
+                            new INotificationService.VoidCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    String message = isChecked ? "Notifications enabled" : "Notifications disabled";
+                                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    Toast.makeText(getContext(), "Error saving preference", Toast.LENGTH_SHORT).show();
+                                    // Revert the switch
+                                    binding.switchNotifications.setOnCheckedChangeListener(null);
+                                    binding.switchNotifications.setChecked(!isChecked);
+                                    setupNotificationsToggle(); // Re-setup
+                                }
                             });
-                        });
-                });
+                    });
+                }
+
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(getContext(), "Error loading preference", Toast.LENGTH_SHORT).show();
+                }
             });
     }
 
