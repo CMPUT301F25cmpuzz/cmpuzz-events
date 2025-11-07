@@ -21,7 +21,8 @@ public class Notification implements Serializable {
         WAITLISTED("waitlisted"),
         CANCELLED("cancelled"),
         ACCEPTED("accepted"),
-        DECLINED("declined");
+        DECLINED("declined"),
+        CONFIRMED("confirmed");
 
         private final String value;
 

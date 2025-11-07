@@ -239,6 +239,8 @@ public class NotificationService implements INotificationService {
                 return "Invitation Accepted";
             case DECLINED:
                 return "Invitation Declined";
+            case CONFIRMED:
+                return "Attendance Confirmed";
             default:
                 return "Event Notification";
         }
@@ -262,6 +264,9 @@ public class NotificationService implements INotificationService {
                 return "You have successfully accepted the invitation to \"" + eventName + "\".";
             case DECLINED:
                 return "You have declined the invitation to \"" + eventName + "\".";
+            case CONFIRMED:
+                return "Congratulations! Your attendance has been confirmed for \"" + eventName + 
+                       "\". We look forward to seeing you at the event!";
             default:
                 return "Update regarding \"" + eventName + "\".";
         }

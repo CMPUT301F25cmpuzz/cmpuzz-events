@@ -170,7 +170,7 @@ public class EventActionMenuFragment extends Fragment {
                     case "attendees":
                         userIds = eventEntity.getAttendees() != null ? 
                                 new ArrayList<>(eventEntity.getAttendees()) : new ArrayList<>();
-                        notificationType = Notification.NotificationType.INVITED; // General notification
+                        notificationType = Notification.NotificationType.CONFIRMED;
                         break;
                     case "declined":
                         userIds = eventEntity.getDeclined() != null ? 
