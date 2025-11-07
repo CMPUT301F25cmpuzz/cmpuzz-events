@@ -137,6 +137,17 @@ public class EventEntity {
     }
 
     /**
+     * Remove a user from the invitation list
+     */
+    public boolean removeFromInvitationsList(String userId) {
+        boolean removed = invitations.removeIf(inv -> inv.getUserId().equals(userId));
+        if (removed) {
+            this.updatedAt = new Date();
+        }
+        return removed;
+    }
+
+    /**
      * Add an invitation
      */
     public void addInvitation(Invitation invitation) {

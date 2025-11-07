@@ -151,6 +151,16 @@ public interface IEventService {
     void removeFromWaitlist(String eventId, String userId, VoidCallback callback);
 
     /**
+     * Remove a user from event invitation list
+     *
+     * @param eventId The event ID
+     * @param userId The user ID to remove
+     * @param callback Callback on success or error
+     */
+    void removeFromInvitiationsList(String eventId, String userId, VoidCallback callback);
+
+
+    /**
      * Send invitations to selected users from waitlist
      * (Random selection logic will be implemented later)
      *

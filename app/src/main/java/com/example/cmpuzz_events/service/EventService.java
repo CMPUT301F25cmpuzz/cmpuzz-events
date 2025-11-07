@@ -363,6 +363,25 @@ public class EventService implements IEventService {
     }
 
     @Override
+    public void removeFromInvitiationsList(String eventId, String userId, VoidCallback callback) {
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                if (event.removeFromInvitationsList(userId)) {
+                    updateEvent(event, callback);
+                } else {
+                    callback.onError("User not found in waitlist");
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    @Override
     public void sendInvitations(String eventId, List<Invitation> invitations, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
             @Override
@@ -402,6 +421,11 @@ public class EventService implements IEventService {
                             event.getDeclined().add(userId);
                         }
                     }
+                    
+                    // Remove from invitations list after they've responded
+                    // This prevents them from receiving duplicate invitation notifications
+                    event.removeFromInvitationsList(userId);
+                    
                     updateEvent(event, callback);
                 } else {
                     callback.onError("Invitation not found for user");
