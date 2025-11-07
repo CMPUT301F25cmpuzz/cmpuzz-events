@@ -184,149 +184,285 @@ public class EventEntity {
 
     // Getters and Setters
 
+    /**
+     * Gets event ID
+     * @return stored event ID
+     */
     public String getEventId() {
         return eventId;
     }
 
+    /**
+     * Sets event ID
+     * @param eventId to set value
+     */
     public void setEventId(String eventId) {
         this.eventId = eventId;
     }
 
+    /**
+     * Gets event title
+     * @return stored event title
+     */
     public String getTitle() {
         return title;
     }
 
+    /**
+     * Sets event title
+     * @param title to set value
+     */
     public void setTitle(String title) {
         this.title = title;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets event description
+     * @return stored event description
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Sets event description
+     * @param description to set description
+     */
     public void setDescription(String description) {
         this.description = description;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets event capacity
+     * @return stored event capacity
+     */
     public int getCapacity() {
         return capacity;
     }
 
+    /**
+     * Sets event capacity and stores update date object
+     * @param capacity to set capacity
+     */
     public void setCapacity(int capacity) {
         this.capacity = capacity;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets registration start date
+     * @return stored registration start date
+     */
     public Date getRegistrationStart() {
         return registrationStart;
     }
 
+    /**
+     * Sets registration start date
+     * @param registrationStart to set registration start date
+     */
     public void setRegistrationStart(Date registrationStart) {
         this.registrationStart = registrationStart;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets registration end date
+     * @return stored registration end date
+     */
     public Date getRegistrationEnd() {
         return registrationEnd;
     }
 
+    /**
+     * Sets registration end date
+     * @param registrationEnd to set registration end datew
+     */
     public void setRegistrationEnd(Date registrationEnd) {
         this.registrationEnd = registrationEnd;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets organizer ID
+     * @return stored organizer ID
+     */
     public String getOrganizerId() {
         return organizerId;
     }
 
+    /**
+     * Sets organizer ID
+     * @param organizerId to set organizer ID
+     */
     public void setOrganizerId(String organizerId) {
         this.organizerId = organizerId;
     }
 
+    /**
+     * Gets organizer name
+     * @return stored organizer name
+     */
     public String getOrganizerName() {
         return organizerName;
     }
 
+    /**
+     * Sets organizer name
+     * @param organizerName to set organizer name
+     */
     public void setOrganizerName(String organizerName) {
         this.organizerName = organizerName;
     }
 
+    /**
+     * Gets geolocation requirement
+     * @return stored geolocation requirement
+     */
     public boolean isGeolocationRequired() {
         return geolocationRequired;
     }
 
+    /**
+     * Sets geolocation requirement
+     * @param geolocationRequired to set geolocation requirement
+     */
     public void setGeolocationRequired(boolean geolocationRequired) {
         this.geolocationRequired = geolocationRequired;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets max entrants
+     * @return stored max entrants
+     */
     public int getMaxEntrants() {
         return maxEntrants;
     }
 
+    /**
+     * Sets max amount of entrants
+     * @param maxEntrants to set max amount of entrants
+     */
     public void setMaxEntrants(int maxEntrants) {
         this.maxEntrants = maxEntrants;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets waitlist
+     * @return stored waitlist
+     */
     public List<String> getWaitlist() {
         return waitlist;
     }
 
+    /**
+     * Sets waitlist
+     * @param waitlist to set waitlist
+     */
     public void setWaitlist(List<String> waitlist) {
         this.waitlist = waitlist;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets list of invitations using a list of the Invitation class
+     * @return invitation list
+     */
     public List<Invitation> getInvitations() {
         return invitations;
     }
 
+    /**
+     * Sets invitation list
+     * @param invitations to set invitation list
+     */
     public void setInvitations(List<Invitation> invitations) {
         this.invitations = invitations;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets attendee list
+     * @return store attendee list
+     */
     public List<String> getAttendees() {
         return attendees;
     }
 
+    /**
+     * Sets attendee list
+     * @param attendees to set attendee list
+     */
     public void setAttendees(List<String> attendees) {
         this.attendees = attendees;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Get list of all entrants who have declined
+     * @return list of declined entrants
+     */
     public List<String> getDeclined() {
         return declined;
     }
 
+    /**
+     * Sets list of declined entrants
+     * @param declined to set declined entrant list
+     */
     public void setDeclined(List<String> declined) {
         this.declined = declined;
         this.updatedAt = new Date();
     }
 
+    /**
+     * Gets Date object event was created at
+     * @return stored Date object from creation
+     */
     public Date getCreatedAt() {
         return createdAt;
     }
 
+    /**
+     * Sets original created date
+     * @param createdAt to set created date
+     */
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
+    /**
+     * Gets last updated Date
+     * @return stored last updated Date
+     */
     public Date getUpdatedAt() {
         return updatedAt;
     }
 
+    /**
+     * Sets last updated date
+     * @param updatedAt to set last updated date
+     */
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * Gets URL of QR code
+     * @return stored URL of QR code
+     */
     public String getQrCodeUrl() {
         return qrCodeUrl;
     }
 
+    /**
+     * Sets URL of QR code
+     * @param qrCodeUrl to set URL of QR code
+     */
     public void setQrCodeUrl(String qrCodeUrl) {
         this.qrCodeUrl = qrCodeUrl;
     }

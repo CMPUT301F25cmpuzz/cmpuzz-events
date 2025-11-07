@@ -12,10 +12,23 @@ import com.example.cmpuzz_events.MainActivity;
 import com.example.cmpuzz_events.databinding.ActivitySignupBinding;
 import com.example.cmpuzz_events.models.user.User;
 
+/**
+ * SignupActivity manages user registration for the entire app.
+ * It allows new users to create an account by entering their name, username,
+ * email, and password. The activity validates user input, interacts with
+ * the AuthManager to upload data to firebase
+ */
 public class SignupActivity extends AppCompatActivity {
     private ActivitySignupBinding binding;
     private AuthManager authManager;
 
+    /**
+     * Called when the activity is first created.
+     * Initializes view binding, sets up the AuthManager instance,
+     * and configures the user interface elements.
+     *
+     * @param savedInstanceState the previously saved instance state, if any
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,6 +39,10 @@ public class SignupActivity extends AppCompatActivity {
         setupUI();
     }
 
+    /**
+     * Sets up UI click listeners for the activity.
+     *
+     */
     private void setupUI() {
         binding.btnSignup.setOnClickListener(v -> handleSignup());
         
@@ -34,6 +51,12 @@ public class SignupActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Handles the user registration process.
+     * Validates all user input fields (name, username, email, password, and confirm password).
+     * Displays appropriate error messages for invalid entries.
+     * The data is then forwarded to the AuthManager to interact with firebase.
+     */
     private void handleSignup() {
         String name = binding.etName.getText().toString().trim();
         String username = binding.etUsername.getText().toString().trim();
@@ -119,6 +142,13 @@ public class SignupActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Displays or hides a loading indicator during authentication.
+     * When loading is enabled, form fields and the sign-up button are disabled
+     * to prevent multiple submissions.
+     *
+     * @param isLoading "true" to show the loading indicator, "false" to hide it
+     */
     private void setLoading(boolean isLoading) {
         binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         binding.btnSignup.setEnabled(!isLoading);
@@ -129,6 +159,9 @@ public class SignupActivity extends AppCompatActivity {
         binding.etConfirmPassword.setEnabled(!isLoading);
     }
 
+    /**
+     * Navigates user to main fragment.
+     */
     private void navigateToMain() {
         Intent intent = new Intent(SignupActivity.this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Singleton class to manage authentication state across the app
- * Similar to Android Context pattern - provides global access to auth state
+ * Singleton class to manage authentication state across the app.
+ * Manages all firebase functionality.
  */
 public class AuthManager {
     private static final String TAG = "AuthManager";
@@ -24,10 +24,17 @@ public class AuthManager {
     private User currentUser;
     private final List<AuthStateListener> listeners;
 
+    /**
+     * Interface definition for a callback to be invoked when authentication state changes.
+     */
     public interface AuthStateListener {
         void onAuthStateChanged(User user);
     }
 
+    /**
+     * Private constructor to enforce singleton pattern.
+     * Initializes FirebaseAuth and Firestore instances and listens for auth state changes.
+     */
     private AuthManager() {
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -45,6 +52,11 @@ public class AuthManager {
         });
     }
 
+    /**
+     * Returns the singleton instance of {@link AuthManager}.
+     *
+     * @return The shared {@link AuthManager} instance.
+     */
     public static synchronized AuthManager getInstance() {
         if (instance == null) {
             instance = new AuthManager();
@@ -52,22 +64,47 @@ public class AuthManager {
         return instance;
     }
 
+    /**
+     * Registers a listener for authentication state changes.
+     *
+     * @param listener The listener to add.
+     */
     public void addAuthStateListener(AuthStateListener listener) {
         listeners.add(listener);
         // Immediately notify with current state
         listener.onAuthStateChanged(currentUser);
     }
 
+    /**
+     * Removes a previously registered authentication state listener.
+     *
+     * @param listener The listener to remove.
+     */
     public void removeAuthStateListener(AuthStateListener listener) {
         listeners.remove(listener);
     }
 
+    /**
+     * Notifies all registered listeners of an authentication state change.
+     *
+     * @param user The current user, or {@code null} if signed out.
+     */
     private void notifyListeners(User user) {
         for (AuthStateListener listener : listeners) {
             listener.onAuthStateChanged(user);
         }
     }
 
+    /**
+     * Creates a new user account using Firebase Authentication and stores
+     * additional user details in Firestore.
+     *
+     * @param email       The user's email.
+     * @param password    The user's password.
+     * @param displayName The user's display name.
+     * @param username    The user's chosen username.
+     * @param callback    Callback to handle success or error.
+     */
     public void signUp(String email, String password, String displayName, String username, AuthCallback callback) {
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
@@ -104,6 +141,13 @@ public class AuthManager {
                 });
     }
 
+    /**
+     * Signs in an existing user with email and password.
+     *
+     * @param email    The user's email.
+     * @param password The user's password.
+     * @param callback Callback to handle success or error.
+     */
     public void signIn(String email, String password, AuthCallback callback) {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
@@ -120,10 +164,21 @@ public class AuthManager {
                 });
     }
 
+    /**
+     * Loads user data from Firestore using the provided UID.
+     *
+     * @param uid The Firebase UID of the user.
+     */
     private void loadUserData(String uid) {
         loadUserData(uid, null);
     }
 
+    /**
+     * Loads user data from Firestore and optionally invokes a callback.
+     *
+     * @param uid      The Firebase UID of the user.
+     * @param callback Optional callback for success or error.
+     */
     private void loadUserData(String uid, AuthCallback callback) {
         db.collection("users").document(uid)
                 .get()
@@ -143,6 +198,12 @@ public class AuthManager {
                 });
     }
 
+    /**
+     * Converts a Firestore document snapshot into a {@link User} object.
+     *
+     * @param doc The Firestore document snapshot.
+     * @return The corresponding {@link User} object.
+     */
     private User documentSnapshotToUser(DocumentSnapshot doc) {
         User user = new User();
         user.setUid(doc.getString("uid"));
@@ -163,26 +224,47 @@ public class AuthManager {
         return user;
     }
 
+    /**
+     * Signs out the currently authenticated user and clears session data.
+     */
     public void signOut() {
         auth.signOut();
         currentUser = null;
         notifyListeners(null);
     }
 
+    /**
+     * Returns the currently signed-in user.
+     *
+     * @return The current {@link User}, or {@code null} if not signed in.
+     */
     public User getCurrentUser() {
         return currentUser;
     }
 
+    /**
+     * Checks whether a user is currently signed in.
+     *
+     * @return {@code true} if a user is signed in, otherwise {@code false}.
+     */
     public boolean isSignedIn() {
         return auth.getCurrentUser() != null && currentUser != null;
     }
 
+    /**
+     * Returns the FirebaseAuth instance.
+     *
+     * @return The {@link FirebaseAuth} instance.
+     */
     public FirebaseAuth getAuth() {
         return auth;
     }
 
     /**
-     * Get multiple users by their IDs
+     * Gets multiple users from their UIDs.
+     *
+     * @param userIds  List of user IDs to fetch.
+     * @param callback Callback invoked with the resulting list or an error.
      */
     public void getUsersByIds(List<String> userIds, UsersCallback callback) {
         if (userIds == null || userIds.isEmpty()) {
@@ -216,11 +298,17 @@ public class AuthManager {
         }
     }
 
+    /**
+     * Callback interface for authentication operations.
+     */
     public interface AuthCallback {
         void onSuccess(User user);
         void onError(String error);
     }
 
+    /**
+     * Callback interface for retrieving multiple users from Firestore.
+     */
     public interface UsersCallback {
         void onSuccess(List<User> users);
         void onError(String error);
