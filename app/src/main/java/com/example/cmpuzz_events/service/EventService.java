@@ -428,14 +428,20 @@ public class EventService implements IEventService {
                     return;
                 }
                 
+                // Count already invited and attending users
+                int alreadyInvitedOrAttending = 0;
+                if (event.getInvitations() != null) {
+                    alreadyInvitedOrAttending = event.getInvitations().size();
+                }
+                
                 // Determine how many to sample
                 int numToSample;
                 if (sampleSize != null && sampleSize > 0) {
-                    // Use provided sample size
-                    numToSample = sampleSize;
+                    // Use provided sample size, minus already invited/attending
+                    numToSample = sampleSize - alreadyInvitedOrAttending;
                 } else if (event.getCapacity() > 0) {
-                    // Use capacity if set
-                    numToSample = event.getCapacity();
+                    // Use capacity, minus already invited/attending
+                    numToSample = event.getCapacity() - alreadyInvitedOrAttending;
                 } else {
                     // Random between 1 and maxEntrants (or waitlist size if smaller)
                     int maxEntrants = event.getMaxEntrants();
@@ -445,6 +451,12 @@ public class EventService implements IEventService {
                     int maxPossible = Math.min(maxEntrants, waitlist.size());
                     Random random = new Random();
                     numToSample = random.nextInt(maxPossible) + 1;
+                }
+                
+                // Ensure we don't draw negative or zero (if capacity already met)
+                if (numToSample <= 0) {
+                    callback.onError("Capacity already met. " + alreadyInvitedOrAttending + " already invited/attending.");
+                    return;
                 }
                 
                 // Cap at waitlist size
