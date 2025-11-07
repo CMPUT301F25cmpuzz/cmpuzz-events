@@ -171,26 +171,13 @@ public class ViewEntrantsFragment extends Fragment {
     }
 
     private void loadAttendees() {
-        List<Invitation> invitations = currentEvent.getInvitations();
-        if (invitations == null || invitations.isEmpty()) {
+        List<String> attendees = currentEvent.getAttendees();
+        if (attendees == null || attendees.isEmpty()) {
             showEmptyState("No attendees yet");
             return;
         }
 
-        // Extract user IDs from accepted invitations
-        List<String> userIds = new ArrayList<>();
-        for (Invitation invitation : invitations) {
-            if (invitation.isAccepted()) {
-                userIds.add(invitation.getUserId());
-            }
-        }
-
-        if (userIds.isEmpty()) {
-            showEmptyState("No confirmed attendees");
-            return;
-        }
-
-        loadUsers(userIds);
+        loadUsers(attendees);
     }
 
     private void loadDeclined() {

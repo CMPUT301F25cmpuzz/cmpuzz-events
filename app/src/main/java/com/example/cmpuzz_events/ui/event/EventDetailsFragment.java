@@ -10,6 +10,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -49,6 +51,7 @@ public class EventDetailsFragment extends Fragment {
     private MaterialButton shareButton;
     private MaterialButton viewMapButton;
     private MaterialButton joinButton;
+    private MaterialButton viewAllEntrantsButton;
     private TextView additionalActionsButton;
     private View dividerTop;
     private View dividerBottom;
@@ -89,6 +92,7 @@ public class EventDetailsFragment extends Fragment {
         shareButton = root.findViewById(R.id.share_button);
         viewMapButton = root.findViewById(R.id.view_map_button);
         joinButton = root.findViewById(R.id.join_button);
+        viewAllEntrantsButton = root.findViewById(R.id.view_all_entrants_button);
         additionalActionsButton = root.findViewById(R.id.additional_actions_button);
         dividerTop = root.findViewById(R.id.divider_top);
         dividerBottom = root.findViewById(R.id.divider_bottom);
@@ -115,14 +119,24 @@ public class EventDetailsFragment extends Fragment {
         if (isOrganizer) {
             // Organizer view - show all management controls
             editButton.setVisibility(View.VISIBLE);
-            shareButton.setVisibility(View.VISIBLE);
-            viewMapButton.setVisibility(View.VISIBLE);
             additionalActionsButton.setVisibility(View.VISIBLE);
             dividerTop.setVisibility(View.VISIBLE);
             dividerBottom.setVisibility(View.VISIBLE);
+            joinButton.setVisibility(View.GONE);
+            viewAllEntrantsButton.setVisibility(View.GONE);
+            shareButton.setVisibility(View.VISIBLE);
+            viewMapButton.setVisibility(View.VISIBLE);
             usersEnrolledTitle.setVisibility(View.VISIBLE);
             usersRecyclerView.setVisibility(View.VISIBLE);
-            joinButton.setVisibility(View.GONE);
+            
+            // Update constraint for organizers: users_enrolled_title below additional_actions_button
+            ConstraintLayout constraintLayout = (ConstraintLayout) usersEnrolledTitle.getParent();
+            ConstraintSet constraintSet = new ConstraintSet();
+            constraintSet.clone(constraintLayout);
+            constraintSet.connect(R.id.users_enrolled_title, ConstraintSet.TOP, 
+                                R.id.additional_actions_button, ConstraintSet.BOTTOM, 
+                                (int) (24 * getResources().getDisplayMetrics().density));
+            constraintSet.applyTo(constraintLayout);
             
             // Navigate to Action Menu, and pass the event object
             additionalActionsButton.setOnClickListener(v -> {
@@ -137,16 +151,17 @@ public class EventDetailsFragment extends Fragment {
             });
             
         } else {
-            // User view - show only Join button and essential info
+            // User view - show Join button, essential info, and entrants list
             editButton.setVisibility(View.GONE);
             shareButton.setVisibility(View.GONE);
             viewMapButton.setVisibility(View.GONE);
             additionalActionsButton.setVisibility(View.GONE);
             dividerTop.setVisibility(View.GONE);
             dividerBottom.setVisibility(View.GONE);
-            usersEnrolledTitle.setVisibility(View.GONE);
-            usersRecyclerView.setVisibility(View.GONE);
+            usersEnrolledTitle.setVisibility(View.VISIBLE);
+            usersRecyclerView.setVisibility(View.VISIBLE);
             joinButton.setVisibility(View.VISIBLE);
+            viewAllEntrantsButton.setVisibility(View.GONE);
             
             // Join event functionality
             joinButton.setOnClickListener(v -> joinEvent());
@@ -227,9 +242,9 @@ public class EventDetailsFragment extends Fragment {
                 
                 displayEventDetails(eventEntity);
                 
-                // Load enrolled users if organizer
+                // Load enrolled users for both organizers and regular users
                 User currentUser = AuthManager.getInstance().getCurrentUser();
-                if (currentUser != null && currentUser.canManageEvents()) {
+                if (currentUser != null) {
                     loadEnrolledUsers(eventEntity.getWaitlist());
                 }
             }
@@ -251,13 +266,23 @@ public class EventDetailsFragment extends Fragment {
             allUserIds.addAll(waitlist);
         }
         
-        // Add invited and attendee users from invitations
+        // Add invited users and attendees
         EventService.getInstance().getEvent(eventId, new IEventService.EventCallback() {
             @Override
             public void onSuccess(EventEntity event) {
+                // Add users with pending invitations
                 if (event.getInvitations() != null) {
                     for (Invitation invitation : event.getInvitations()) {
                         String userId = invitation.getUserId();
+                        if (!allUserIds.contains(userId)) {
+                            allUserIds.add(userId);
+                        }
+                    }
+                }
+                
+                // Add attendees (users who accepted invitations)
+                if (event.getAttendees() != null) {
+                    for (String userId : event.getAttendees()) {
                         if (!allUserIds.contains(userId)) {
                             allUserIds.add(userId);
                         }
@@ -324,16 +349,15 @@ public class EventDetailsFragment extends Fragment {
                 // Check if user has declined
                 boolean hasDeclined = event.getDeclined() != null && event.getDeclined().contains(userId);
                 
-                // Check if user has an invitation (invited or attending)
+                // Check if user is an attendee
+                boolean isAttending = event.getAttendees() != null && event.getAttendees().contains(userId);
+                
+                // Check if user has a pending invitation
                 boolean hasInvitation = false;
-                boolean isAttending = false;
                 if (event.getInvitations() != null) {
                     for (Invitation inv : event.getInvitations()) {
                         if (inv.getUserId() != null && inv.getUserId().equals(userId)) {
                             hasInvitation = true;
-                            if (inv.isAccepted()) {
-                                isAttending = true;
-                            }
                             break;
                         }
                     }

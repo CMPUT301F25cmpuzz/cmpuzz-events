@@ -69,6 +69,9 @@
         <action
             android:id="@+id/action_to_event_action_menu"
             app:destination="@id/eventActionMenuFragment" />
+        <action
+            android:id="@+id/action_event_details_to_view_all_entrants"
+            app:destination="@id/viewAllEntrantsFragment" />
     </fragment>
 
     <!-- Event Action Menu Fragment -->
@@ -91,6 +94,17 @@
         android:name="com.example.cmpuzz_events.ui.event.ViewEntrantsFragment"
         android:label="View Entrants"
         tools:layout="@layout/fragment_view_entrants">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
+    </fragment>
+
+    <!-- View All Entrants Fragment (for users) -->
+    <fragment
+        android:id="@+id/viewAllEntrantsFragment"
+        android:name="com.example.cmpuzz_events.ui.event.ViewAllEntrantsFragment"
+        android:label="All Entrants"
+        tools:layout="@layout/fragment_view_all_entrants">
         <argument
             android:name="eventId"
             app:argType="string" />
