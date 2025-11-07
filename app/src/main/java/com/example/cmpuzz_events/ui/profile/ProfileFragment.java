@@ -1,5 +1,6 @@
 package com.example.cmpuzz_events.ui.profile;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -49,6 +50,9 @@ public class ProfileFragment extends Fragment {
             // Setup enrolled events RecyclerView
             setupEnrolledEvents(root, currentUser);
         }
+
+        // Setup logout button
+        binding.btnLogout.setOnClickListener(v -> logout());
 
         return root;
     }
@@ -117,6 +121,23 @@ public class ProfileFragment extends Fragment {
                 Toast.makeText(getContext(), "Failed to leave: " + error, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void logout() {
+        // Clear user session
+        AuthManager.getInstance().signOut();
+        
+        // Show toast
+        Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
+        
+        // Redirect to LoginActivity
+        Intent intent = new Intent(getActivity(), com.example.cmpuzz_events.auth.LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        
+        if (getActivity() != null) {
+            getActivity().finish();
+        }
     }
 
     @Override
