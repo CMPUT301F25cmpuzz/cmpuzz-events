@@ -181,8 +181,48 @@ public class AuthManager {
         return auth;
     }
 
+    /**
+     * Get multiple users by their IDs
+     */
+    public void getUsersByIds(List<String> userIds, UsersCallback callback) {
+        if (userIds == null || userIds.isEmpty()) {
+            callback.onSuccess(new ArrayList<>());
+            return;
+        }
+
+        List<User> users = new ArrayList<>();
+        final int[] remaining = {userIds.size()};
+
+        for (String userId : userIds) {
+            db.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        User user = documentSnapshotToUser(documentSnapshot);
+                        users.add(user);
+                    }
+                    remaining[0]--;
+                    if (remaining[0] == 0) {
+                        callback.onSuccess(users);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading user: " + userId, e);
+                    remaining[0]--;
+                    if (remaining[0] == 0) {
+                        callback.onSuccess(users);
+                    }
+                });
+        }
+    }
+
     public interface AuthCallback {
         void onSuccess(User user);
+        void onError(String error);
+    }
+
+    public interface UsersCallback {
+        void onSuccess(List<User> users);
         void onError(String error);
     }
 }

@@ -12,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
@@ -20,6 +22,9 @@ import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
 import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EventDetailsFragment extends Fragment {
 
@@ -47,6 +52,8 @@ public class EventDetailsFragment extends Fragment {
     private View dividerTop;
     private View dividerBottom;
     private TextView usersEnrolledTitle;
+    private RecyclerView usersRecyclerView;
+    private EnrolledUsersAdapter usersAdapter;
 
     public static EventDetailsFragment newInstance(String eventId) {
         EventDetailsFragment fragment = new EventDetailsFragment();
@@ -85,6 +92,12 @@ public class EventDetailsFragment extends Fragment {
         dividerTop = root.findViewById(R.id.divider_top);
         dividerBottom = root.findViewById(R.id.divider_bottom);
         usersEnrolledTitle = root.findViewById(R.id.users_enrolled_title);
+        usersRecyclerView = root.findViewById(R.id.users_recycler_view);
+        
+        // Setup RecyclerView
+        usersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        usersAdapter = new EnrolledUsersAdapter(new ArrayList<>());
+        usersRecyclerView.setAdapter(usersAdapter);
         
         // Setup UI based on user role
         setupRoleBasedUI(root);
@@ -107,6 +120,7 @@ public class EventDetailsFragment extends Fragment {
             dividerTop.setVisibility(View.VISIBLE);
             dividerBottom.setVisibility(View.VISIBLE);
             usersEnrolledTitle.setVisibility(View.VISIBLE);
+            usersRecyclerView.setVisibility(View.VISIBLE);
             joinButton.setVisibility(View.GONE);
             
             // Navigate to Action Menu, and pass the event object
@@ -130,6 +144,7 @@ public class EventDetailsFragment extends Fragment {
             dividerTop.setVisibility(View.GONE);
             dividerBottom.setVisibility(View.GONE);
             usersEnrolledTitle.setVisibility(View.GONE);
+            usersRecyclerView.setVisibility(View.GONE);
             joinButton.setVisibility(View.VISIBLE);
             
             // Join event functionality
@@ -210,12 +225,41 @@ public class EventDetailsFragment extends Fragment {
                 currentEvent.setMaxEntrants(eventEntity.getMaxEntrants());
                 
                 displayEventDetails(eventEntity);
+                
+                // Load enrolled users if organizer
+                User currentUser = AuthManager.getInstance().getCurrentUser();
+                if (currentUser != null && currentUser.canManageEvents()) {
+                    loadEnrolledUsers(eventEntity.getWaitlist());
+                }
             }
 
             @Override
             public void onError(String error) {
                 Log.e(TAG, "Error loading event: " + error);
                 Toast.makeText(getContext(), "Failed to load event details", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadEnrolledUsers(List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            usersAdapter.updateUsers(new ArrayList<>());
+            usersRecyclerView.setVisibility(View.GONE);
+            return;
+        }
+
+        AuthManager.getInstance().getUsersByIds(userIds, new AuthManager.UsersCallback() {
+            @Override
+            public void onSuccess(List<User> users) {
+                Log.d(TAG, "Loaded " + users.size() + " enrolled users");
+                usersAdapter.updateUsers(users);
+                usersRecyclerView.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error loading enrolled users: " + error);
+                usersAdapter.updateUsers(new ArrayList<>());
             }
         });
     }
