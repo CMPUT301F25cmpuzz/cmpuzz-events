@@ -48,6 +48,15 @@ public class Notification implements Serializable {
     public Notification() {
     }
 
+    /**
+     * Constructor for notification with known data
+     * @param userId
+     * @param eventId
+     * @param eventName
+     * @param type
+     * @param title
+     * @param message
+     */
     public Notification(String userId, String eventId, String eventName, NotificationType type, String title, String message) {
         this.userId = userId;
         this.eventId = eventId;

@@ -84,6 +84,12 @@ public class EventService implements IEventService {
         return uiEvent;
     }
 
+    /**
+     * Creates a new event in Firestore.
+     *
+     * @param uiEvent  The UI event to create
+     * @param callback Callback for success or error
+     */
     @Override
     public void createEvent(Event uiEvent, EventCallback callback) {
         Log.d(TAG, "createEvent called for: " + uiEvent.getTitle());
@@ -104,6 +110,12 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Retrieves a Firestore event by its ID.
+     *
+     * @param eventId  The ID of the event
+     * @param callback Callback returning the EventEntity or an error
+     */
     @Override
     public void getEvent(String eventId, EventCallback callback) {
         db.collection(COLLECTION_EVENTS)
@@ -123,6 +135,12 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Retrieves a UI Event by ID, converting from Firestore entity.
+     *
+     * @param eventId The event ID
+     * @param callback Callback with UI Event or error
+     */
     @Override
     public void getUIEventById(String eventId, UIEventCallback callback) {
         getEvent(eventId, new EventCallback() {
@@ -139,6 +157,12 @@ public class EventService implements IEventService {
         });
     }
 
+    /**
+     * Retrieves all events for a specific organizer.
+     *
+     * @param organizerId Organizer's user ID
+     * @param callback Callback with list of EventEntity or error
+     */
     @Override
     public void getEventsForOrganizer(String organizerId, EventListCallback callback) {
         db.collection(COLLECTION_EVENTS)
@@ -157,6 +181,11 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Retrieves all available events.
+     *
+     * @param callback Callback returning list of Event or error
+     */
     @Override
     public void getAllEvents(UIEventListCallback callback) {
         db.collection(COLLECTION_EVENTS)
@@ -177,6 +206,12 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Retrieves all events in which the user is enrolled (on waitlist).
+     *
+     * @param userId   User ID
+     * @param callback Callback returning list of Event or error
+     */
     @Override
     public void getEventsUserEnrolledIn(String userId, UIEventListCallback callback) {
         db.collection(COLLECTION_EVENTS)
@@ -198,6 +233,12 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Retrieves all events in which a user is involved (attending, invited, declined, or waitlisted).
+     *
+     * @param userId   User ID
+     * @param callback Callback with list of Event
+     */
     @Override
     public void getEventsForUser(String userId, UIEventListCallback callback) {
         // Get all events and filter for user involvement
@@ -246,6 +287,12 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Retrieves all event entities for a user’s involvement (attendee, waitlist, etc.).
+     *
+     * @param userId   User ID
+     * @param callback Callback returning list of EventEntity
+     */
     @Override
     public void getEventsForUserWithEntities(String userId, EventListCallback callback) {
         // Get all events and filter for user involvement - return EventEntity
@@ -293,6 +340,12 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Updates an existing event document in Firestore.
+     *
+     * @param event Event entity to update
+     * @param callback Callback for success or error
+     */
     @Override
     public void updateEvent(EventEntity event, VoidCallback callback) {
         event.setUpdatedAt(new Date());
@@ -310,6 +363,12 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Deletes an event by ID.
+     *
+     * @param eventId  ID of the event to delete
+     * @param callback Callback for completion
+     */
     @Override
     public void deleteEvent(String eventId, VoidCallback callback) {
         db.collection(COLLECTION_EVENTS)
@@ -325,6 +384,13 @@ public class EventService implements IEventService {
             });
     }
 
+    /**
+     * Adds a user to an event waitlist.
+     *
+     * @param eventId Event ID
+     * @param userId User ID
+     * @param callback Callback for success or error
+     */
     @Override
     public void addToWaitlist(String eventId, String userId, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
@@ -344,6 +410,12 @@ public class EventService implements IEventService {
         });
     }
 
+    /**
+     * Adds a user to a waitlist.
+     * @param eventId The event ID
+     * @param userId The user ID to add
+     * @param callback Callback on success or error
+     */
     @Override
     public void joinEvent(String eventId, String userId, VoidCallback callback) {
         // joinEvent is just an alias for addToWaitlist with better logging
@@ -351,6 +423,12 @@ public class EventService implements IEventService {
         addToWaitlist(eventId, userId, callback);
     }
 
+    /**
+     * Removes a user from event waitlist.
+     * @param eventId The event ID
+     * @param userId The user ID to remove
+     * @param callback Callback on success or error
+     */
     @Override
     public void removeFromWaitlist(String eventId, String userId, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
@@ -370,6 +448,12 @@ public class EventService implements IEventService {
         });
     }
 
+    /**
+     * Removes user from invitations list.
+     * @param eventId The event ID
+     * @param userId The user ID to remove
+     * @param callback Callback on success or error
+     */
     @Override
     public void removeFromInvitiationsList(String eventId, String userId, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
@@ -389,6 +473,12 @@ public class EventService implements IEventService {
         });
     }
 
+    /**
+     * Sends invitations to specified users.
+     * @param eventId The event ID
+     * @param invitations List of invitations to send
+     * @param callback Callback on success or error
+     */
     @Override
     public void sendInvitations(String eventId, List<Invitation> invitations, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
@@ -409,6 +499,13 @@ public class EventService implements IEventService {
         });
     }
 
+    /**
+     * Handles user invitation responses.
+     * @param eventId The event ID
+     * @param userId The user ID
+     * @param accept True to accept, false to decline
+     * @param callback Callback on success or error
+     */
     @Override
     public void respondToInvitation(String eventId, String userId, boolean accept, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
@@ -449,6 +546,14 @@ public class EventService implements IEventService {
         });
     }
 
+    /**
+     * Randomly draws a specified number of attendees from an event's waitlist.
+     * Generates invitations for selected users.
+     *
+     * @param eventId    Event ID
+     * @param sampleSize Number of users to invite
+     * @param callback   Completion callback
+     */
     @Override
     public void drawAttendees(String eventId, Integer sampleSize, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
