@@ -465,7 +465,10 @@ public class EventService implements IEventService {
                 // Count already invited and attending users
                 int alreadyInvitedOrAttending = 0;
                 if (event.getInvitations() != null) {
-                    alreadyInvitedOrAttending = event.getInvitations().size();
+                    alreadyInvitedOrAttending += event.getInvitations().size();
+                }
+                if (event.getAttendees() != null) {
+                    alreadyInvitedOrAttending += event.getAttendees().size();
                 }
                 
                 // Determine how many to sample
