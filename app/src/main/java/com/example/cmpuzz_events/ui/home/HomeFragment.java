@@ -54,14 +54,22 @@ public class HomeFragment extends Fragment {
         adapter = new MyEventsAdapter(new ArrayList<>(), true); // true = organizer view
         
         // Set click listener for viewing event details
-        adapter.setOnEventClickListener(event -> {
-            // Navigate to EventDetailsFragment
-            Bundle bundle = new Bundle();
-            bundle.putString("eventId", event.getEventId());
-            Navigation.findNavController(root).navigate(
-                R.id.action_to_event_details,
-                bundle
-            );
+        adapter.setOnEventClickListener(new MyEventsAdapter.OnEventClickListener() {
+            @Override
+            public void onViewEventClick(Event event) {
+                // Navigate to EventDetailsFragment
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", event.getEventId());
+                Navigation.findNavController(root).navigate(
+                    R.id.action_to_event_details,
+                    bundle
+                );
+            }
+
+            @Override
+            public void onDrawAttendeesClick(Event event) {
+                drawAttendeesForEvent(event);
+            }
         });
         
         recyclerView.setAdapter(adapter);
@@ -70,6 +78,31 @@ public class HomeFragment extends Fragment {
         loadMyEvents();
         
         return root;
+    }
+
+    private void drawAttendeesForEvent(Event event) {
+        Log.d(TAG, "Drawing attendees for event: " + event.getTitle());
+        
+        // Call the service to draw attendees (null = use capacity or random)
+        eventService.drawAttendees(event.getEventId(), null, new IEventService.VoidCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(getContext(), 
+                    "Successfully drew attendees for " + event.getTitle(), 
+                    Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Attendees drawn successfully");
+                // Optionally reload the events list to show updated state
+                loadMyEvents();
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getContext(), 
+                    "Error drawing attendees: " + error, 
+                    Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Error drawing attendees: " + error);
+            }
+        });
     }
 
     private void loadMyEvents() {

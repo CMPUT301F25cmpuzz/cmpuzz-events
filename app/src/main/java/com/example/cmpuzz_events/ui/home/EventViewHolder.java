@@ -38,9 +38,10 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
             btnDraw.setVisibility(View.GONE);
         }
         
-        // Set click listener for View Event button
+        // Set click listeners
         if (listener != null) {
             btnView.setOnClickListener(v -> listener.onViewEventClick(event));
+            btnDraw.setOnClickListener(v -> listener.onDrawAttendeesClick(event));
         }
     }
 }

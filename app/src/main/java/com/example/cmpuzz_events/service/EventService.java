@@ -5,14 +5,17 @@ import android.util.Log;
 import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.ui.event.Event;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Implementation of IEventService.
@@ -224,11 +227,11 @@ public class EventService implements IEventService {
     }
 
     @Override
-    public void addToWaitlist(String eventId, String deviceId, VoidCallback callback) {
+    public void addToWaitlist(String eventId, String userId, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
             @Override
             public void onSuccess(EventEntity event) {
-                if (event.addToWaitlist(deviceId)) {
+                if (event.addToWaitlist(userId)) {
                     updateEvent(event, callback);
                 } else {
                     callback.onError("Failed to add to waitlist - already exists or waitlist full");
@@ -243,21 +246,21 @@ public class EventService implements IEventService {
     }
 
     @Override
-    public void joinEvent(String eventId, String deviceId, VoidCallback callback) {
+    public void joinEvent(String eventId, String userId, VoidCallback callback) {
         // joinEvent is just an alias for addToWaitlist with better logging
         Log.d(TAG, "User joining event: " + eventId);
-        addToWaitlist(eventId, deviceId, callback);
+        addToWaitlist(eventId, userId, callback);
     }
 
     @Override
-    public void removeFromWaitlist(String eventId, String deviceId, VoidCallback callback) {
+    public void removeFromWaitlist(String eventId, String userId, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
             @Override
             public void onSuccess(EventEntity event) {
-                if (event.removeFromWaitlist(deviceId)) {
+                if (event.removeFromWaitlist(userId)) {
                     updateEvent(event, callback);
                 } else {
-                    callback.onError("Device not found in waitlist");
+                    callback.onError("User not found in waitlist");
                 }
             }
 
@@ -276,7 +279,7 @@ public class EventService implements IEventService {
                 for (Invitation invitation : invitations) {
                     event.addInvitation(invitation);
                     // Also remove from waitlist when invited
-                    event.removeFromWaitlist(invitation.getDeviceId());
+                    event.removeFromWaitlist(invitation.getUserId());
                 }
                 updateEvent(event, callback);
             }
@@ -289,11 +292,11 @@ public class EventService implements IEventService {
     }
 
     @Override
-    public void respondToInvitation(String eventId, String deviceId, boolean accept, VoidCallback callback) {
+    public void respondToInvitation(String eventId, String userId, boolean accept, VoidCallback callback) {
         getEvent(eventId, new EventCallback() {
             @Override
             public void onSuccess(EventEntity event) {
-                Invitation invitation = event.getInvitationByDeviceId(deviceId);
+                Invitation invitation = event.getInvitationByUserId(userId);
                 if (invitation != null) {
                     if (accept) {
                         invitation.accept();
@@ -302,8 +305,86 @@ public class EventService implements IEventService {
                     }
                     updateEvent(event, callback);
                 } else {
-                    callback.onError("Invitation not found for device");
+                    callback.onError("Invitation not found for user");
                 }
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    @Override
+    public void drawAttendees(String eventId, Integer sampleSize, VoidCallback callback) {
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                List<String> waitlist = event.getWaitlist();
+                
+                // Validate waitlist is not empty
+                if (waitlist == null || waitlist.isEmpty()) {
+                    callback.onError("Waitlist is empty - no attendees to draw");
+                    return;
+                }
+                
+                // Determine how many to sample
+                int numToSample;
+                if (sampleSize != null && sampleSize > 0) {
+                    // Use provided sample size
+                    numToSample = sampleSize;
+                } else if (event.getCapacity() > 0) {
+                    // Use capacity if set
+                    numToSample = event.getCapacity();
+                } else {
+                    // Random between 1 and maxEntrants (or waitlist size if smaller)
+                    int maxEntrants = event.getMaxEntrants();
+                    if (maxEntrants <= 0) {
+                        maxEntrants = waitlist.size();
+                    }
+                    int maxPossible = Math.min(maxEntrants, waitlist.size());
+                    Random random = new Random();
+                    numToSample = random.nextInt(maxPossible) + 1;
+                }
+                
+                // Cap at waitlist size
+                numToSample = Math.min(numToSample, waitlist.size());
+                final int finalNumToSample = numToSample; // Make effectively final for inner class
+                
+                Log.d(TAG, "Drawing " + finalNumToSample + " attendees from waitlist of " + waitlist.size());
+                
+                // Randomly sample from waitlist
+                List<String> shuffledWaitlist = new ArrayList<>(waitlist);
+                Collections.shuffle(shuffledWaitlist);
+                List<String> selectedDeviceIds = shuffledWaitlist.subList(0, finalNumToSample);
+                
+                // Create invitations for selected attendees
+                List<Invitation> invitations = new ArrayList<>();
+                for (String userId : selectedDeviceIds) {
+                    Invitation invitation = new Invitation(userId, null); // username can be null
+                    invitations.add(invitation);
+                }
+                
+                // Add invitations to event and remove from waitlist
+                for (Invitation invitation : invitations) {
+                    event.addInvitation(invitation);
+                    event.removeFromWaitlist(invitation.getUserId());
+                }
+                
+                // Save the updated event
+                updateEvent(event, new VoidCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Successfully drew " + finalNumToSample + " attendees and sent invitations");
+                        callback.onSuccess();
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        callback.onError("Failed to save drawn attendees: " + error);
+                    }
+                });
             }
 
             @Override
@@ -355,7 +436,7 @@ public class EventService implements IEventService {
             List<Invitation> invitations = new ArrayList<>();
             for (Map<String, Object> invMap : invitationMaps) {
                 Invitation inv = new Invitation();
-                inv.setDeviceId((String) invMap.get("deviceId"));
+                inv.setUserId((String) invMap.get("userId"));
                 inv.setUsername((String) invMap.get("username"));
                 
                 String statusStr = (String) invMap.get("status");
@@ -363,11 +444,20 @@ public class EventService implements IEventService {
                     inv.setStatus(Invitation.InvitationStatus.fromString(statusStr));
                 }
                 
-                Date invitedAt = (Date) invMap.get("invitedAt");
-                if (invitedAt != null) inv.setInvitedAt(invitedAt);
+                // Handle both Timestamp and Date types
+                Object invitedAtObj = invMap.get("invitedAt");
+                if (invitedAtObj instanceof Timestamp) {
+                    inv.setInvitedAt(((Timestamp) invitedAtObj).toDate());
+                } else if (invitedAtObj instanceof Date) {
+                    inv.setInvitedAt((Date) invitedAtObj);
+                }
                 
-                Date respondedAt = (Date) invMap.get("respondedAt");
-                if (respondedAt != null) inv.setRespondedAt(respondedAt);
+                Object respondedAtObj = invMap.get("respondedAt");
+                if (respondedAtObj instanceof Timestamp) {
+                    inv.setRespondedAt(((Timestamp) respondedAtObj).toDate());
+                } else if (respondedAtObj instanceof Date) {
+                    inv.setRespondedAt((Date) respondedAtObj);
+                }
                 
                 invitations.add(inv);
             }

@@ -105,32 +105,32 @@ public interface IEventService {
     void deleteEvent(String eventId, VoidCallback callback);
 
     /**
-     * Add a device to event waitlist
+     * Add a user to event waitlist
      *
      * @param eventId The event ID
-     * @param deviceId The device ID to add
+     * @param userId The user ID to add
      * @param callback Callback on success or error
      */
-    void addToWaitlist(String eventId, String deviceId, VoidCallback callback);
+    void addToWaitlist(String eventId, String userId, VoidCallback callback);
 
     /**
      * Join an event (add to waitlist)
      * Convenience method for users to join events
      *
      * @param eventId The event ID
-     * @param deviceId The device ID to add
+     * @param userId The user ID to add
      * @param callback Callback on success or error
      */
-    void joinEvent(String eventId, String deviceId, VoidCallback callback);
+    void joinEvent(String eventId, String userId, VoidCallback callback);
 
     /**
-     * Remove a device from event waitlist
+     * Remove a user from event waitlist
      *
      * @param eventId The event ID
-     * @param deviceId The device ID to remove
+     * @param userId The user ID to remove
      * @param callback Callback on success or error
      */
-    void removeFromWaitlist(String eventId, String deviceId, VoidCallback callback);
+    void removeFromWaitlist(String eventId, String userId, VoidCallback callback);
 
     /**
      * Send invitations to selected users from waitlist
@@ -146,9 +146,20 @@ public interface IEventService {
      * Update invitation status (accept/decline)
      *
      * @param eventId The event ID
-     * @param deviceId The device ID
+     * @param userId The user ID
      * @param accept True to accept, false to decline
      * @param callback Callback on success or error
      */
-    void respondToInvitation(String eventId, String deviceId, boolean accept, VoidCallback callback);
+    void respondToInvitation(String eventId, String userId, boolean accept, VoidCallback callback);
+
+    /**
+     * Draw random attendees from waitlist and send them invitations.
+     * If capacity is set (> 0), samples that many attendees.
+     * Otherwise, samples a random number between 1 and maxEntrants.
+     *
+     * @param eventId The event ID
+     * @param sampleSize Number of attendees to draw (null to use capacity or random 1-maxEntrants)
+     * @param callback Callback on success or error
+     */
+    void drawAttendees(String eventId, Integer sampleSize, VoidCallback callback);
 }

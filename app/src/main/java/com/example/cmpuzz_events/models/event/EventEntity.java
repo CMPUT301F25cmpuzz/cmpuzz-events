@@ -111,25 +111,25 @@ public class EventEntity {
     }
 
     /**
-     * Add a device to the waitlist
+     * Add a user to the waitlist
      */
-    public boolean addToWaitlist(String deviceId) {
-        if (waitlist.contains(deviceId)) {
+    public boolean addToWaitlist(String userId) {
+        if (waitlist.contains(userId)) {
             return false; // Already on waitlist
         }
         if (maxEntrants > 0 && waitlist.size() >= maxEntrants) {
             return false; // Waitlist is full
         }
-        waitlist.add(deviceId);
+        waitlist.add(userId);
         this.updatedAt = new Date();
         return true;
     }
 
     /**
-     * Remove a device from the waitlist
+     * Remove a user from the waitlist
      */
-    public boolean removeFromWaitlist(String deviceId) {
-        boolean removed = waitlist.remove(deviceId);
+    public boolean removeFromWaitlist(String userId) {
+        boolean removed = waitlist.remove(userId);
         if (removed) {
             this.updatedAt = new Date();
         }
@@ -145,11 +145,11 @@ public class EventEntity {
     }
 
     /**
-     * Get invitation by device ID
+     * Get invitation by user ID
      */
-    public Invitation getInvitationByDeviceId(String deviceId) {
+    public Invitation getInvitationByUserId(String userId) {
         for (Invitation inv : invitations) {
-            if (inv.getDeviceId().equals(deviceId)) {
+            if (inv.getUserId().equals(userId)) {
                 return inv;
             }
         }

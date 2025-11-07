@@ -9,7 +9,7 @@ import java.util.Map;
  * Tracks invitation status (pending, accepted, declined).
  */
 public class Invitation {
-    private String deviceId;
+    private String userId;
     private String username;           // Optional: for display purposes
     private InvitationStatus status;
     private Date invitedAt;
@@ -41,8 +41,8 @@ public class Invitation {
     /**
      * Constructor for creating a new invitation
      */
-    public Invitation(String deviceId, String username) {
-        this.deviceId = deviceId;
+    public Invitation(String userId, String username) {
+        this.userId = userId;
         this.username = username;
         this.status = InvitationStatus.PENDING;
         this.invitedAt = new Date();
@@ -77,7 +77,7 @@ public class Invitation {
      */
     public Map<String, Object> toMap() {
         Map<String, Object> map = new HashMap<>();
-        map.put("deviceId", deviceId);
+        map.put("userId", userId);
         map.put("username", username);
         map.put("status", status.name());
         map.put("invitedAt", invitedAt);
@@ -87,12 +87,12 @@ public class Invitation {
 
     // Getters and Setters
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getUsername() {

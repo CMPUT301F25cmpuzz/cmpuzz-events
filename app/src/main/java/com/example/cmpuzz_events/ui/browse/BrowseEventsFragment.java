@@ -43,13 +43,21 @@ public class BrowseEventsFragment extends Fragment {
         adapter = new MyEventsAdapter(new ArrayList<>(), false); // false = user view
         
         // Set click listener to navigate to event details
-        adapter.setOnEventClickListener(event -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("eventId", event.getEventId());
-            Navigation.findNavController(root).navigate(
-                R.id.action_browse_to_event_details,
-                bundle
-            );
+        adapter.setOnEventClickListener(new MyEventsAdapter.OnEventClickListener() {
+            @Override
+            public void onViewEventClick(Event event) {
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", event.getEventId());
+                Navigation.findNavController(root).navigate(
+                    R.id.action_browse_to_event_details,
+                    bundle
+                );
+            }
+
+            @Override
+            public void onDrawAttendeesClick(Event event) {
+                // Do nothing - users can't draw attendees
+            }
         });
         
         binding.recyclerViewBrowseEvents.setAdapter(adapter);
