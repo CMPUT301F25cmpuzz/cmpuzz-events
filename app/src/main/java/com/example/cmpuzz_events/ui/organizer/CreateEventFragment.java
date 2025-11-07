@@ -25,6 +25,15 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
+import android.content.Intent;
+import android.net.Uri;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.example.cmpuzz_events.R;
+
+
+
 /**
  * Controller for the Organizer "Create Event" screen.
  * Connects UI inputs to EventService for Firebase storage.
@@ -38,6 +47,10 @@ public class CreateEventFragment extends Fragment {
     private Date registrationStart;
     private Date registrationEnd;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private Uri imageUri;
+    private StorageReference storageRef;
+
 
     @Nullable
     @Override
@@ -74,8 +87,6 @@ public class CreateEventFragment extends Fragment {
         // Handle Finish button click
         binding.btnFinish.setOnClickListener(v -> handleCreateEvent());
 
-        // Handle Finish button click
-        binding.btnFinish.setOnClickListener(v -> handleCreateEvent());
 
         // Handle registration period picker
         binding.rowSetRegistrationPeriod.setOnClickListener(v -> {
@@ -99,6 +110,11 @@ public class CreateEventFragment extends Fragment {
             binding.setEntrantsInput.setEnabled(isChecked);
             if (!isChecked) binding.setEntrantsInput.setText("");
         });
+
+        storageRef = FirebaseStorage.getInstance().getReference("event_posters");
+
+        binding.btnUploadImage.setOnClickListener(v -> openFileChooser());
+
 
         return root;
     }
@@ -125,11 +141,7 @@ public class CreateEventFragment extends Fragment {
         String capacityStr = binding.setAttendeesInput.getText().toString().trim();
         String maxEntrantsStr = binding.setEntrantsInput.getText().toString().trim();
 
-        // Validate required fields
-        if (title.isEmpty() || description.isEmpty()) {
-            Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
-            return;
-        }
+
         if (capacityStr.isEmpty() || maxEntrantsStr.isEmpty()) {
             Toast.makeText(requireContext(), "Please enter attendee and entrant limits", Toast.LENGTH_SHORT).show();
             return;
@@ -154,45 +166,46 @@ public class CreateEventFragment extends Fragment {
             return;
         }
 
-        // Use selected registration period
-        Date start = registrationStart;
-        Date end = registrationEnd;
+        // Upload image if selected
+        if (imageUri != null) {
+            String fileName = UUID.randomUUID().toString() + ".jpg";
+            StorageReference fileRef = storageRef.child(fileName);
 
-        if (title.isEmpty() || description.isEmpty()) {
-            Log.w("CreateEventFragment", "Title or description is empty");
-            Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
-            return;
+            fileRef.putFile(imageUri)
+                    .addOnProgressListener(taskSnapshot -> {
+                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                        binding.btnUploadImage.setText("Uploading... " + (int) progress + "%");
+                        binding.btnUploadImage.setEnabled(false);
+                    })
+                    .addOnSuccessListener(taskSnapshot -> {
+                        binding.btnUploadImage.setText("Upload Image");
+                        binding.btnUploadImage.setEnabled(true);
+
+                        fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                            String imageUrl = uri.toString();
+                            saveEventToFirestore(title, description, geoRequired, capacity, maxEntrants, imageUrl);
+                        });
+                    })
+                    .addOnFailureListener(e -> {
+                        binding.btnUploadImage.setText("Upload Image");
+                        binding.btnUploadImage.setEnabled(true);
+                        Toast.makeText(requireContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+
+        } else {
+            // No image selected, just save event
+            saveEventToFirestore(title, description, geoRequired, capacity, maxEntrants, null);
         }
 
-        Log.d("CreateEventFragment",
-                "Creating event: " + title + " by " + currentUser.getDisplayName() + " (" + currentUser.getUid() + ")");
-
-        // Create UI Event object with current user's UID and name as organizer
-        String eventId = UUID.randomUUID().toString();
-        Event uiEvent = new Event(eventId, title, description, capacity,
-                start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired);
-        uiEvent.setMaxEntrants(maxEntrants);
-
-        // Save to Firebase via EventService
-        eventService.createEvent(uiEvent, new IEventService.EventCallback() {
-            @Override
-            public void onSuccess(com.example.cmpuzz_events.models.event.EventEntity event) {
-                Log.d("CreateEventFragment", "Event saved to Firebase: " + event.getEventId());
-                Toast.makeText(requireContext(), "Event created successfully!", Toast.LENGTH_SHORT).show();
-                
-                // Optional: Navigate back or clear form
-                binding.etEventName.setText("");
-                binding.etEventDescription.setText("");
-                binding.toggleGeolocation.setChecked(false);
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e("CreateEventFragment", "Error saving event: " + error);
-                Toast.makeText(requireContext(), "Failed to create event: " + error, Toast.LENGTH_LONG).show();
-            }
-        });
     }
+
+    private void openFileChooser() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
 
     private void showDatePicker() {
         Calendar calendar = Calendar.getInstance();
@@ -234,10 +247,62 @@ public class CreateEventFragment extends Fragment {
         startPicker.show();
     }
 
+    private void saveEventToFirestore(String title, String description, boolean geoRequired,
+                                      int capacity, int maxEntrants, @Nullable String imageUrl) {
+        Date start = registrationStart;
+        Date end = registrationEnd;
+
+        String eventId = UUID.randomUUID().toString();
+        Event uiEvent = new Event(eventId, title, description, capacity,
+                start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired);
+        uiEvent.setMaxEntrants(maxEntrants);
+
+        if (imageUrl != null) uiEvent.setPosterUrl(imageUrl);
+
+        eventService.createEvent(uiEvent, new IEventService.EventCallback() {
+            @Override
+            public void onSuccess(com.example.cmpuzz_events.models.event.EventEntity event) {
+                Toast.makeText(requireContext(), "Event created successfully!", Toast.LENGTH_SHORT).show();
+
+                // Reset form fields
+                binding.etEventName.setText("");
+                binding.etEventDescription.setText("");
+                binding.ivEventImage.setImageResource(R.drawable.bg_image_placeholder);
+                binding.toggleGeolocation.setChecked(false);
+                binding.toggleSetAttendees.setChecked(false);
+                binding.toggleMaxEntrants.setChecked(false);
+                binding.setAttendeesInput.setText("");
+                binding.setEntrantsInput.setText("");
+                binding.tvRegistrationSummary.setText("");
+
+                // Reset stored date values
+                registrationStart = null;
+                registrationEnd = null;
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(requireContext(), "Failed to create event: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && data != null && data.getData() != null) {
+            imageUri = data.getData();
+            binding.ivEventImage.setImageURI(imageUri); // preview selected image
+        }
+    }
+
 }

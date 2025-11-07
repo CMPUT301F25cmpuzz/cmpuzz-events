@@ -29,6 +29,8 @@ public class EventEntity {
     private List<String> attendees;          // Array of device IDs who are confirmed attendees
     private List<String> declined;           // Array of device IDs who declined invitations
     private String qrCodeUrl;                // Unique URL for QR code
+    private String posterUrl;   // Download URL of event poster (Firebase Storage)
+
     private Date createdAt;
     private Date updatedAt;
 
@@ -40,6 +42,7 @@ public class EventEntity {
         this.invitations = new ArrayList<>();
         this.attendees = new ArrayList<>();
         this.declined = new ArrayList<>();
+        this.posterUrl = null;
         this.createdAt = new Date();
         this.updatedAt = new Date();
     }
@@ -65,6 +68,7 @@ public class EventEntity {
         this.attendees = new ArrayList<>();
         this.declined = new ArrayList<>();
         this.qrCodeUrl = generateQRCodeUrl(eventId);
+        this.posterUrl = null;
         this.createdAt = new Date();
         this.updatedAt = new Date();
     }
