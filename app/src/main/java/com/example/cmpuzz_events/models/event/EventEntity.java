@@ -15,13 +15,13 @@ public class EventEntity {
     private String eventId;
     private String title;
     private String description;
-    private int capacity;                    // Max attendees (attendance limit from UI)
+    private int capacity = 0;                    // Max attendees (attendance limit from UI)
     private Date registrationStart;
     private Date registrationEnd;
     private String organizerId;
     private String organizerName;            // Display name of organizer
     private boolean geolocationRequired;
-    private int maxEntrants;                 // Max people who can ENROLL into the event
+    private int maxEntrants = 0;                 // Max people who can ENROLL into the event
     
     // Backend-specific fields
     private List<String> waitlist;           // Array of device IDs on waitlist (ALL entrants)
@@ -31,6 +31,7 @@ public class EventEntity {
     private String qrCodeUrl;                // Unique URL for QR code
     private Date createdAt;
     private Date updatedAt;
+    private List<String> entrants;
 
     /**
      * Default constructor required for Firebase deserialization
@@ -466,4 +467,12 @@ public class EventEntity {
     public void setQrCodeUrl(String qrCodeUrl) {
         this.qrCodeUrl = qrCodeUrl;
     }
+
+    public List<String> getEntrants() {
+        return this.entrants;
+    }
+    public void setEntrants(List<String> entrants) {
+        this.entrants = entrants;
+    }
+
 }

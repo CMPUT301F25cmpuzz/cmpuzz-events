@@ -180,6 +180,46 @@ public class EventService implements IEventService {
                 callback.onError(e.getMessage());
             });
     }
+    /**
+     * This method retrieves the event history where the specific user was an entrant..
+     *
+     * @param userId   The ID of the user whose registration history is being
+     *                 retrieved.
+     * @param callback The callback invoked on success with a list of past
+     *                 {@link EventEntity} instances, or on error with a message.
+     */
+    @Override
+    public void getRegistrationHistory(String userId, RegistrationHistoryCallback callback) {
+        if (userId == null || userId.isEmpty()) {
+            callback.onError("User ID is required.");
+            return;
+        }
+        db.collection("events").whereArrayContains("entrants", userId).get().addOnCompleteListener(task -> {
+                // Find all events where the user's ID is in the 'entrants' list
+                    if (task.isSuccessful()) {
+                        List<EventEntity> pastEvents = new ArrayList<>();
+                        Date now = new Date(); // Current time
+
+                        for (com.google.firebase.firestore.QueryDocumentSnapshot document : task.getResult()) {
+                            EventEntity event = document.toObject(EventEntity.class);
+                            event.setEventId(document.getId());
+
+                            // check to see if the event has ended
+                            if (event.getRegistrationEnd() != null && event.getRegistrationEnd().before(now)) {
+                                pastEvents.add(event);
+                            }
+                        }
+
+                        // Sort events by end date, most recent first
+                        pastEvents.sort((e1, e2) -> e2.getRegistrationEnd().compareTo(e1.getRegistrationEnd()));
+
+                        callback.onSuccess(pastEvents);
+                    } else {
+                        Log.e(TAG, "Error getting registration history", task.getException());
+                        callback.onError(task.getException() != null ? task.getException().getMessage() : "Unknown error");
+                    }
+                });
+    }
 
     /**
      * Retrieves all available events.
@@ -648,41 +688,56 @@ public class EventService implements IEventService {
     }
 
     /**
-     * Convert Firestore document to EventEntity
+     * Helper method to turn a Firestore document into an EventEntity object.
+     * It safely handles missing numbers (like capacity) by defaulting them to 0.
+     * @param doc The document snapshot from Firestore.
+     * @return A complete EventEntity.
      */
     private EventEntity documentToEventEntity(DocumentSnapshot doc) {
         EventEntity entity = new EventEntity();
-        
+
         entity.setEventId(doc.getString("eventId"));
         entity.setTitle(doc.getString("title"));
         entity.setDescription(doc.getString("description"));
-        
+
+        // fix for the getter issue relating to the availbility of each event
         Long capacity = doc.getLong("capacity");
-        if (capacity != null) entity.setCapacity(capacity.intValue());
-        
+        if (capacity != null) {
+            entity.setCapacity(capacity.intValue());
+        } else {
+            entity.setCapacity(0);
+        }
+
+
         entity.setRegistrationStart(doc.getDate("registrationStart"));
         entity.setRegistrationEnd(doc.getDate("registrationEnd"));
         entity.setOrganizerId(doc.getString("organizerId"));
         entity.setOrganizerName(doc.getString("organizerName"));
-        
+
         Boolean geoRequired = doc.getBoolean("geolocationRequired");
         if (geoRequired != null) entity.setGeolocationRequired(geoRequired);
-        
+
+        // same as the fix for capacity above
         Long maxEntrants = doc.getLong("maxEntrants");
-        if (maxEntrants != null) entity.setMaxEntrants(maxEntrants.intValue());
-        
+        if (maxEntrants != null) {
+            entity.setMaxEntrants(maxEntrants.intValue());
+        } else {
+            entity.setMaxEntrants(0);
+        }
+
+
         // Waitlist
         List<String> waitlist = (List<String>) doc.get("waitlist");
         if (waitlist != null) entity.setWaitlist(waitlist);
-        
+
         // Attendees
         List<String> attendees = (List<String>) doc.get("attendees");
         if (attendees != null) entity.setAttendees(attendees);
-        
+
         // Declined
         List<String> declined = (List<String>) doc.get("declined");
         if (declined != null) entity.setDeclined(declined);
-        
+
         // Invitations
         List<Map<String, Object>> invitationMaps = (List<Map<String, Object>>) doc.get("invitations");
         if (invitationMaps != null) {
@@ -691,12 +746,12 @@ public class EventService implements IEventService {
                 Invitation inv = new Invitation();
                 inv.setUserId((String) invMap.get("userId"));
                 inv.setUsername((String) invMap.get("username"));
-                
+
                 String statusStr = (String) invMap.get("status");
                 if (statusStr != null) {
                     inv.setStatus(Invitation.InvitationStatus.fromString(statusStr));
                 }
-                
+
                 // Handle both Timestamp and Date types
                 Object invitedAtObj = invMap.get("invitedAt");
                 if (invitedAtObj instanceof Timestamp) {
@@ -704,26 +759,26 @@ public class EventService implements IEventService {
                 } else if (invitedAtObj instanceof Date) {
                     inv.setInvitedAt((Date) invitedAtObj);
                 }
-                
+
                 Object respondedAtObj = invMap.get("respondedAt");
                 if (respondedAtObj instanceof Timestamp) {
                     inv.setRespondedAt(((Timestamp) respondedAtObj).toDate());
                 } else if (respondedAtObj instanceof Date) {
                     inv.setRespondedAt((Date) respondedAtObj);
                 }
-                
+
                 invitations.add(inv);
             }
-        entity.setInvitations(invitations);
+            entity.setInvitations(invitations);
         }
-        
+
         // QR Code URL
         String qrCodeUrl = doc.getString("qrCodeUrl");
         if (qrCodeUrl != null) entity.setQrCodeUrl(qrCodeUrl);
-        
+
         entity.setCreatedAt(doc.getDate("createdAt"));
         entity.setUpdatedAt(doc.getDate("updatedAt"));
-        
+
         return entity;
     }
 }

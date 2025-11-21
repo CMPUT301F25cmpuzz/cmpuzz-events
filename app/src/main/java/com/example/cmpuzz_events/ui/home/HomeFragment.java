@@ -35,8 +35,10 @@ public class HomeFragment extends Fragment {
     private EventService eventService;
     private MyEventsAdapter adapter;
 
-    // List to hold all events for filtering
+    // Lists to hold all events for filtering
     private List<Event> allEvents = new ArrayList<>();
+    private List<EventEntity> allEventEntities = new ArrayList<>();
+
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -113,7 +115,11 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    // method for applying all filters such as search and availability from radio buttons
+
+    /**
+     * Filters the main event list based on the search query and availability radio buttons.
+     * It then updates the adapter to show only the events that match.
+     */
     private void applyFilters() {
         // Get the query and selected availability from the UI
         String query = binding.eventSearchView.getQuery().toString();
@@ -122,25 +128,46 @@ public class HomeFragment extends Fragment {
         List<Event> filteredEvents = new ArrayList<>();
         String lowerCaseQuery = (query == null) ? "" : query.toLowerCase();
 
+        List<EventEntity> detailedEvents = this.allEventEntities;
+
         // Apply filters to the list of all events
         for (Event event : allEvents) {
-            // Check if the event matches the selected availability
+            // Find the matching EventEntity for the current Event using its ID.
+            EventEntity correspondingEntity = null;
+            if (detailedEvents != null) {
+                for (EventEntity entity : detailedEvents) {
+                    if (entity.getEventId().equals(event.getEventId())) {
+                        correspondingEntity = entity;
+                        break; // Found it, no need to keep searching.
+                    }
+                }
+            }
+
+            if (correspondingEntity == null) {
+                continue; // Skip this event if its details are missing.
+            }
+
             boolean availabilityMatch = false;
+            int currentEntrantCount = (correspondingEntity.getEntrants() != null) ? correspondingEntity.getEntrants().size() : 0;
+            int capacity = correspondingEntity.getCapacity();
+
             if (selectedAvailabilityId == R.id.radio_not_full) {
-                if (event.getMaxEntrants() < event.getCapacity()) {
+                if (capacity == 0 || currentEntrantCount < capacity) {
                     availabilityMatch = true;
                 }
             } else if (selectedAvailabilityId == R.id.radio_full) {
-                if (event.getMaxEntrants() >= event.getCapacity()) {
+                if (capacity > 0 && currentEntrantCount >= capacity) {
                     availabilityMatch = true;
                 }
             } else {
+                // This handles the "Any" case
                 availabilityMatch = true;
             }
-            // lastly checking the query matching
+
             if (availabilityMatch) {
                 if (lowerCaseQuery.isEmpty() ||
-                        event.getTitle().toLowerCase().contains(lowerCaseQuery) || event.getDescription().toLowerCase().contains(lowerCaseQuery)) {
+                        event.getTitle().toLowerCase().contains(lowerCaseQuery) ||
+                        event.getDescription().toLowerCase().contains(lowerCaseQuery)) {
                     filteredEvents.add(event);
                 }
             }
@@ -148,6 +175,9 @@ public class HomeFragment extends Fragment {
         // update the view's adapter with the filtered events
         adapter.updateEvents(filteredEvents);
     }
+
+
+
 
     private void drawAttendeesForEvent(Event event) {
         Log.d(TAG, "Drawing attendees for event: " + event.getTitle());
@@ -189,8 +219,9 @@ public class HomeFragment extends Fragment {
             @Override
             public void onSuccess(List<EventEntity> events) {
                 Log.d("HomeFragment", "Loaded " + events.size() + " events");
-
                 allEvents.clear();
+                allEventEntities.clear();
+                allEventEntities.addAll(events);
                 for (EventEntity entity : events) {
                     Event uiEvent = new Event(
                             entity.getEventId(),
