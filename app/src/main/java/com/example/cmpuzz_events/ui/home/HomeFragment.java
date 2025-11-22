@@ -223,6 +223,7 @@ public class HomeFragment extends Fragment {
                 allEventEntities.clear();
                 allEventEntities.addAll(events);
                 for (EventEntity entity : events) {
+                    List<String> waitlistIds = entity.getWaitlist();
                     Event uiEvent = new Event(
                             entity.getEventId(),
                             entity.getTitle(),
@@ -232,7 +233,8 @@ public class HomeFragment extends Fragment {
                             entity.getRegistrationEnd(),
                             entity.getOrganizerId(),
                             entity.getOrganizerName(),
-                            entity.isGeolocationRequired()
+                            entity.isGeolocationRequired(),
+                            waitlistIds
                     );
                     uiEvent.setMaxEntrants(entity.getMaxEntrants());
                     allEvents.add(uiEvent);

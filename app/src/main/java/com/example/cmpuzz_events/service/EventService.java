@@ -69,6 +69,7 @@ public class EventService implements IEventService {
      * Convert EventEntity to UI Event
      */
     private Event convertToUIEvent(EventEntity entity) {
+        List<String> waitlistIds = entity.getWaitlist();
         Event uiEvent = new Event(
             entity.getEventId(),
             entity.getTitle(),
@@ -78,7 +79,8 @@ public class EventService implements IEventService {
             entity.getRegistrationEnd(),
             entity.getOrganizerId(),
             entity.getOrganizerName(),
-            entity.isGeolocationRequired()
+            entity.isGeolocationRequired(),
+                waitlistIds
         );
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
         return uiEvent;
