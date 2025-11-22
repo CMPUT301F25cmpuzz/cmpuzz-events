@@ -31,6 +31,7 @@ public class EventEntity {
     private String qrCodeUrl;                // Unique URL for QR code
     private Date createdAt;
     private Date updatedAt;
+    private Map<String, List<Double>> entrantLocations; // Key: UserID, Value: {Lat, Lon}
 
     /**
      * Default constructor required for Firebase deserialization
@@ -42,6 +43,7 @@ public class EventEntity {
         this.declined = new ArrayList<>();
         this.createdAt = new Date();
         this.updatedAt = new Date();
+        this.entrantLocations = new HashMap<>();
     }
 
     /**
@@ -106,6 +108,8 @@ public class EventEntity {
         map.put("qrCodeUrl", qrCodeUrl);
         map.put("createdAt", createdAt);
         map.put("updatedAt", updatedAt);
+
+        map.put("entrantLocations", entrantLocations);
         
         return map;
     }
@@ -182,6 +186,16 @@ public class EventEntity {
         return false;
     }
 
+    /**
+     * Add location
+     */
+    public void addLocation(String userId, double lat, double lon) {
+        if (entrantLocations == null) {
+            entrantLocations = new HashMap<>();
+        }
+        entrantLocations.put(userId, java.util.Arrays.asList(lat, lon));
+    }
+
     // Getters and Setters
 
     /**
@@ -232,6 +246,14 @@ public class EventEntity {
     public void setDescription(String description) {
         this.description = description;
         this.updatedAt = new Date();
+    }
+
+    public Map<String, List<Double>> getEntrantLocations() {
+        return entrantLocations;
+    }
+
+    public void setEntrantLocations(Map<String, List<Double>> entrantLocations) {
+        this.entrantLocations = entrantLocations;
     }
 
     /**

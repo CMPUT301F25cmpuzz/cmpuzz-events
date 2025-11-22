@@ -385,6 +385,40 @@ public class EventService implements IEventService {
     }
 
     /**
+     * Joins an event with geolocation data.
+     *
+     * @param eventId   The ID of the event to join.
+     * @param userId    The ID of the user joining.
+     * @param latitude  The user's latitude.
+     * @param longitude The user's longitude.
+     * @param callback  Callback for success or error.
+     */
+    @Override
+    public void joinEventWithLocation(String eventId, String userId, double latitude, double longitude, VoidCallback callback) {
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                // Add to waitlist logic
+                boolean added = event.addToWaitlist(userId);
+
+                if (added) {
+                    // Save location if added successfully
+                    event.addLocation(userId, latitude, longitude);
+                    updateEvent(event, callback);
+                } else {
+                    callback.onError("Failed to join: User already in waitlist or full.");
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+
+    /**
      * Adds a user to an event waitlist.
      *
      * @param eventId Event ID
@@ -723,6 +757,22 @@ public class EventService implements IEventService {
         
         entity.setCreatedAt(doc.getDate("createdAt"));
         entity.setUpdatedAt(doc.getDate("updatedAt"));
+
+        // Data overwrite occurs when another user joins event
+        Map<String, Object> locationsMap = (Map<String, Object>) doc.get("entrantLocations");
+        if (locationsMap != null) {
+            for (Map.Entry<String, Object> entry : locationsMap.entrySet()) {
+                if (entry.getValue() instanceof List) {
+                    List<?> coords = (List<?>) entry.getValue();
+                    if (coords.size() >= 2) {
+                        // Convert List<Double> back to double primitive or Double object
+                        double lat = ((Number) coords.get(0)).doubleValue();
+                        double lon = ((Number) coords.get(1)).doubleValue();
+                        entity.addLocation(entry.getKey(), lat, lon);
+                    }
+                }
+            }
+        }
         
         return entity;
     }

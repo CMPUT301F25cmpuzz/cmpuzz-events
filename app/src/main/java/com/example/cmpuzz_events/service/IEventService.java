@@ -142,6 +142,17 @@ public interface IEventService {
     void joinEvent(String eventId, String userId, VoidCallback callback);
 
     /**
+     * Joins an event with geolocation data.
+     *
+     * @param eventId   The ID of the event to join.
+     * @param userId    The ID of the user joining.
+     * @param latitude  The user's latitude.
+     * @param longitude The user's longitude.
+     * @param callback  Callback for success or error.
+     */
+    void joinEventWithLocation(String eventId, String userId, double latitude, double longitude, VoidCallback callback);
+
+    /**
      * Remove a user from event waitlist
      *
      * @param eventId The event ID
