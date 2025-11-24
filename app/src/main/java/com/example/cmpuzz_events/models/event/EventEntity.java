@@ -117,6 +117,9 @@ public class EventEntity {
         if (waitlist.contains(userId)) {
             return false; // Already on waitlist
         }
+        if (maxEntrants == 0) {
+            return false; // Event not accepting entrants
+        }
         if (maxEntrants > 0 && waitlist.size() >= maxEntrants) {
             return false; // Waitlist is full
         }
