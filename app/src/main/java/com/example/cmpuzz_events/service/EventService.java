@@ -573,6 +573,11 @@ public class EventService implements IEventService {
                     return;
                 }
                 
+                if (event.getCapacity() <= 0) {
+                    callback.onError("Unable to draw attendees: Attendees for event is set to zero.");
+                    return;
+                }
+
                 if (event.getMaxEntrants() == 0) {
                     callback.onError("Event max entrants is zero; cannot draw attendees.");
                     return;
