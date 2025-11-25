@@ -690,6 +690,12 @@ public class EventService implements IEventService {
                     return;
                 }
 
+                List<String> declined = event.getDeclined();
+                if (declined == null || declined.isEmpty()) {
+                    callback.onError("No declined entrants to replace.");
+                    return;
+                }
+
                 if (event.getMaxEntrants() == 0) {
                     callback.onError("Event max entrants is zero; cannot draw replacement.");
                     return;

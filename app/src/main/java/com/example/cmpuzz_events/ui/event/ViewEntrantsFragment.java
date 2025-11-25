@@ -245,11 +245,22 @@ public class ViewEntrantsFragment extends Fragment {
         boolean hasWaitlist = currentEvent != null &&
                 currentEvent.getWaitlist() != null &&
                 !currentEvent.getWaitlist().isEmpty();
-        drawReplacementButton.setEnabled(hasWaitlist && !isDrawingReplacement);
+        boolean hasDeclined = currentEvent != null &&
+                currentEvent.getDeclined() != null &&
+                !currentEvent.getDeclined().isEmpty();
+        drawReplacementButton.setEnabled(hasWaitlist && hasDeclined && !isDrawingReplacement);
     }
 
     private void drawReplacementEntrant() {
         if (eventId == null || isDrawingReplacement) {
+            return;
+        }
+        if (currentEvent == null || currentEvent.getDeclined() == null || currentEvent.getDeclined().isEmpty()) {
+            showToast("No declined entrants to replace.");
+            return;
+        }
+        if (currentEvent.getWaitlist() == null || currentEvent.getWaitlist().isEmpty()) {
+            showToast("Waitlist is empty - no replacements available.");
             return;
         }
         isDrawingReplacement = true;
