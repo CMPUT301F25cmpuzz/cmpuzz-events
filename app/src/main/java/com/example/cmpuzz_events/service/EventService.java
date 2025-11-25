@@ -678,6 +678,61 @@ public class EventService implements IEventService {
         });
     }
 
+    @Override
+    public void drawReplacementAttendee(String eventId, VoidCallback callback) {
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                List<String> waitlist = event.getWaitlist();
+
+                if (waitlist == null || waitlist.isEmpty()) {
+                    callback.onError("Waitlist is empty - no replacements available.");
+                    return;
+                }
+
+                if (event.getMaxEntrants() == 0) {
+                    callback.onError("Event max entrants is zero; cannot draw replacement.");
+                    return;
+                }
+
+                int invitedCount = event.getInvitations() != null ? event.getInvitations().size() : 0;
+                int attendeeCount = event.getAttendees() != null ? event.getAttendees().size() : 0;
+                int totalEngaged = invitedCount + attendeeCount;
+
+                if (event.getCapacity() > 0 && totalEngaged >= event.getCapacity()) {
+                    callback.onError("All attendee slots are filled. Cannot draw replacement.");
+                    return;
+                }
+
+                List<String> shuffledWaitlist = new ArrayList<>(waitlist);
+                Collections.shuffle(shuffledWaitlist);
+                String selectedUserId = shuffledWaitlist.get(0);
+
+                Invitation replacementInvitation = new Invitation(selectedUserId, null);
+                event.addInvitation(replacementInvitation);
+                event.removeFromWaitlist(selectedUserId);
+
+                updateEvent(event, new VoidCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Replacement attendee drawn for event: " + eventId);
+                        callback.onSuccess();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        callback.onError("Failed to draw replacement: " + error);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
     /**
      * Convert Firestore document to EventEntity
      */
