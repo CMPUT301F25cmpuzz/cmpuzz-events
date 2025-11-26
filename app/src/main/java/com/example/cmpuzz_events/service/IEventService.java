@@ -190,4 +190,13 @@ public interface IEventService {
      * @param callback Callback on success or error
      */
     void drawAttendees(String eventId, Integer sampleSize, VoidCallback callback);
+
+    /**
+     * Draw a single replacement attendee from the waitlist.
+     * Used when a previously selected entrant cancels or declines.
+     *
+     * @param eventId The event ID
+     * @param callback Callback on success or error
+     */
+    void drawReplacementAttendee(String eventId, VoidCallback callback);
 }

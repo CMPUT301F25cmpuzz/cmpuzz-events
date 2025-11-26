@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +21,7 @@ import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -43,6 +45,10 @@ public class ViewEntrantsFragment extends Fragment {
     private RecyclerView recyclerView;
     private EnrolledUsersAdapter adapter;
     private TextView emptyStateText;
+    private MaterialButton drawReplacementButton;
+    private boolean isOrganizer;
+    private boolean isDrawingReplacement = false;
+    private IEventService eventService;
 
     public static ViewEntrantsFragment newInstance(String eventId) {
         ViewEntrantsFragment fragment = new ViewEntrantsFragment();
@@ -58,6 +64,9 @@ public class ViewEntrantsFragment extends Fragment {
         if (getArguments() != null) {
             eventId = getArguments().getString(ARG_EVENT_ID);
         }
+        eventService = EventService.getInstance();
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        isOrganizer = currentUser != null && currentUser.canManageEvents();
     }
 
     @Nullable
@@ -69,6 +78,8 @@ public class ViewEntrantsFragment extends Fragment {
         tabLayout = root.findViewById(R.id.tabLayout);
         recyclerView = root.findViewById(R.id.recyclerView);
         emptyStateText = root.findViewById(R.id.tvEmptyState);
+        drawReplacementButton = root.findViewById(R.id.btnDrawReplacement);
+        drawReplacementButton.setOnClickListener(v -> drawReplacementEntrant());
         
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -102,12 +113,15 @@ public class ViewEntrantsFragment extends Fragment {
     }
 
     private void loadEventData() {
-        EventService.getInstance().getEvent(eventId, new IEventService.EventCallback() {
+        eventService.getEvent(eventId, new IEventService.EventCallback() {
             @Override
             public void onSuccess(EventEntity event) {
                 currentEvent = event;
-                // Load data for the first tab (Waitlist)
-                loadEntrantsForTab(0);
+                int position = tabLayout != null ? tabLayout.getSelectedTabPosition() : 0;
+                if (position < 0) {
+                    position = 0;
+                }
+                loadEntrantsForTab(position);
             }
 
             @Override
@@ -119,6 +133,7 @@ public class ViewEntrantsFragment extends Fragment {
     }
 
     private void loadEntrantsForTab(int position) {
+        updateReplacementButton(position);
         if (currentEvent == null) return;
 
         switch (position) {
@@ -216,5 +231,61 @@ public class ViewEntrantsFragment extends Fragment {
         recyclerView.setVisibility(View.GONE);
         emptyStateText.setVisibility(View.VISIBLE);
         emptyStateText.setText(message);
+    }
+
+    private void updateReplacementButton(int tabPosition) {
+        if (drawReplacementButton == null) return;
+
+        if (!isOrganizer || tabPosition != 3) {
+            drawReplacementButton.setVisibility(View.GONE);
+            return;
+        }
+
+        drawReplacementButton.setVisibility(View.VISIBLE);
+        boolean hasWaitlist = currentEvent != null &&
+                currentEvent.getWaitlist() != null &&
+                !currentEvent.getWaitlist().isEmpty();
+        boolean hasDeclined = currentEvent != null &&
+                currentEvent.getDeclined() != null &&
+                !currentEvent.getDeclined().isEmpty();
+        drawReplacementButton.setEnabled(hasWaitlist && hasDeclined && !isDrawingReplacement);
+    }
+
+    private void drawReplacementEntrant() {
+        if (eventId == null || isDrawingReplacement) {
+            return;
+        }
+        if (currentEvent == null || currentEvent.getDeclined() == null || currentEvent.getDeclined().isEmpty()) {
+            showToast("No declined entrants to replace.");
+            return;
+        }
+        if (currentEvent.getWaitlist() == null || currentEvent.getWaitlist().isEmpty()) {
+            showToast("Waitlist is empty - no replacements available.");
+            return;
+        }
+        isDrawingReplacement = true;
+        updateReplacementButton(tabLayout != null ? tabLayout.getSelectedTabPosition() : 3);
+
+        eventService.drawReplacementAttendee(eventId, new IEventService.VoidCallback() {
+            @Override
+            public void onSuccess() {
+                isDrawingReplacement = false;
+                showToast("Replacement invitation sent.");
+                loadEventData();
+            }
+
+            @Override
+            public void onError(String error) {
+                isDrawingReplacement = false;
+                showToast(error != null ? error : "Unable to draw replacement.");
+                updateReplacementButton(tabLayout != null ? tabLayout.getSelectedTabPosition() : 3);
+            }
+        });
+    }
+
+    private void showToast(String message) {
+        if (getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        }
     }
 }
