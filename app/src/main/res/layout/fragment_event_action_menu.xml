@@ -89,6 +89,46 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Export Enrolled Entrants to CSV -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardExportEnrolledEntrants"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_profile"
+                        android:contentDescription="Export Enrolled Entrants" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Export Enrolled Entrants"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:layout_marginStart="16dp" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="Navigate" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- View Declined Entrants -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardViewDeclinedEntrants"
@@ -249,6 +289,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+
             <!-- NOTIFICATIONS Section -->
             <TextView
                 android:layout_width="wrap_content"
@@ -298,6 +339,7 @@
                         android:contentDescription="Navigate" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
 
             <!-- Send Notification to Waiting List -->
             <com.google.android.material.card.MaterialCardView

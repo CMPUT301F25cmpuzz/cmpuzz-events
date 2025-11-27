@@ -25,6 +25,11 @@ public interface IEventService {
         void onError(String error);
     }
 
+    interface RegistrationHistoryCallback {
+        void onSuccess(List<EventEntity> pastEvents);
+        void onError(String error);
+    }
+
     interface UIEventCallback {
         void onSuccess(Event event);
         void onError(String error);
@@ -191,6 +196,15 @@ public interface IEventService {
      */
     void drawAttendees(String eventId, Integer sampleSize, VoidCallback callback);
 
+
+    /**
+     * Retrieves the registration history for a specified user.
+     *
+     * @param userId  The ID of the user whose registration history is requested.
+     * @param callback Callback invoked with the registration history on success,
+     *                 or an error on failure.
+     */
+    void getRegistrationHistory(String userId, RegistrationHistoryCallback callback);
     /**
      * Draw a single replacement attendee from the waitlist.
      * Used when a previously selected entrant cancels or declines.

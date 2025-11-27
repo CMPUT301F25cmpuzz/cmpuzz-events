@@ -1,6 +1,12 @@
 package com.example.cmpuzz_events.ui.event;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +28,12 @@ import com.example.cmpuzz_events.service.NotificationService;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.card.MaterialCardView;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,7 +87,7 @@ public class EventActionMenuFragment extends Fragment {
     private void setupClickListeners(View root) {
         // Now you have access to the event object!
         String eventTitle = event != null ? event.getTitle() : "Unknown";
-        
+
         // Entrants section
         root.findViewById(R.id.cardCancelEntrants).setOnClickListener(v ->
                 showToast("Cancel Entrants for: " + eventTitle));
@@ -123,6 +135,9 @@ public class EventActionMenuFragment extends Fragment {
                 );
             }
         });
+
+        root.findViewById(R.id.cardExportEnrolledEntrants).setOnClickListener(v -> {exportEnrolledEntrants();});
+
 
         // Notifications section
         root.findViewById(R.id.cardNotifyDeclined).setOnClickListener(v -> 
@@ -222,4 +237,73 @@ public class EventActionMenuFragment extends Fragment {
             Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         }
     }
+
+    /**
+     * Exports a list of enrolled entrants into a CSV file into the public Downloads directory of the Android device.
+     *
+     * @param context  The application context to access the ContentResolver.
+     * @param eeList   The list of enrolled entrants to be exported.
+     * @param filename The desired name of the file (without the .csv extension).
+     */
+    public void csvExport(Context context, List<String> eeList, String filename) throws IOException {
+        // used to put the file within the downloads folder of the android device
+        ContentResolver resolver = context.getContentResolver();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename + ".csv");
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "text/csv");
+        contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+        Uri collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        Uri fileUri = resolver.insert(collection, contentValues);
+
+        if (fileUri == null) {
+            throw new IOException("Failed to create new MediaStore record.");
+        }
+
+        try (OutputStream outputStream = resolver.openOutputStream(fileUri);
+             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+
+            if (outputStream == null) {
+                throw new IOException("Failed to open output stream for " + fileUri);
+            }
+
+            for (String entrant : eeList) {
+                bufferedWriter.write(entrant);
+                bufferedWriter.newLine();
+            }
+
+        } catch (IOException e) {
+            throw e;
+        }
+
+    }
+
+    /**
+     * Fetches event details to get the attendee list and initiates the CSV export process.
+     */
+    private void exportEnrolledEntrants() {
+        eventService.getEvent(event.getEventId(), new IEventService.EventCallback() {
+            @Override
+            public void onSuccess(EventEntity eventEntity) {
+                List<String> eeList = eventEntity.getAttendees() != null ? new ArrayList<>(eventEntity.getAttendees()) : new ArrayList<>();
+                if (eeList.isEmpty()) {
+                    showToast("No enrolled entrants to export.");
+                    return;
+                }
+                String filename = "enrolled_entrants_for_event_id_" + event.getEventId();
+                try {
+                    csvExport(requireContext(), eeList, filename);
+                    showToast("Successfully exported " + eeList.size() + " confirmed entrants to CSV.");
+                } catch (IOException e) {
+                    showToast("Export failed.");
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                showToast("Error loading data for export.");
+                Log.e(TAG, "Error fetching event for export: " + error);
+            }
+        });
+    }
+
 }

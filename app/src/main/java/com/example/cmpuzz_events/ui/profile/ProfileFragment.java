@@ -102,6 +102,11 @@ public class ProfileFragment extends Fragment {
             navController.navigate(R.id.action_profile_to_settings);
         });
 
+        // Guidelines button
+        binding.btnLotteryGuidelines.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.action_profile_to_guidelines);
+        });
 
         profileService = new ProfileService();
         if (currentUser == null) {
@@ -186,6 +191,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private Event convertToUIEvent(EventEntity entity) {
+        List<String> waitlistIds = entity.getWaitlist();
         Event uiEvent = new Event(
             entity.getEventId(),
             entity.getTitle(),
@@ -195,7 +201,8 @@ public class ProfileFragment extends Fragment {
             entity.getRegistrationEnd(),
             entity.getOrganizerId(),
             entity.getOrganizerName(),
-            entity.isGeolocationRequired()
+            entity.isGeolocationRequired(),
+                waitlistIds
         );
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
         return uiEvent;

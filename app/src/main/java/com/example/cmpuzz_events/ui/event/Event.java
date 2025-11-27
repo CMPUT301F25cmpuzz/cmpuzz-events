@@ -18,11 +18,11 @@ public class Event implements Serializable {
     private String organizerName;            // Display name of organizer
     private boolean geolocationRequired;
     private int maxEntrants;                 // Max people who can enroll
-    private List<Entrant> waitingList;
+    private List<String> waitingList;
 
     public Event(String eventId, String title, String description, int capacity,
                  Date registrationStart, Date registrationEnd,
-                 String organizerId, String organizerName, boolean geolocationRequired) {
+                 String organizerId, String organizerName, boolean geolocationRequired,List<String> waitingList) {
         this.eventId = eventId;
         this.title = title;
         this.description = description;
@@ -32,8 +32,7 @@ public class Event implements Serializable {
         this.organizerId = organizerId;
         this.organizerName = organizerName;
         this.geolocationRequired = geolocationRequired;
-        this.waitingList = new ArrayList<>();
-    }
+        this.waitingList = (waitingList != null) ? waitingList : new ArrayList<>();    }
 
     public String getEventId() { return eventId; }
     public String getTitle() { return title; }
@@ -45,7 +44,7 @@ public class Event implements Serializable {
     public String getOrganizerName() { return organizerName; }
     public boolean isGeolocationRequired() { return geolocationRequired; }
     public int getMaxEntrants() { return maxEntrants; }
-    public List<Entrant> getWaitingList() { return waitingList; }
+    public List<String> getWaitingList() { return waitingList; }
     
     public void setRegistrationStart(Date date) { this.registrationStart = date; }
     public void setRegistrationEnd(Date date) { this.registrationEnd = date; }
