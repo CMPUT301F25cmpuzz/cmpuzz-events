@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.example.cmpuzz_events.models.notification.Notification;
+
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import java.util.Date;
@@ -438,6 +440,10 @@ public class EventService implements IEventService {
         getEvent(eventId, new EventCallback() {
             @Override
             public void onSuccess(EventEntity event) {
+                if (event.getMaxEntrants() == 0) {
+                    callback.onError("This event is not accepting new entrants.");
+                    return;
+                }
                 if (event.addToWaitlist(userId)) {
                     updateEvent(event, callback);
                 } else {
@@ -609,6 +615,16 @@ public class EventService implements IEventService {
                     return;
                 }
                 
+                if (event.getCapacity() <= 0) {
+                    callback.onError("Unable to draw attendees: Attendees for event is set to zero.");
+                    return;
+                }
+
+                if (event.getMaxEntrants() == 0) {
+                    callback.onError("Event max entrants is zero; cannot draw attendees.");
+                    return;
+                }
+
                 // Count already invited and attending users
                 int alreadyInvitedOrAttending = 0;
                 if (event.getInvitations() != null) {
@@ -653,7 +669,11 @@ public class EventService implements IEventService {
                 List<String> shuffledWaitlist = new ArrayList<>(waitlist);
                 Collections.shuffle(shuffledWaitlist);
                 List<String> selectedUserIds = shuffledWaitlist.subList(0, finalNumToSample);
-                
+
+                // Users who remain on the waitlist = "lost" this draw
+                final List<String> loserUserIds = new ArrayList<>(waitlist);
+                loserUserIds.removeAll(selectedUserIds);
+
                 // Create invitations for selected attendees
                 List<Invitation> invitations = new ArrayList<>();
                 for (String userId : selectedUserIds) {
@@ -672,12 +692,84 @@ public class EventService implements IEventService {
                     @Override
                     public void onSuccess() {
                         Log.d(TAG, "Successfully drew " + finalNumToSample + " attendees and sent invitations");
+                        // Send "lost the lottery" notifications (best-effort, don’t block UI)
+                        if (loserUserIds != null && !loserUserIds.isEmpty()) {
+                            NotificationService.getInstance().sendNotificationsToUsers(
+                                    loserUserIds,
+                                    event.getEventId(),
+                                    event.getTitle(),
+                                    Notification.NotificationType.WAITLISTED,  // use the “not selected” message
+                                    null   // fire-and-forget; we ignore success/failure here
+                            );
+                        }
+
                         callback.onSuccess();
                     }
                     
                     @Override
                     public void onError(String error) {
                         callback.onError("Failed to save drawn attendees: " + error);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    @Override
+    public void drawReplacementAttendee(String eventId, VoidCallback callback) {
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                List<String> waitlist = event.getWaitlist();
+
+                if (waitlist == null || waitlist.isEmpty()) {
+                    callback.onError("Waitlist is empty - no replacements available.");
+                    return;
+                }
+
+                List<String> declined = event.getDeclined();
+                if (declined == null || declined.isEmpty()) {
+                    callback.onError("No declined entrants to replace.");
+                    return;
+                }
+
+                if (event.getMaxEntrants() == 0) {
+                    callback.onError("Event max entrants is zero; cannot draw replacement.");
+                    return;
+                }
+
+                int invitedCount = event.getInvitations() != null ? event.getInvitations().size() : 0;
+                int attendeeCount = event.getAttendees() != null ? event.getAttendees().size() : 0;
+                int totalEngaged = invitedCount + attendeeCount;
+
+                if (event.getCapacity() > 0 && totalEngaged >= event.getCapacity()) {
+                    callback.onError("All attendee slots are filled. Cannot draw replacement.");
+                    return;
+                }
+
+                List<String> shuffledWaitlist = new ArrayList<>(waitlist);
+                Collections.shuffle(shuffledWaitlist);
+                String selectedUserId = shuffledWaitlist.get(0);
+
+                Invitation replacementInvitation = new Invitation(selectedUserId, null);
+                event.addInvitation(replacementInvitation);
+                event.removeFromWaitlist(selectedUserId);
+
+                updateEvent(event, new VoidCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Replacement attendee drawn for event: " + eventId);
+                        callback.onSuccess();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        callback.onError("Failed to draw replacement: " + error);
                     }
                 });
             }

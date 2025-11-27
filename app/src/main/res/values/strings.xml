@@ -19,6 +19,7 @@
     <string name="max_attendees_placeholder">Maximum Attendees: </string>
     <string name="description">Description: </string>
     <string name="draw_attendees">Draw Attendees</string>
+    <string name="draw_replacement">Draw Replacement</string>
     <string name="status">Status: </string>
 
     <string name="delete">Delete</string>
