@@ -17,6 +17,7 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.cmpuzz_events.Entrant;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.models.user.User;
@@ -32,6 +33,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.firestore.DocumentReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +67,7 @@ public class EventDetailsFragment extends Fragment {
     private TextView usersEnrolledTitle;
     private RecyclerView usersRecyclerView;
     private EnrolledUsersAdapter usersAdapter;
+    private TextView tvWaitlistCount;
 
     private FusedLocationProviderClient fusedLocationClient;
 
@@ -109,6 +112,7 @@ public class EventDetailsFragment extends Fragment {
         dividerBottom = root.findViewById(R.id.divider_bottom);
         usersEnrolledTitle = root.findViewById(R.id.users_enrolled_title);
         usersRecyclerView = root.findViewById(R.id.users_recycler_view);
+        tvWaitlistCount = root.findViewById(R.id.tvWaitlistCount);
         
         // Setup RecyclerView
         usersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -289,6 +293,7 @@ public class EventDetailsFragment extends Fragment {
         eventService.getEvent(eventId, new IEventService.EventCallback() {
             @Override
             public void onSuccess(EventEntity eventEntity) {
+                List<String> waitlistIds = eventEntity.getWaitlist();
                 // Convert to UI Event and store
                 currentEvent = new Event(
                     eventEntity.getEventId(),
@@ -299,7 +304,8 @@ public class EventDetailsFragment extends Fragment {
                     eventEntity.getRegistrationEnd(),
                     eventEntity.getOrganizerId(),
                     eventEntity.getOrganizerName(),
-                    eventEntity.isGeolocationRequired()
+                    eventEntity.isGeolocationRequired(),
+                        waitlistIds
                 );
                 currentEvent.setMaxEntrants(eventEntity.getMaxEntrants());
                 
@@ -393,7 +399,20 @@ public class EventDetailsFragment extends Fragment {
                     : "Hosted by: " + event.getOrganizerId();
             eventHost.setText(hostText);
             descriptionText.setText(event.getDescription());
-            
+
+            // same as in eventviewholder
+            List<String> waitlist = event.getWaitlist();
+            int waitlistCount = (waitlist != null) ? waitlist.size() : 0;
+
+            if (waitlistCount >= 0) {
+                // If the waitlist has people, show the count
+                tvWaitlistCount.setVisibility(View.VISIBLE);
+                tvWaitlistCount.setText(getString(R.string.waitlist_count_format, waitlistCount));
+            } else {
+                // Otherwise, make sure the view is hidden
+                tvWaitlistCount.setVisibility(View.GONE);
+            }
+
             // Format dates
             if (event.getRegistrationStart() != null) {
                 datePosted.setText("Registration Start: " + event.getRegistrationStart());

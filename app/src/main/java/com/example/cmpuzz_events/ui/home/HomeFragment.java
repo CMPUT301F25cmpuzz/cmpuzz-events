@@ -5,7 +5,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RadioGroup;
 import android.widget.Toast;
+import androidx.appcompat.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -24,6 +26,7 @@ import com.example.cmpuzz_events.ui.event.Event;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class HomeFragment extends Fragment {
 
@@ -32,37 +35,57 @@ public class HomeFragment extends Fragment {
     private EventService eventService;
     private MyEventsAdapter adapter;
 
+    // Lists to hold all events for filtering
+    private List<Event> allEvents = new ArrayList<>();
+    private List<EventEntity> allEventEntities = new ArrayList<>();
+
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        // Check if user should see this fragment
         User currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser == null || !currentUser.canManageEvents()) {
-            // This fragment should only be visible to organizers
             Log.w(TAG, "HomeFragment accessed by non-organizer user");
             return root;
         }
 
         eventService = EventService.getInstance();
-        
-        // Setup RecyclerView
+
+        setupRecyclerView(root);
+        setupSearchView();
+        setupAvailabilityFilter();
+
+        loadMyEvents();
+
+        return root;
+    }
+
+    private void setupAvailabilityFilter() {
+        binding.availabilityFilterGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                // when the radio buttons change, apply the new filters onto the allEvents list
+                applyFilters();
+            }
+        });
+    }
+
+    private void setupRecyclerView(View root) {
         RecyclerView recyclerView = binding.recyclerViewMyEvents;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new MyEventsAdapter(new ArrayList<>(), true); // true = organizer view
-        
-        // Set click listener for viewing event details
+        adapter = new MyEventsAdapter(new ArrayList<>(), true);
+
         adapter.setOnEventClickListener(new MyEventsAdapter.OnEventClickListener() {
             @Override
             public void onViewEventClick(Event event) {
-                // Navigate to EventDetailsFragment
                 Bundle bundle = new Bundle();
                 bundle.putString("eventId", event.getEventId());
                 Navigation.findNavController(root).navigate(
-                    R.id.action_to_event_details,
-                    bundle
+                        R.id.action_to_event_details,
+                        bundle
                 );
             }
 
@@ -71,35 +94,109 @@ public class HomeFragment extends Fragment {
                 drawAttendeesForEvent(event);
             }
         });
-        
+
         recyclerView.setAdapter(adapter);
-        
-        // Load user's events
-        loadMyEvents();
-        
-        return root;
     }
+
+    // search view added to allow user to filter events by title or description
+    private void setupSearchView() {
+        binding.eventSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                applyFilters();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                applyFilters();
+                return true;
+            }
+        });
+    }
+
+
+    /**
+     * Filters the main event list based on the search query and availability radio buttons.
+     * It then updates the adapter to show only the events that match.
+     */
+    private void applyFilters() {
+        // Get the query and selected availability from the UI
+        String query = binding.eventSearchView.getQuery().toString();
+        int selectedAvailabilityId = binding.availabilityFilterGroup.getCheckedRadioButtonId();
+
+        List<Event> filteredEvents = new ArrayList<>();
+        String lowerCaseQuery = (query == null) ? "" : query.toLowerCase();
+
+        List<EventEntity> detailedEvents = this.allEventEntities;
+
+        // Apply filters to the list of all events
+        for (Event event : allEvents) {
+            // Find the matching EventEntity for the current Event using its ID.
+            EventEntity correspondingEntity = null;
+            if (detailedEvents != null) {
+                for (EventEntity entity : detailedEvents) {
+                    if (entity.getEventId().equals(event.getEventId())) {
+                        correspondingEntity = entity;
+                        break; // Found it, no need to keep searching.
+                    }
+                }
+            }
+
+            if (correspondingEntity == null) {
+                continue; // Skip this event if its details are missing.
+            }
+
+            boolean availabilityMatch = false;
+            int currentEntrantCount = (correspondingEntity.getEntrants() != null) ? correspondingEntity.getEntrants().size() : 0;
+            int capacity = correspondingEntity.getCapacity();
+
+            if (selectedAvailabilityId == R.id.radio_not_full) {
+                if (capacity == 0 || currentEntrantCount < capacity) {
+                    availabilityMatch = true;
+                }
+            } else if (selectedAvailabilityId == R.id.radio_full) {
+                if (capacity > 0 && currentEntrantCount >= capacity) {
+                    availabilityMatch = true;
+                }
+            } else {
+                // This handles the "Any" case
+                availabilityMatch = true;
+            }
+
+            if (availabilityMatch) {
+                if (lowerCaseQuery.isEmpty() ||
+                        event.getTitle().toLowerCase().contains(lowerCaseQuery) ||
+                        event.getDescription().toLowerCase().contains(lowerCaseQuery)) {
+                    filteredEvents.add(event);
+                }
+            }
+        }
+        // update the view's adapter with the filtered events
+        adapter.updateEvents(filteredEvents);
+    }
+
+
+
 
     private void drawAttendeesForEvent(Event event) {
         Log.d(TAG, "Drawing attendees for event: " + event.getTitle());
-        
-        // Call the service to draw attendees (null = use capacity or random)
+
         eventService.drawAttendees(event.getEventId(), null, new IEventService.VoidCallback() {
             @Override
             public void onSuccess() {
-                Toast.makeText(getContext(), 
-                    "Successfully drew attendees for " + event.getTitle(), 
-                    Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(),
+                        "Successfully drew attendees for " + event.getTitle(),
+                        Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "Attendees drawn successfully");
-                // Optionally reload the events list to show updated state
                 loadMyEvents();
             }
 
             @Override
             public void onError(String error) {
-                Toast.makeText(getContext(), 
-                    "Error drawing attendees: " + error, 
-                    Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(),
+                        "Error drawing attendees: " + error,
+                        Toast.LENGTH_LONG).show();
                 Log.e(TAG, "Error drawing attendees: " + error);
             }
         });
@@ -107,46 +204,45 @@ public class HomeFragment extends Fragment {
 
     private void loadMyEvents() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
-        
+
         if (currentUser == null) {
             Toast.makeText(getContext(), "Please log in", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Only load events for organizers/admins
         if (!currentUser.canManageEvents()) {
             Log.w(TAG, "User is not an organizer, skipping event load");
             return;
         }
 
-        // Get events for current user (organizer)
         eventService.getEventsForOrganizer(currentUser.getUid(), new IEventService.EventListCallback() {
             @Override
             public void onSuccess(List<EventEntity> events) {
                 Log.d("HomeFragment", "Loaded " + events.size() + " events");
-                
-                // Convert to UI Events
-                List<Event> uiEvents = new ArrayList<>();
+                allEvents.clear();
+                allEventEntities.clear();
+                allEventEntities.addAll(events);
                 for (EventEntity entity : events) {
+                    List<String> waitlistIds = entity.getWaitlist();
                     Event uiEvent = new Event(
-                        entity.getEventId(),
-                        entity.getTitle(),
-                        entity.getDescription(),
-                        entity.getCapacity(),
-                        entity.getRegistrationStart(),
-                        entity.getRegistrationEnd(),
-                        entity.getOrganizerId(),
-                        entity.getOrganizerName(),
-                        entity.isGeolocationRequired()
+                            entity.getEventId(),
+                            entity.getTitle(),
+                            entity.getDescription(),
+                            entity.getCapacity(),
+                            entity.getRegistrationStart(),
+                            entity.getRegistrationEnd(),
+                            entity.getOrganizerId(),
+                            entity.getOrganizerName(),
+                            entity.isGeolocationRequired(),
+                            waitlistIds
                     );
                     uiEvent.setMaxEntrants(entity.getMaxEntrants());
-                    uiEvents.add(uiEvent);
+                    allEvents.add(uiEvent);
                 }
-                
-                adapter.updateEvents(uiEvents);
-                
-                // Show/hide empty state
-                if (uiEvents.isEmpty()) {
+
+                applyFilters();
+
+                if (allEvents.isEmpty()) {
                     binding.recyclerViewMyEvents.setVisibility(View.GONE);
                     binding.tvEmptyState.setVisibility(View.VISIBLE);
                 } else {

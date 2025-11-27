@@ -41,13 +41,32 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         this.listener = listener;
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        Notification n = notifications.get(position);
+
+        // Waitlist-loss notifications use special layout
+        if (n.getType() == Notification.NotificationType.WAITLISTED) {
+            return 1; // lost lottery
+        }
+
+        return 0; // default notification layout
+    }
+
     @NonNull
     @Override
     public NotificationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+
+        int layout = (viewType == 1)
+                ? R.layout.waitlisted_notification        // lost lottery layout
+                : R.layout.item_notification;             // default layout
+
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_notification, parent, false);
+                .inflate(layout, parent, false);
+
         return new NotificationViewHolder(view);
     }
+
 
     @Override
     public void onBindViewHolder(@NonNull NotificationViewHolder holder, int position) {
@@ -70,8 +89,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         private final Button btnAccept;
         private final Button btnDecline;
 
+        // Extra for waitlisted layout
+        private final TextView waitlistedEventName;
+
         public NotificationViewHolder(@NonNull View itemView) {
             super(itemView);
+
+            // Default layout IDs (may be null if waitlisted_notification.xml is used)
             tvTitle = itemView.findViewById(R.id.tvNotificationTitle);
             tvEventName = itemView.findViewById(R.id.tvEventName);
             tvMessage = itemView.findViewById(R.id.tvNotificationMessage);
@@ -80,56 +104,52 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             layoutActionButtons = itemView.findViewById(R.id.layoutActionButtons);
             btnAccept = itemView.findViewById(R.id.btnAccept);
             btnDecline = itemView.findViewById(R.id.btnDecline);
+
+            // Waitlisted lottery-loss layout IDs
+            waitlistedEventName = itemView.findViewById(R.id.waitlisted_notification_event_name);
         }
 
         public void bind(Notification notification, OnNotificationActionListener listener) {
+
+            // LOST LOTTERY NOTIFICATION LAYOUT
+            if (waitlistedEventName != null) {
+                waitlistedEventName.setText(notification.getEventName());
+                return; // DON'T bind anything else for this layout
+            }
+
+            // NORMAL NOTIFICATIONS (existing behaviour)
             tvTitle.setText(notification.getTitle());
             tvEventName.setText(notification.getEventName());
             tvMessage.setText(notification.getMessage());
-            
-            // Show relative time
+
+            // relative time
             CharSequence timeAgo = DateUtils.getRelativeTimeSpanString(
                     notification.getTimestamp(),
                     System.currentTimeMillis(),
                     DateUtils.MINUTE_IN_MILLIS);
             tvTimestamp.setText(timeAgo);
-            
-            // Show unread indicator
+
+            // unread dot
             unreadIndicator.setVisibility(notification.isRead() ? View.GONE : View.VISIBLE);
-            
-            // Show action buttons only for INVITED notifications
-            // Hide them if notification is read (means they already responded)
+
+            // Accept/Decline buttons ONLY for INVITED
             if (notification.getType() == Notification.NotificationType.INVITED && !notification.isRead()) {
                 layoutActionButtons.setVisibility(View.VISIBLE);
-                btnAccept.setEnabled(true);
-                btnDecline.setEnabled(true);
-                
+
                 btnAccept.setOnClickListener(v -> {
-                    if (listener != null) {
-                        // Disable buttons immediately to prevent double-clicks
-                        btnAccept.setEnabled(false);
-                        btnDecline.setEnabled(false);
-                        listener.onAcceptInvitation(notification);
-                    }
+                    if (listener != null) listener.onAcceptInvitation(notification);
                 });
-                
                 btnDecline.setOnClickListener(v -> {
-                    if (listener != null) {
-                        // Disable buttons immediately to prevent double-clicks
-                        btnAccept.setEnabled(false);
-                        btnDecline.setEnabled(false);
-                        listener.onDeclineInvitation(notification);
-                    }
+                    if (listener != null) listener.onDeclineInvitation(notification);
                 });
+
             } else {
                 layoutActionButtons.setVisibility(View.GONE);
             }
-            
-            // Click listener for the entire card
+
+            // Entire card click
             itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onNotificationClick(notification);
-                }
+                if (listener != null) listener.onNotificationClick(notification);
             });
         }
     }

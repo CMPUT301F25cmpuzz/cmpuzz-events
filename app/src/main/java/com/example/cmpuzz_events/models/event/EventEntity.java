@@ -1,5 +1,13 @@
 package com.example.cmpuzz_events.models.event;
 
+import android.content.Context;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,14 +23,14 @@ public class EventEntity {
     private String eventId;
     private String title;
     private String description;
-    private int capacity;                    // Max attendees (attendance limit from UI)
+    private int capacity = 0;                    // Max attendees (attendance limit from UI)
     private Date registrationStart;
     private Date registrationEnd;
     private String organizerId;
     private String organizerName;            // Display name of organizer
     private boolean geolocationRequired;
-    private int maxEntrants;                 // Max people who can ENROLL into the event
-    
+    private int maxEntrants = 0;                 // Max people who can ENROLL into the event
+
     // Backend-specific fields
     private List<String> waitlist;           // Array of device IDs on waitlist (ALL entrants)
     private List<Invitation> invitations;    // Array of Invitation objects (invited entrants)
@@ -32,6 +40,7 @@ public class EventEntity {
     private Date createdAt;
     private Date updatedAt;
     private Map<String, List<Double>> entrantLocations; // Key: UserID, Value: {Lat, Lon}
+    private List<String> entrants;
 
     /**
      * Default constructor required for Firebase deserialization
@@ -97,14 +106,14 @@ public class EventEntity {
         map.put("waitlist", waitlist);
         map.put("attendees", attendees);
         map.put("declined", declined);
-        
+
         // Convert invitations to list of maps
         List<Map<String, Object>> invitationMaps = new ArrayList<>();
         for (Invitation inv : invitations) {
             invitationMaps.add(inv.toMap());
         }
         map.put("invitations", invitationMaps);
-        
+
         map.put("qrCodeUrl", qrCodeUrl);
         map.put("createdAt", createdAt);
         map.put("updatedAt", updatedAt);
@@ -120,6 +129,9 @@ public class EventEntity {
     public boolean addToWaitlist(String userId) {
         if (waitlist.contains(userId)) {
             return false; // Already on waitlist
+        }
+        if (maxEntrants == 0) {
+            return false; // Event not accepting entrants
         }
         if (maxEntrants > 0 && waitlist.size() >= maxEntrants) {
             return false; // Waitlist is full
@@ -200,6 +212,7 @@ public class EventEntity {
 
     /**
      * Gets event ID
+     *
      * @return stored event ID
      */
     public String getEventId() {
@@ -208,6 +221,7 @@ public class EventEntity {
 
     /**
      * Sets event ID
+     *
      * @param eventId to set value
      */
     public void setEventId(String eventId) {
@@ -216,6 +230,7 @@ public class EventEntity {
 
     /**
      * Gets event title
+     *
      * @return stored event title
      */
     public String getTitle() {
@@ -224,6 +239,7 @@ public class EventEntity {
 
     /**
      * Sets event title
+     *
      * @param title to set value
      */
     public void setTitle(String title) {
@@ -233,6 +249,7 @@ public class EventEntity {
 
     /**
      * Gets event description
+     *
      * @return stored event description
      */
     public String getDescription() {
@@ -241,6 +258,7 @@ public class EventEntity {
 
     /**
      * Sets event description
+     *
      * @param description to set description
      */
     public void setDescription(String description) {
@@ -258,6 +276,7 @@ public class EventEntity {
 
     /**
      * Gets event capacity
+     *
      * @return stored event capacity
      */
     public int getCapacity() {
@@ -266,6 +285,7 @@ public class EventEntity {
 
     /**
      * Sets event capacity and stores update date object
+     *
      * @param capacity to set capacity
      */
     public void setCapacity(int capacity) {
@@ -275,6 +295,7 @@ public class EventEntity {
 
     /**
      * Gets registration start date
+     *
      * @return stored registration start date
      */
     public Date getRegistrationStart() {
@@ -283,6 +304,7 @@ public class EventEntity {
 
     /**
      * Sets registration start date
+     *
      * @param registrationStart to set registration start date
      */
     public void setRegistrationStart(Date registrationStart) {
@@ -292,6 +314,7 @@ public class EventEntity {
 
     /**
      * Gets registration end date
+     *
      * @return stored registration end date
      */
     public Date getRegistrationEnd() {
@@ -300,6 +323,7 @@ public class EventEntity {
 
     /**
      * Sets registration end date
+     *
      * @param registrationEnd to set registration end datew
      */
     public void setRegistrationEnd(Date registrationEnd) {
@@ -309,6 +333,7 @@ public class EventEntity {
 
     /**
      * Gets organizer ID
+     *
      * @return stored organizer ID
      */
     public String getOrganizerId() {
@@ -317,6 +342,7 @@ public class EventEntity {
 
     /**
      * Sets organizer ID
+     *
      * @param organizerId to set organizer ID
      */
     public void setOrganizerId(String organizerId) {
@@ -325,6 +351,7 @@ public class EventEntity {
 
     /**
      * Gets organizer name
+     *
      * @return stored organizer name
      */
     public String getOrganizerName() {
@@ -333,6 +360,7 @@ public class EventEntity {
 
     /**
      * Sets organizer name
+     *
      * @param organizerName to set organizer name
      */
     public void setOrganizerName(String organizerName) {
@@ -341,6 +369,7 @@ public class EventEntity {
 
     /**
      * Gets geolocation requirement
+     *
      * @return stored geolocation requirement
      */
     public boolean isGeolocationRequired() {
@@ -349,6 +378,7 @@ public class EventEntity {
 
     /**
      * Sets geolocation requirement
+     *
      * @param geolocationRequired to set geolocation requirement
      */
     public void setGeolocationRequired(boolean geolocationRequired) {
@@ -358,6 +388,7 @@ public class EventEntity {
 
     /**
      * Gets max entrants
+     *
      * @return stored max entrants
      */
     public int getMaxEntrants() {
@@ -366,6 +397,7 @@ public class EventEntity {
 
     /**
      * Sets max amount of entrants
+     *
      * @param maxEntrants to set max amount of entrants
      */
     public void setMaxEntrants(int maxEntrants) {
@@ -375,6 +407,7 @@ public class EventEntity {
 
     /**
      * Gets waitlist
+     *
      * @return stored waitlist
      */
     public List<String> getWaitlist() {
@@ -383,6 +416,7 @@ public class EventEntity {
 
     /**
      * Sets waitlist
+     *
      * @param waitlist to set waitlist
      */
     public void setWaitlist(List<String> waitlist) {
@@ -392,6 +426,7 @@ public class EventEntity {
 
     /**
      * Gets list of invitations using a list of the Invitation class
+     *
      * @return invitation list
      */
     public List<Invitation> getInvitations() {
@@ -400,6 +435,7 @@ public class EventEntity {
 
     /**
      * Sets invitation list
+     *
      * @param invitations to set invitation list
      */
     public void setInvitations(List<Invitation> invitations) {
@@ -409,6 +445,7 @@ public class EventEntity {
 
     /**
      * Gets attendee list
+     *
      * @return store attendee list
      */
     public List<String> getAttendees() {
@@ -417,6 +454,7 @@ public class EventEntity {
 
     /**
      * Sets attendee list
+     *
      * @param attendees to set attendee list
      */
     public void setAttendees(List<String> attendees) {
@@ -426,6 +464,7 @@ public class EventEntity {
 
     /**
      * Get list of all entrants who have declined
+     *
      * @return list of declined entrants
      */
     public List<String> getDeclined() {
@@ -434,6 +473,7 @@ public class EventEntity {
 
     /**
      * Sets list of declined entrants
+     *
      * @param declined to set declined entrant list
      */
     public void setDeclined(List<String> declined) {
@@ -443,6 +483,7 @@ public class EventEntity {
 
     /**
      * Gets Date object event was created at
+     *
      * @return stored Date object from creation
      */
     public Date getCreatedAt() {
@@ -451,6 +492,7 @@ public class EventEntity {
 
     /**
      * Sets original created date
+     *
      * @param createdAt to set created date
      */
     public void setCreatedAt(Date createdAt) {
@@ -459,6 +501,7 @@ public class EventEntity {
 
     /**
      * Gets last updated Date
+     *
      * @return stored last updated Date
      */
     public Date getUpdatedAt() {
@@ -467,6 +510,7 @@ public class EventEntity {
 
     /**
      * Sets last updated date
+     *
      * @param updatedAt to set last updated date
      */
     public void setUpdatedAt(Date updatedAt) {
@@ -475,6 +519,7 @@ public class EventEntity {
 
     /**
      * Gets URL of QR code
+     *
      * @return stored URL of QR code
      */
     public String getQrCodeUrl() {
@@ -483,9 +528,19 @@ public class EventEntity {
 
     /**
      * Sets URL of QR code
+     *
      * @param qrCodeUrl to set URL of QR code
      */
     public void setQrCodeUrl(String qrCodeUrl) {
         this.qrCodeUrl = qrCodeUrl;
     }
+
+    public List<String> getEntrants() {
+        return this.entrants;
+    }
+
+    public void setEntrants(List<String> entrants) {
+        this.entrants = entrants;
+    }
+
 }
