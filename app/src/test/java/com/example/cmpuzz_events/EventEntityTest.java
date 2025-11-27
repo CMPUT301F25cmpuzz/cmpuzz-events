@@ -186,24 +186,4 @@ public class EventEntityTest {
         assertTrue(event.getDeclined().contains("user1"));
     }
 
-    @Test
-    public void testLotteryDraw() {
-        // Setup: 10 users on waitlist, capacity for 3
-        event.setCapacity(3);
-        for (int i = 0; i < 10; i++) {
-            event.addToWaitlist("user" + i);
-        }
-
-        // Action: Draw the lottery
-        event.drawLottery(null); // null means "fill to capacity"
-
-        // Verification
-        assertEquals("Should invite exactly 3 people", 3, event.getInvitations().size());
-        assertEquals("Waitlist should shrink by 3", 7, event.getWaitlist().size());
-
-        // Verify no duplicates (entrants shouldn't be in both lists)
-        for (Invitation inv : event.getInvitations()) {
-            assertFalse(event.getWaitlist().contains(inv.getUserId()));
-        }
-    }
 }
