@@ -925,4 +925,31 @@ public class EventService implements IEventService {
         
         return entity;
     }
+
+
+    /**
+     * Retrieves all events as EventEntity objects.
+     * This is used by the HomeFragment to show all public events to non-organizers.
+     *
+     * @param callback Callback returning a list of EventEntity or an error.
+     */
+    @Override
+    public void getAllEventsN(EventListCallback callback) {
+        db.collection(COLLECTION_EVENTS)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<EventEntity> entities = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        entities.add(documentToEventEntity(doc));
+                    }
+                    Log.d(TAG, "Retrieved " + entities.size() + " event entities for HomeFragment");
+                    callback.onSuccess(entities);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error getting all event entities", e);
+                    callback.onError(e.getMessage());
+                });
+    }
 }
+
+

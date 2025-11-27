@@ -24,40 +24,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A {@link Fragment} that displays a history of events for which the current user
- * has registered and that have already concluded.
+ * A {@link Fragment} that displays a history of events that the current user has attended.
  * <p>
- * This fragment retrieves past event data using the {@link EventService} and displays
- * it in a {@link RecyclerView}. It handles UI states for when the list is populated,
- * when it's empty, and when an error occurs during data fetching.
+ * This fragment retrieves event data using {@link EventService} and displays it in a
+ * {@link RecyclerView} managed by an {@link EventHistoryAdapter}. It handles user authentication
+ * status via {@link AuthManager}, showing a message if the user is not logged in. It also
+ * manages UI states for loading, success (with or without events), and error scenarios.
+ *
+ * @see EventHistoryAdapter
+ * @see EventService
+ * @see AuthManager
  */
 public class EventHistoryFragment extends Fragment {
 
+    /**
+     * Tag for logging purposes, used to identify logs originating from this class.
+     */
     private static final String TAG = "EventHistoryFragment";
 
     /**
-     * View binding instance for this fragment's layout, providing type-safe access to views.
+     * View binding instance for this fragment, providing direct access to the views
+     * defined in the {@code fragment_history.xml} layout. It is nulled out in {@link #onDestroyView()}.
      */
     private FragmentHistoryBinding binding;
 
     /**
-     * Service responsible for all event-related data operations.
+     * Service layer for fetching event-related data from the backend.
      */
     private EventService eventService;
 
     /**
-     * Adapter for the RecyclerView that displays the list of past events.
+     * Adapter for the RecyclerView, responsible for binding event data to the list items.
      */
     private EventHistoryAdapter eventHistoryAdapter;
 
     /**
      * Called to have the fragment instantiate its user interface view.
-     * This is where layout inflation and view binding initialization occurs.
+     * <p>
+     * This method inflates the fragment's layout, initializes view binding, sets up the
+     * {@link RecyclerView}, and initiates the process of loading the event history.
      *
      * @param inflater           The LayoutInflater object that can be used to inflate any views in the fragment.
      * @param container          If non-null, this is the parent view that the fragment's UI should be attached to.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state as given here.
-     * @return Return the View for the fragment's UI, or null.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state.
+     * @return The View for the fragment's UI, or null.
      */
     @Nullable
     @Override
@@ -68,14 +78,13 @@ public class EventHistoryFragment extends Fragment {
         eventService = EventService.getInstance();
 
         setupRecyclerView();
-        loadRegistrationHistory();
+        loadAttendedEvents();
 
         return root;
     }
 
     /**
-     * Initializes the RecyclerView with a {@link LinearLayoutManager} and sets up the
-     * {@link EventHistoryAdapter}.
+     * Initializes the RecyclerView, setting its layout manager and attaching the {@link EventHistoryAdapter}.
      */
     private void setupRecyclerView() {
         RecyclerView recyclerView = binding.recyclerViewHistory;
@@ -85,11 +94,15 @@ public class EventHistoryFragment extends Fragment {
     }
 
     /**
-     * Fetches the registration history for the currently logged-in user from the {@link EventService}.
-     * It handles the UI updates based on the success or failure of the data fetching operation.
-     * If no user is logged in, it displays a toast message and the empty state view.
+     * Fetches and displays the events the current user is attending.
+     * <p>
+     * It first checks if a user is logged in using {@link AuthManager}. If not, it displays a
+     * message and an empty state view. If logged in, it calls the {@link EventService} to get all
+     * events the user is involved in, filters them to find only the ones they are attending, and
+     * updates the {@link EventHistoryAdapter}. It handles both success and error cases from the service call,
+     * updating the UI accordingly.
      */
-    private void loadRegistrationHistory() {
+    private void loadAttendedEvents() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser == null) {
             Toast.makeText(getContext(), "You must be logged in to see your history.", Toast.LENGTH_SHORT).show();
@@ -98,37 +111,36 @@ public class EventHistoryFragment extends Fragment {
             return;
         }
 
-        binding.recyclerViewHistory.setVisibility(View.VISIBLE);
-        binding.emptyStateView.setVisibility(View.GONE);
+        String currentUserId = currentUser.getUid();
 
-        eventService.getRegistrationHistory(currentUser.getUid(), new IEventService.RegistrationHistoryCallback() {
-            /**
-             * Handles the successful retrieval of past event data.
-             *
-             * @param pastEvents A list of {@link EventEntity} objects representing past events.
-             */
+        eventService.getEventsForUserWithEntities(currentUserId, new IEventService.EventListCallback() {
             @Override
-            public void onSuccess(List<EventEntity> pastEvents) {
-                Log.d(TAG, "Successfully loaded " + pastEvents.size() + " past events.");
+            public void onSuccess(List<EventEntity> allInvolvedEvents) {
+                List<EventEntity> attendingEvents = new ArrayList<>();
 
-                if (pastEvents.isEmpty()) {
+                // Filter the events to include only those the user is marked as an attendee for.
+                for (EventEntity event : allInvolvedEvents) {
+                    if (event != null && event.getAttendees() != null && event.getAttendees().contains(currentUserId)) {
+                        attendingEvents.add(event);
+                    }
+                }
+
+                Log.d(TAG, "Found " + attendingEvents.size() + " events the user is attending.");
+
+                // Update UI based on whether attended events were found.
+                if (attendingEvents.isEmpty()) {
                     binding.recyclerViewHistory.setVisibility(View.GONE);
                     binding.emptyStateView.setVisibility(View.VISIBLE);
                 } else {
                     binding.recyclerViewHistory.setVisibility(View.VISIBLE);
                     binding.emptyStateView.setVisibility(View.GONE);
-                    eventHistoryAdapter.updateEvents(pastEvents);
+                    eventHistoryAdapter.updateEvents(attendingEvents);
                 }
             }
 
-            /**
-             * Handles errors that occur during the data fetching process.
-             *
-             * @param error A string describing the error.
-             */
             @Override
             public void onError(String error) {
-                Log.e(TAG, "Error loading registration history: " + error);
+                Log.e(TAG, "Error loading event history: " + error);
                 Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_LONG).show();
                 binding.emptyStateView.setVisibility(View.VISIBLE);
                 binding.recyclerViewHistory.setVisibility(View.GONE);
@@ -138,7 +150,9 @@ public class EventHistoryFragment extends Fragment {
 
     /**
      * Called when the view previously created by {@link #onCreateView} has been detached from the fragment.
-     * This is where we clean up the binding reference to avoid memory leaks.
+     * <p>
+     * This is where the fragment cleans up resources associated with its view. The binding
+     * is set to null to avoid memory leaks.
      */
     @Override
     public void onDestroyView() {

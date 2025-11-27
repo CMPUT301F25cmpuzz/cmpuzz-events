@@ -63,9 +63,6 @@ public class MainActivity extends AppCompatActivity {
             navView.getMenu().clear();
             navView.inflateMenu(R.menu.bottom_nav_menu_user);
             
-            // Navigate to Browse Events (first screen for users)
-            navController.navigate(R.id.navigation_browse);
-            
             AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_browse,R.id.navigation_history ,R.id.navigation_profile, R.id.navigation_notifications)
                     .build();

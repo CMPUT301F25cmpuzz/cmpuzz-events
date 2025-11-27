@@ -8,8 +8,28 @@
     android:background="?android:attr/colorBackground"
     tools:context=".ui.history.EventHistoryFragment">
 
+    <!-- Title Card (used as an invisible spacer) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/title_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="invisible"
+        app:cardElevation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textAppearance="?attr/textAppearanceHeadline5"
+            tools:text="History" />
+
+    </com.google.android.material.card.MaterialCardView>
+
     <!-- RecyclerView to display the list of historical events -->
-    <!-- Each item in this list will use the item_history_event.xml layout -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewHistory"
         android:layout_width="0dp"
@@ -21,37 +41,37 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:listitem="@layout/item_history_event"
-        tools:itemCount="5" />
+        app:layout_constraintTop_toBottomOf="@id/title_card"
+        tools:itemCount="5"
+        tools:listitem="@layout/item_history_event" />
 
     <!-- Empty state view, shown when there are no history items -->
     <LinearLayout
         android:id="@+id/emptyStateView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:gravity="center"
+        android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_card"
         tools:visibility="visible">
 
         <ImageView
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:contentDescription="@string/no_past_events"
             android:src="@drawable/ic_history"
-            app:tint="?android:attr/textColorSecondary"
-            android:contentDescription="@string/no_past_events"/>
+            app:tint="?android:attr/textColorSecondary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/no_past_events"
-            android:textAppearance="?attr/textAppearanceHeadline6"/>
+            android:textAppearance="?attr/textAppearanceHeadline6" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -59,7 +79,7 @@
             android:layout_marginTop="4dp"
             android:text="@string/past_events_will_appear_here"
             android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?android:attr/textColorSecondary"/>
+            android:textColor="?android:attr/textColorSecondary" />
 
     </LinearLayout>
 
