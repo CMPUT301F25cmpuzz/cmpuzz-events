@@ -102,6 +102,11 @@ public class ProfileFragment extends Fragment {
             navController.navigate(R.id.action_profile_to_settings);
         });
 
+        // Guidelines button
+        binding.btnLotteryGuidelines.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.action_profile_to_guidelines);
+        });
 
         profileService = new ProfileService();
         if (currentUser == null) {

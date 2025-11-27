@@ -58,6 +58,9 @@
         <action
             android:id="@+id/action_profile_to_settings"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_profile_to_guidelines"
+            app:destination="@id/guidelinesFragment" />
     </fragment>
 
     <!-- Event Details Fragment -->
@@ -126,4 +129,12 @@
         android:name="com.example.cmpuzz_events.ui.history.EventHistoryFragment"
         android:label="@string/title_history"
         tools:layout="@layout/fragment_history" />
+
+    <!-- Guidelines Fragment -->
+    <fragment
+        android:id="@+id/guidelinesFragment"
+        android:name="com.example.cmpuzz_events.ui.profile.GuidelinesFragment"
+        android:label="fragment_guidelines"
+        tools:layout="@layout/fragment_guidelines" />
+
 </navigation>
