@@ -52,4 +52,54 @@ public class UserTest {
         assertEquals("organizer", map.get("role"));
         assertEquals(creationTime, map.get("createdAt"));
     }
+
+    @Test
+    public void testRoleBooleanHelpers() {
+        User user = new User();
+
+        // Test Admin
+        user.setRole(User.UserRole.ADMIN);
+        assertTrue(user.isAdmin());
+        assertFalse(user.isOrganizer());
+        assertFalse(user.isUser());
+
+        // Test Organizer
+        user.setRole(User.UserRole.ORGANIZER);
+        assertFalse(user.isAdmin());
+        assertTrue(user.isOrganizer());
+        assertFalse(user.isUser());
+
+        // Test User
+        user.setRole(User.UserRole.USER);
+        assertFalse(user.isAdmin());
+        assertFalse(user.isOrganizer());
+        assertTrue(user.isUser());
+    }
+
+    @Test
+    public void testNotificationSettings() {
+        User user = new User();
+
+        // Default should be enabled
+        assertTrue("Notifications should be enabled by default", user.isNotificationsEnabled());
+
+        user.setNotificationsEnabled(false);
+        assertFalse(user.isNotificationsEnabled());
+
+        user.setNotificationsEnabled(true);
+        assertTrue(user.isNotificationsEnabled());
+    }
+
+    @Test
+    public void testConstructors() {
+        // Test empty constructor defaults
+        User defaultUser = new User();
+        assertEquals(User.UserRole.USER, defaultUser.getRole());
+        assertTrue(defaultUser.getCreatedAt() > 0);
+
+        // Test full constructor
+        User fullUser = new User("uid1", "a@a.com", "Name", "uname", User.UserRole.ADMIN);
+        assertEquals("uid1", fullUser.getUid());
+        assertEquals("admin", fullUser.getRole().getRoleName());
+    }
 }
