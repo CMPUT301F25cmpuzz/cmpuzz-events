@@ -25,6 +25,13 @@ import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.firestore.DocumentReference;
 
@@ -62,6 +69,8 @@ public class EventDetailsFragment extends Fragment {
     private EnrolledUsersAdapter usersAdapter;
     private TextView tvWaitlistCount;
 
+    private FusedLocationProviderClient fusedLocationClient;
+
     public static EventDetailsFragment newInstance(String eventId) {
         EventDetailsFragment fragment = new EventDetailsFragment();
         Bundle args = new Bundle();
@@ -78,6 +87,8 @@ public class EventDetailsFragment extends Fragment {
         }
 
         eventService = EventService.getInstance();
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
     }
 
     @Nullable
@@ -172,29 +183,81 @@ public class EventDetailsFragment extends Fragment {
         }
     }
 
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    fetchLocationAndJoin();
+                } else {
+                    Toast.makeText(getContext(), "Location required to join this event", Toast.LENGTH_SHORT).show();
+                }
+            });
+
     private void joinEvent() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser == null) {
             Toast.makeText(getContext(), "Please log in to join events", Toast.LENGTH_SHORT).show();
             return;
         }
-        
-        // Use user ID to join waitlist
-        String userId = currentUser.getUid();
-        
-        eventService.joinEvent(eventId, userId, new IEventService.VoidCallback() {
-            @Override
-            public void onSuccess() {
-                Toast.makeText(getContext(), "Successfully joined event!", Toast.LENGTH_SHORT).show();
-                // Reload event details to update button state
-                loadEventDetails();
-            }
 
-            @Override
-            public void onError(String error) {
-                Toast.makeText(getContext(), "Failed to join: " + error, Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (currentEvent.isGeolocationRequired()) {
+            checkPermissionAndJoin();
+        } else {
+
+            // Use user ID to join waitlist
+            String userId = currentUser.getUid();
+
+            eventService.joinEvent(eventId, userId, new IEventService.VoidCallback() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(getContext(), "Successfully joined event!", Toast.LENGTH_SHORT).show();
+                    // Reload event details to update button state
+                    loadEventDetails();
+                }
+
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(getContext(), "Failed to join: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    private void checkPermissionAndJoin() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            fetchLocationAndJoin();
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+    }
+
+    private void fetchLocationAndJoin() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) return;
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        String userId = AuthManager.getInstance().getCurrentUser().getUid();
+
+                        // Call the NEW service method
+                        eventService.joinEventWithLocation(eventId, userId,
+                                location.getLatitude(), location.getLongitude(),
+                                new IEventService.VoidCallback() {
+                                    @Override
+                                    public void onSuccess() {
+                                        Toast.makeText(getContext(), "Joined with location!", Toast.LENGTH_SHORT).show();
+                                        loadEventDetails();
+                                    }
+                                    @Override
+                                    public void onError(String error) {
+                                        Toast.makeText(getContext(), "Failed: " + error, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    } else {
+                        Toast.makeText(getContext(), "Could not determine location. Try opening Maps first.", Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void leaveEvent() {
@@ -436,9 +499,19 @@ public class EventDetailsFragment extends Fragment {
             shareButton.setOnClickListener(v -> {
                 Toast.makeText(getContext(), "Share functionality coming soon", Toast.LENGTH_SHORT).show();
             });
-            
+
             viewMapButton.setOnClickListener(v -> {
-                Toast.makeText(getContext(), "Map functionality coming soon", Toast.LENGTH_SHORT).show();
+                if (currentEvent == null) return;
+
+                // Check if there are any locations to show
+                // (Optional: prevents opening empty map, though Fragment handles empty state too)
+
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", currentEvent.getEventId());
+
+                // Ensure you have added this action/destination to your nav_graph.xml
+                // OR use ID navigation if you added the fragment to the graph
+                Navigation.findNavController(v).navigate(R.id.action_event_details_to_event_map, bundle);
             });
         });
     }

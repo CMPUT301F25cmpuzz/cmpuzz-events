@@ -78,6 +78,20 @@
         <action
             android:id="@+id/action_event_details_to_view_all_entrants"
             app:destination="@id/viewAllEntrantsFragment" />
+        <action
+            android:id="@+id/action_event_details_to_event_map"
+            app:destination="@id/eventMapFragment" />
+    </fragment>
+
+    <!-- Event Map Fragment -->
+    <fragment
+        android:id="@+id/eventMapFragment"
+        android:name="com.example.cmpuzz_events.ui.event.EventMapFragment"
+        android:label="Event Map"
+        tools:layout="@layout/fragment_event_map">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
     </fragment>
 
     <!-- Event Action Menu Fragment -->
