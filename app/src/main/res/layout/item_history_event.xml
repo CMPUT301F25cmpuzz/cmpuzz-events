@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="12dp"
+    android:layout_marginStart="16dp"
     android:layout_marginTop="8dp"
-    android:layout_marginEnd="12dp"
+    android:layout_marginEnd="16dp"
     android:layout_marginBottom="8dp"
-    app:cardCornerRadius="12dp"
+    app:cardCornerRadius="16dp"
     app:cardElevation="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -26,39 +27,64 @@
             android:textAppearance="?attr/textAppearanceHeadline6"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Sample Name" />
-
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="Expo 2025" />
 
         <!-- Event Date -->
-        <TextView
-            android:id="@+id/tvEventDate"
+        <LinearLayout
+            android:id="@+id/date_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:drawablePadding="4dp"
+            android:layout_marginTop="12dp"
             android:gravity="center_vertical"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?android:attr/textColorSecondary"
-            app:drawableStartCompat="@drawable/ic_calendar_today"
+            android:orientation="horizontal"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvEventName"
-            tools:text="Sample Date" />
+            app:layout_constraintTop_toBottomOf="@id/tvEventName">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_calendar_today"
+                app:tint="?android:attr/textColorSecondary"
+                android:contentDescription="@string/event_date_icon" />
+
+            <TextView
+                android:id="@+id/tvEventDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?android:attr/textColorSecondary"
+                tools:text="Sep 25, 2025" />
+        </LinearLayout>
 
         <!-- Attendee Count -->
-        <TextView
-            android:id="@+id/tvAttendeeCount"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/attendee_container"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:drawablePadding="4dp"
             android:gravity="center_vertical"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?android:attr/textColorSecondary"
-            app:drawableStartCompat="@drawable/ic_person"
-            app:layout_constraintStart_toEndOf="@id/tvEventDate"
-            app:layout_constraintTop_toTopOf="@id/tvEventDate"
-            app:layout_constraintBottom_toBottomOf="@id/tvEventDate"
-            tools:text="150 / 200 Attendees" />
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/date_container"
+            app:layout_constraintBottom_toBottomOf="@id/date_container">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_person"
+                app:tint="?android:attr/textColorSecondary"
+                android:contentDescription="@string/attendee_count_icon" />
+
+            <TextView
+                android:id="@+id/tvAttendeeCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?android:attr/textColorSecondary"
+                tools:text="150 / 200" />
+        </LinearLayout>
 
         <!-- Divider -->
         <View
@@ -69,32 +95,20 @@
             android:background="?android:attr/listDivider"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvEventDate" />
-
-        <!-- Description Label -->
-        <TextView
-            android:id="@+id/tvDescLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/description"
-            android:textAppearance="?attr/textAppearanceOverline"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider" />
+            app:layout_constraintTop_toBottomOf="@id/date_container" />
 
         <!-- Event Description -->
         <TextView
             android:id="@+id/tvDesc"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:maxLines="3"
+            android:layout_marginTop="16dp"
             android:textAppearance="?attr/textAppearanceBody2"
+            android:textColor="?android:attr/textColorSecondary"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvDescLabel"
-            tools:text="Sample Desc" />
+            app:layout_constraintTop_toBottomOf="@id/divider"
+            tools:text="This is a sample description of the event. It can span multiple lines to give users a good idea of what to expect." />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

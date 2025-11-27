@@ -46,19 +46,18 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        User currentUser = AuthManager.getInstance().getCurrentUser();
-        if (currentUser == null || !currentUser.canManageEvents()) {
-            Log.w(TAG, "HomeFragment accessed by non-organizer user");
-            return root;
-        }
-
         eventService = EventService.getInstance();
-
         setupRecyclerView(root);
         setupSearchView();
         setupAvailabilityFilter();
-
-        loadMyEvents();
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        if (currentUser != null && currentUser.canManageEvents()) {
+            binding.tvMyEventsTitle.setText("My Events");
+            loadMyEvents();
+        } else {
+            binding.tvMyEventsTitle.setText("All Events");
+            getAllEventsN();
+        }
 
         return root;
     }
@@ -76,8 +75,9 @@ public class HomeFragment extends Fragment {
     private void setupRecyclerView(View root) {
         RecyclerView recyclerView = binding.recyclerViewMyEvents;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new MyEventsAdapter(new ArrayList<>(), true);
-
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        boolean isOrganizer = (currentUser != null && currentUser.canManageEvents());
+        adapter = new MyEventsAdapter(new ArrayList<>(), isOrganizer);
         adapter.setOnEventClickListener(new MyEventsAdapter.OnEventClickListener() {
             @Override
             public void onViewEventClick(Event event) {
@@ -202,16 +202,42 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    /**
+     * Fetches events organized by the current user and updates the UI.
+     * <p>
+     * This method first verifies that a user is logged in via {@link AuthManager} and that the
+     * user has permissions to manage events (i.e., is an organizer). If these checks fail,
+     * it returns early without fetching data.
+     * <p>
+     * If the checks pass, it calls the {@link EventService} to retrieve the events for the
+     * current organizer's user ID.
+     * <p>
+     * On success, it clears the existing event lists, converts the retrieved {@link EventEntity}
+     * objects into UI-specific {@link Event} models, and calls {@link #applyFilters()} to display
+     * the data. The UI is updated to show the event list or an empty state view.
+     * <p>
+     * On error, it logs the issue, shows a toast notification, and updates the UI to display an
+     * error message.
+     *
+     * @see AuthManager#getCurrentUser()
+     * @see IEventService#getEventsForOrganizer(String, IEventService.EventListCallback)
+     * @see #applyFilters()
+     */
     private void loadMyEvents() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
 
         if (currentUser == null) {
             Toast.makeText(getContext(), "Please log in", Toast.LENGTH_SHORT).show();
+            binding.tvEmptyState.setVisibility(View.VISIBLE);
+            binding.recyclerViewMyEvents.setVisibility(View.GONE);
             return;
         }
 
         if (!currentUser.canManageEvents()) {
             Log.w(TAG, "User is not an organizer, skipping event load");
+            binding.recyclerViewMyEvents.setVisibility(View.GONE);
+            binding.tvEmptyState.setText("You do not have any events to manage.");
+            binding.tvEmptyState.setVisibility(View.VISIBLE);
             return;
         }
 
@@ -222,6 +248,7 @@ public class HomeFragment extends Fragment {
                 allEvents.clear();
                 allEventEntities.clear();
                 allEventEntities.addAll(events);
+
                 for (EventEntity entity : events) {
                     List<String> waitlistIds = entity.getWaitlist();
                     Event uiEvent = new Event(
@@ -244,6 +271,7 @@ public class HomeFragment extends Fragment {
 
                 if (allEvents.isEmpty()) {
                     binding.recyclerViewMyEvents.setVisibility(View.GONE);
+                    binding.tvEmptyState.setText("You have not created any events.");
                     binding.tvEmptyState.setVisibility(View.VISIBLE);
                 } else {
                     binding.recyclerViewMyEvents.setVisibility(View.VISIBLE);
@@ -255,11 +283,105 @@ public class HomeFragment extends Fragment {
             public void onError(String error) {
                 Log.e("HomeFragment", "Error loading events: " + error);
                 Toast.makeText(getContext(), "Error loading events", Toast.LENGTH_SHORT).show();
+                binding.tvEmptyState.setText("Could not load your events.");
                 binding.tvEmptyState.setVisibility(View.VISIBLE);
                 binding.recyclerViewMyEvents.setVisibility(View.GONE);
             }
         });
     }
+
+
+    /**
+     * Fetches all public events from the {@link EventService} and updates the UI.
+     * <p>
+     * This method defines a {@link IEventService.EventListCallback} to handle the asynchronous
+     * response from the service.
+     * <p>
+     * On success, it performs the following actions:
+     * <ul>
+     *     <li>Checks if the fragment's view is still available to prevent crashes.</li>
+     *     <li>Clears any existing event data from {@code allEvents} and {@code allEventEntities}.</li>
+     *     <li>Converts the received {@link EventEntity} objects into UI-specific {@link Event} models.</li>
+     *     <li>Calls {@link #applyFilters()} to process and display the newly fetched data based on current filter settings.</li>
+     *     <li>Updates the UI to show the event list or an "empty state" message if no events are available after filtering.</li>
+     *     <li>Makes search and filter controls visible.</li>
+     * </ul>
+     * <p>
+     * On error, it logs the failure, displays a toast message, and updates the UI to show an error
+     * state, hiding the event list and filtering controls.
+     *
+     * @see IEventService#getAllEventsN(IEventService.EventListCallback)
+     * @see #applyFilters()
+     */
+    private void getAllEventsN() {
+        IEventService.EventListCallback eventCallback = new IEventService.EventListCallback() {
+            @Override
+            public void onSuccess(List<EventEntity> events) {
+                if (binding == null) {
+                    Log.w(TAG, "HomeFragment view was destroyed. Ignoring event list response.");
+                    return;
+                }
+
+                Log.d(TAG, "Successfully loaded " + events.size() + " public events.");
+                allEvents.clear();
+                allEventEntities.clear();
+                allEventEntities.addAll(events);
+
+                for (EventEntity entity : events) {
+                    Event uiEvent = new Event(
+                            entity.getEventId(),
+                            entity.getTitle(),
+                            entity.getDescription(),
+                            entity.getCapacity(),
+                            entity.getRegistrationStart(),
+                            entity.getRegistrationEnd(),
+                            entity.getOrganizerId(),
+                            entity.getOrganizerName(),
+                            entity.isGeolocationRequired(),
+                            entity.getWaitlist()
+                    );
+                    uiEvent.setMaxEntrants(entity.getMaxEntrants());
+                    allEvents.add(uiEvent);
+                }
+
+                applyFilters();
+
+                if (adapter.getItemCount() == 0) {
+                    binding.recyclerViewMyEvents.setVisibility(View.GONE);
+                    binding.tvEmptyState.setText("No events available right now.");
+                    binding.tvEmptyState.setVisibility(View.VISIBLE);
+                } else {
+                    binding.recyclerViewMyEvents.setVisibility(View.VISIBLE);
+                    binding.tvEmptyState.setVisibility(View.GONE);
+                }
+
+                binding.eventSearchView.setVisibility(View.VISIBLE);
+                binding.availabilityFilterGroup.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onError(String error) {
+                if (binding == null) {
+                    Log.w(TAG, "HomeFragment view was destroyed. Ignoring error response.");
+                    return;
+                }
+
+                Log.e(TAG, "Error loading all public events: " + error);
+                Toast.makeText(getContext(), "Error loading events: " + error, Toast.LENGTH_SHORT).show();
+
+                binding.tvEmptyState.setText("Could not load events.");
+                binding.tvEmptyState.setVisibility(View.VISIBLE);
+                binding.recyclerViewMyEvents.setVisibility(View.GONE);
+
+                binding.eventSearchView.setVisibility(View.GONE);
+                binding.availabilityFilterGroup.setVisibility(View.GONE);
+            }
+        };
+
+        eventService.getAllEventsN(eventCallback);
+    }
+
+
 
     @Override
     public void onDestroyView() {
