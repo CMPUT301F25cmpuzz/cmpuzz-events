@@ -29,8 +29,7 @@ import java.util.List;
  * <p>
  * This fragment retrieves event data using {@link EventService} and displays it in a
  * {@link RecyclerView} managed by an {@link EventHistoryAdapter}. It handles user authentication
- * status via {@link AuthManager}, showing a message if the user is not logged in. It also
- * manages UI states for loading, success (with or without events), and error scenarios.
+ * status via {@link AuthManager}.
  *
  * @see EventHistoryAdapter
  * @see EventService

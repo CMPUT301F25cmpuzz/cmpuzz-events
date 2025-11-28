@@ -51,11 +51,9 @@ public class EventHistoryAdapter extends RecyclerView.Adapter<EventHistoryAdapte
      * Called when the {@link RecyclerView} needs a new {@link EventHistoryViewHolder} of the given type to represent an item.
      * <p>
      * This new ViewHolder should be constructed with a new View that can represent the items
-     * of the given type. You can either create a new View manually or inflate it from an XML
-     * layout file.
+     * of the given type.
      *
-     * @param parent   The ViewGroup into which the new View will be added after it is bound to
-     *                 an adapter position.
+     * @param parent   The ViewGroup into which the new View will be added after it is bound to an adapter position.
      * @param viewType The view type of the new View.
      * @return A new {@link EventHistoryViewHolder} that holds a View for an event item.
      */
@@ -72,8 +70,7 @@ public class EventHistoryAdapter extends RecyclerView.Adapter<EventHistoryAdapte
      * updates the contents of the {@link EventHistoryViewHolder#itemView} to reflect the item at the
      * given position.
      *
-     * @param holder   The {@link EventHistoryViewHolder} which should be updated to represent the
-     *                 contents of the item at the given position in the data set.
+     * @param holder   The {@link EventHistoryViewHolder} which should be updated to represent the contents of the item at the given position in the data set.
      * @param position The position of the item within the adapter's data set.
      */
     @Override
