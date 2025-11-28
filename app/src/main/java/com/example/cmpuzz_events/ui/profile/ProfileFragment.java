@@ -60,7 +60,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 
-
+/**
+ * A fragment that displays the current user's profile information.
+ * This includes their name, email, role, and a list of events they are enrolled in.
+ * It also provides functionality for editing the profile, logging out, and navigating to settings.
+ */
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
@@ -73,6 +77,15 @@ public class ProfileFragment extends Fragment {
     private User currentUser;
     private SharedPreferences preferences;
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * This is where the layout is inflated, views are initialized, and listeners are set up.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment.
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state.
+     * @return The View for the fragment's UI.
+     */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -91,11 +104,11 @@ public class ProfileFragment extends Fragment {
             binding.tvUserName.setText(currentUser.getDisplayName());
             binding.tvUserEmail.setText(currentUser.getEmail());
             binding.tvUserRole.setText("Role: " + currentUser.getRole().getRoleName());
-            
+
             // Setup enrolled events RecyclerView
             setupEnrolledEvents(root, currentUser);
         }
-        
+
         // Setup settings button
         binding.btnSettings.setOnClickListener(v -> {
             NavController navController = Navigation.findNavController(v);
@@ -120,10 +133,17 @@ public class ProfileFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Initializes the RecyclerView for displaying the events the user is enrolled in.
+     * Sets up the adapter and defines actions for event interactions.
+     *
+     * @param root The root view of the fragment, used for navigation.
+     * @param currentUser The currently logged-in user.
+     */
     private void setupEnrolledEvents(View root, User currentUser) {
         binding.recyclerViewEnrolledEvents.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new EnrolledEventsAdapter(new ArrayList<>());
-        
+
         adapter.setOnEventActionListener(new EnrolledEventsAdapter.OnEventActionListener() {
             @Override
             public void onLeaveWaitlist(Event event) {
@@ -146,23 +166,29 @@ public class ProfileFragment extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putString("eventId", event.getEventId());
                 Navigation.findNavController(root).navigate(
-                    R.id.action_profile_to_event_details,
-                    bundle
+                        R.id.action_profile_to_event_details,
+                        bundle
                 );
             }
         });
-        
+
         binding.recyclerViewEnrolledEvents.setAdapter(adapter);
         loadEnrolledEvents(currentUser.getUid());
     }
 
+    /**
+     * Fetches and displays the list of events associated with the user from the event service.
+     * This includes events they are attending, invited to, or on the waitlist for.
+     *
+     * @param userId The unique ID of the user whose events are to be loaded.
+     */
     private void loadEnrolledEvents(String userId) {
         // Use getEventsForUserWithEntities to get full event data with invitations
         eventService.getEventsForUserWithEntities(userId, new IEventService.EventListCallback() {
             @Override
             public void onSuccess(List<EventEntity> entities) {
                 Log.d(TAG, "Loaded " + entities.size() + " events for user");
-                
+
                 // Convert to EventWithStatus
                 List<EventWithStatus> eventsWithStatus = new ArrayList<>();
                 for (EventEntity entity : entities) {
@@ -170,9 +196,9 @@ public class ProfileFragment extends Fragment {
                     String status = determineUserStatus(entity, userId);
                     eventsWithStatus.add(new EventWithStatus(uiEvent, status));
                 }
-                
+
                 adapter.updateEvents(eventsWithStatus);
-                
+
                 if (eventsWithStatus.isEmpty()) {
                     binding.recyclerViewEnrolledEvents.setVisibility(View.GONE);
                     binding.tvEmptyEnrolled.setVisibility(View.VISIBLE);
@@ -190,35 +216,48 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * Converts an {@link EventEntity} data model to an {@link Event} UI model.
+     *
+     * @param entity The {@link EventEntity} to convert.
+     * @return The resulting {@link Event} object for UI display.
+     */
     private Event convertToUIEvent(EventEntity entity) {
         List<String> waitlistIds = entity.getWaitlist();
         Event uiEvent = new Event(
-            entity.getEventId(),
-            entity.getTitle(),
-            entity.getDescription(),
-            entity.getCapacity(),
-            entity.getRegistrationStart(),
-            entity.getRegistrationEnd(),
-            entity.getOrganizerId(),
-            entity.getOrganizerName(),
-            entity.isGeolocationRequired(),
+                entity.getEventId(),
+                entity.getTitle(),
+                entity.getDescription(),
+                entity.getCapacity(),
+                entity.getRegistrationStart(),
+                entity.getRegistrationEnd(),
+                entity.getOrganizerId(),
+                entity.getOrganizerName(),
+                entity.isGeolocationRequired(),
                 waitlistIds
         );
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
         return uiEvent;
     }
 
+    /**
+     * Determines the user's status for a given event (e.g., attending, invited, waitlist).
+     *
+     * @param entity The event entity containing attendee, invitation, and waitlist data.
+     * @param userId The ID of the user to check the status for.
+     * @return A string representing the user's status.
+     */
     private String determineUserStatus(EventEntity entity, String userId) {
         // Check if user is an attendee (accepted invitation)
         if (entity.getAttendees() != null && entity.getAttendees().contains(userId)) {
             return "attending";
         }
-        
+
         // Check if user has declined
         if (entity.getDeclined() != null && entity.getDeclined().contains(userId)) {
             return "declined";
         }
-        
+
         // Check if user has an invitation
         if (entity.getInvitations() != null) {
             for (Invitation inv : entity.getInvitations()) {
@@ -229,11 +268,18 @@ public class ProfileFragment extends Fragment {
                 }
             }
         }
-        
+
         // If not attending, invited, or declined, must be in waitlist
         return "waitlist";
     }
 
+    /**
+     * Handles the action of a user leaving the waitlist for an event.
+     * It calls the event service to update the waitlist and reloads the enrolled events on success.
+     *
+     * @param event The event from which the user is leaving the waitlist.
+     * @param currentUser The current user performing the action.
+     */
     private void leaveWaitlist(Event event, User currentUser) {
         eventService.removeFromWaitlist(event.getEventId(), currentUser.getUid(), new IEventService.VoidCallback() {
             @Override
@@ -249,34 +295,41 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * Handles the action of a user accepting an invitation to an event.
+     * Notifies the organizer of the response and reloads the event list.
+     *
+     * @param event The event for which the invitation is being accepted.
+     * @param currentUser The current user accepting the invitation.
+     */
     private void acceptInvitation(Event event, User currentUser) {
         eventService.respondToInvitation(event.getEventId(), currentUser.getUid(), true, new IEventService.VoidCallback() {
             @Override
             public void onSuccess() {
                 Toast.makeText(getContext(), "Accepted invitation to " + event.getTitle(), Toast.LENGTH_SHORT).show();
-                
-                // Notify organizer
-                String userName = currentUser.getDisplayName() != null ? 
-                                currentUser.getDisplayName() : "A user";
-                notificationService.notifyOrganizerOfResponse(
-                    event.getOrganizerId(),
-                    userName,
-                    event.getEventId(),
-                    event.getTitle(),
-                    true,
-                    new INotificationService.VoidCallback() {
-                        @Override
-                        public void onSuccess() {
-                            Log.d(TAG, "Organizer notified of acceptance");
-                        }
 
-                        @Override
-                        public void onError(String error) {
-                            Log.e(TAG, "Error notifying organizer: " + error);
+                // Notify organizer
+                String userName = currentUser.getDisplayName() != null ?
+                        currentUser.getDisplayName() : "A user";
+                notificationService.notifyOrganizerOfResponse(
+                        event.getOrganizerId(),
+                        userName,
+                        event.getEventId(),
+                        event.getTitle(),
+                        true,
+                        new INotificationService.VoidCallback() {
+                            @Override
+                            public void onSuccess() {
+                                Log.d(TAG, "Organizer notified of acceptance");
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                Log.e(TAG, "Error notifying organizer: " + error);
+                            }
                         }
-                    }
                 );
-                
+
                 loadEnrolledEvents(currentUser.getUid());
             }
 
@@ -287,34 +340,41 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * Handles the action of a user declining an invitation to an event.
+     * Notifies the organizer of the response and reloads the event list.
+     *
+     * @param event The event for which the invitation is being declined.
+     * @param currentUser The current user declining the invitation.
+     */
     private void declineInvitation(Event event, User currentUser) {
         eventService.respondToInvitation(event.getEventId(), currentUser.getUid(), false, new IEventService.VoidCallback() {
             @Override
             public void onSuccess() {
                 Toast.makeText(getContext(), "Declined invitation to " + event.getTitle(), Toast.LENGTH_SHORT).show();
-                
-                // Notify organizer
-                String userName = currentUser.getDisplayName() != null ? 
-                                currentUser.getDisplayName() : "A user";
-                notificationService.notifyOrganizerOfResponse(
-                    event.getOrganizerId(),
-                    userName,
-                    event.getEventId(),
-                    event.getTitle(),
-                    false,
-                    new INotificationService.VoidCallback() {
-                        @Override
-                        public void onSuccess() {
-                            Log.d(TAG, "Organizer notified of decline");
-                        }
 
-                        @Override
-                        public void onError(String error) {
-                            Log.e(TAG, "Error notifying organizer: " + error);
+                // Notify organizer
+                String userName = currentUser.getDisplayName() != null ?
+                        currentUser.getDisplayName() : "A user";
+                notificationService.notifyOrganizerOfResponse(
+                        event.getOrganizerId(),
+                        userName,
+                        event.getEventId(),
+                        event.getTitle(),
+                        false,
+                        new INotificationService.VoidCallback() {
+                            @Override
+                            public void onSuccess() {
+                                Log.d(TAG, "Organizer notified of decline");
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                Log.e(TAG, "Error notifying organizer: " + error);
+                            }
                         }
-                    }
                 );
-                
+
                 loadEnrolledEvents(currentUser.getUid());
             }
 
@@ -325,24 +385,31 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * Signs the current user out, clears their session, and navigates to the login screen.
+     */
     private void logout() {
         // Clear user session
         AuthManager.getInstance().signOut();
-        
+
         // Show toast
         Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
-        
+
         // Redirect to LoginActivity
         Intent intent = new Intent(getActivity(), com.example.cmpuzz_events.auth.LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        
+
         if (getActivity() != null) {
             getActivity().finish();
         }
     }
 
 
+    /**
+     * Displays a dialog for editing the user's profile information such as name, username, and email.
+     * It handles input validation and calls the profile service to apply the changes.
+     */
     private void showEditDialog() {
         if (currentUser == null) {
             Toast.makeText(requireContext(), "Not signed in", Toast.LENGTH_SHORT).show();
@@ -441,6 +508,15 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * Shows a dialog requesting the user's password for re-authentication.
+     * This is required for sensitive operations like changing an email address.
+     * After successful re-authentication, it retries the profile update.
+     *
+     * @param newEmail The new email address to be set.
+     * @param fullName The full name to be set.
+     * @param username The username to be set.
+     */
     private void showReauthDialogAndRetry(String newEmail, String fullName, String username) {
         View v = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_reauth_password, null, false);
         EditText etPassword = v.findViewById(R.id.etPassword);
@@ -496,6 +572,10 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * Called when the view previously created by {@link #onCreateView} has been detached from the fragment.
+     * This is where we clean up references to the binding class instance.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

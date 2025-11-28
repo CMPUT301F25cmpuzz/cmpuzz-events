@@ -56,6 +56,9 @@
     <string name="past_events_will_appear_here">Events you have attended will show up here.</string>
     <string name="event_date_icon">Event date icon</string>
     <string name="attendee_count_icon">Attendee count icon</string>
+    <string name="status_selected">Selected</string>
+    <string name="status_not_selected">Not Selected</string>
+    <string name="status_pending">Pending Selection</string>
 
 
 </resources>
