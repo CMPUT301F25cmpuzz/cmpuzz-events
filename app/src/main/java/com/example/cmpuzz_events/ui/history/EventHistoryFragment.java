@@ -24,7 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A {@link Fragment} that displays a history of events that the current user has attended.
+ * A {@link Fragment} that displays a history of events that the current user has registered for,
+ * including their selection status (selected, not selected, or pending).
  * <p>
  * This fragment retrieves event data using {@link EventService} and displays it in a
  * {@link RecyclerView} managed by an {@link EventHistoryAdapter}. It handles user authentication
@@ -78,7 +79,7 @@ public class EventHistoryFragment extends Fragment {
         eventService = EventService.getInstance();
 
         setupRecyclerView();
-        loadAttendedEvents();
+        loadEventHistory();
 
         return root;
     }
@@ -94,15 +95,15 @@ public class EventHistoryFragment extends Fragment {
     }
 
     /**
-     * Fetches and displays the events the current user is attending.
+     * Fetches and displays the history of all events the current user has registered for.
      * <p>
      * It first checks if a user is logged in using {@link AuthManager}. If not, it displays a
      * message and an empty state view. If logged in, it calls the {@link EventService} to get all
-     * events the user is involved in, filters them to find only the ones they are attending, and
-     * updates the {@link EventHistoryAdapter}. It handles both success and error cases from the service call,
-     * updating the UI accordingly.
+     * events the user is involved in (as an attendee or on a waitlist). It then passes this list,
+     * along with the user's ID, to the {@link EventHistoryAdapter} for display. It handles both
+     * success and error cases from the service call, updating the UI accordingly.
      */
-    private void loadAttendedEvents() {
+    private void loadEventHistory() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser == null) {
             Toast.makeText(getContext(), "You must be logged in to see your history.", Toast.LENGTH_SHORT).show();
@@ -116,25 +117,15 @@ public class EventHistoryFragment extends Fragment {
         eventService.getEventsForUserWithEntities(currentUserId, new IEventService.EventListCallback() {
             @Override
             public void onSuccess(List<EventEntity> allInvolvedEvents) {
-                List<EventEntity> attendingEvents = new ArrayList<>();
+                Log.d(TAG, "Found " + allInvolvedEvents.size() + " events in user's history.");
 
-                // Filter the events to include only those the user is marked as an attendee for.
-                for (EventEntity event : allInvolvedEvents) {
-                    if (event != null && event.getAttendees() != null && event.getAttendees().contains(currentUserId)) {
-                        attendingEvents.add(event);
-                    }
-                }
-
-                Log.d(TAG, "Found " + attendingEvents.size() + " events the user is attending.");
-
-                // Update UI based on whether attended events were found.
-                if (attendingEvents.isEmpty()) {
+                if (allInvolvedEvents.isEmpty()) {
                     binding.recyclerViewHistory.setVisibility(View.GONE);
                     binding.emptyStateView.setVisibility(View.VISIBLE);
                 } else {
                     binding.recyclerViewHistory.setVisibility(View.VISIBLE);
                     binding.emptyStateView.setVisibility(View.GONE);
-                    eventHistoryAdapter.updateEvents(attendingEvents);
+                    eventHistoryAdapter.updateEvents(allInvolvedEvents, currentUserId);
                 }
             }
 

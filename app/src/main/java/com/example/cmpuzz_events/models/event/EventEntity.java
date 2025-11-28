@@ -41,6 +41,7 @@ public class EventEntity {
     private Date updatedAt;
     private Map<String, List<Double>> entrantLocations; // Key: UserID, Value: {Lat, Lon}
     private List<String> entrants;
+    private boolean selectionsFinalized = false;
 
     /**
      * Default constructor required for Firebase deserialization
@@ -53,6 +54,7 @@ public class EventEntity {
         this.createdAt = new Date();
         this.updatedAt = new Date();
         this.entrantLocations = new HashMap<>();
+        this.selectionsFinalized = false;
     }
 
     /**
@@ -78,6 +80,7 @@ public class EventEntity {
         this.qrCodeUrl = generateQRCodeUrl(eventId);
         this.createdAt = new Date();
         this.updatedAt = new Date();
+        this.selectionsFinalized = false;
     }
 
     /**
@@ -119,7 +122,9 @@ public class EventEntity {
         map.put("updatedAt", updatedAt);
 
         map.put("entrantLocations", entrantLocations);
-        
+        map.put("selectionsFinalized", selectionsFinalized);
+
+
         return map;
     }
 
@@ -535,12 +540,48 @@ public class EventEntity {
         this.qrCodeUrl = qrCodeUrl;
     }
 
+    /**
+     * Grabs the full list of everyone who signed up for the event.
+     * Think of this as the master list of all participants, including
+     * those who ended up on the waitlist and those who were selected.
+     *
+     * @return A list of user IDs. If nobody has signed up yet, you'll get an empty list back.
+     */
     public List<String> getEntrants() {
         return this.entrants;
     }
 
+    /**
+     * Sets or replaces the entire list of entrants for the event.
+     * You'd mostly use this when loading the event's data from the database
+     * and need to populate the list from scratch.
+     *
+     * @param entrants The new list of user IDs to use for the event's entrants.
+     */
     public void setEntrants(List<String> entrants) {
         this.entrants = entrants;
+    }
+
+    /**
+     * Checks if the selection process for the event's waitlist has been completed.
+     * This determines whether a waitlisted user should see their status as
+     * 'Pending' or 'Not Selected'.
+     *
+     * @return {@code true} if selections are finalized, otherwise {@code false}.
+     */
+    public boolean isSelectionsFinalized() {
+        return selectionsFinalized;
+    }
+
+    /**
+     * Sets the finalization status of the event's waitlist selection.
+     * This should be set to {@code true} by an organizer once attendees have been chosen.
+     *
+     * @param selectionsFinalized {@code true} if selections have been made and are final.
+     */
+    public void setSelectionsFinalized(boolean selectionsFinalized) {
+        this.selectionsFinalized = selectionsFinalized;
+        this.updatedAt = new Date();
     }
 
 }
