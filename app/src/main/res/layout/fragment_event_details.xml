@@ -85,6 +85,31 @@
             app:layout_constraintStart_toStartOf="@id/event_title"
             app:layout_constraintTop_toBottomOf="@id/event_availability"/>
 
+        <Space
+            android:id="@+id/button_spacer"
+            android:layout_width="12dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toEndOf="@id/edit_button"
+            app:layout_constraintTop_toBottomOf="@id/event_availability" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/delete_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+
+            android:text="@string/delete_event"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@android:color/holo_red_light"
+
+            app:cornerRadius="20dp"
+
+            app:layout_constraintStart_toEndOf="@id/button_spacer"
+            app:layout_constraintTop_toBottomOf="@id/event_availability"/>
+
 
         <TextView
             android:id="@+id/date_posted"

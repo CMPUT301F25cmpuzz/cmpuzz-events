@@ -44,5 +44,7 @@
     <string name="second_chance_notification">You have a chance of being drawn in another lottery round. Would you like to be considered for a second chance in the lottery?</string>
     <string name="cancelled">EVENT CANCELLED</string>
     <string name="cancelled_notification">This event has been cancelled due to unforeseen circumstances. We sincerely apologize for any inconveniences this may cause. Thank you for understanding! - Event Coordinators</string>
+    <string name="delete_event">Delete Event</string>
+    <string name="browse_users">Browse Users</string>
 
 </resources>

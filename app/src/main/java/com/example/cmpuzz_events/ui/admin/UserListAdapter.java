@@ -1,9 +1,8 @@
-package com.example.cmpuzz_events.ui.event;
+package com.example.cmpuzz_events.ui.admin;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -11,18 +10,28 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.models.user.User;
-import com.google.android.play.core.integrity.IntegrityManagerFactory;
+import com.example.cmpuzz_events.ui.event.OnItemClickListener;
 
 import java.util.List;
 
 /**
  * Adapter to display enrolled users in an event's waitlist
  */
-public class EnrolledUsersAdapter extends RecyclerView.Adapter<EnrolledUsersAdapter.UserViewHolder> {
+public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserViewHolder> {
 
     private List<User> users;
+    private OnItemClickListener listener;
 
-    public EnrolledUsersAdapter(List<User> users) {
+    public interface OnItemClickListener {
+        void onItemClick(User user, int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener)
+    {
+        this.listener = listener;
+    }
+
+    public UserListAdapter(List<User> users) {
         this.users = users;
     }
 
@@ -41,14 +50,21 @@ public class EnrolledUsersAdapter extends RecyclerView.Adapter<EnrolledUsersAdap
 
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
-        holder.bind(users.get(position));
+        User currUser = users.get(position);
+        holder.bind(currUser);
 
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null && holder.getAdapterPosition() != RecyclerView.NO_POSITION) {
+                listener.onItemClick(currUser, holder.getAdapterPosition());
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
         return users != null ? users.size() : 0;
     }
+
     static class UserViewHolder extends RecyclerView.ViewHolder {
         private final TextView userName;
 
