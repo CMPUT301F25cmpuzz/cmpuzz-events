@@ -36,19 +36,22 @@ import java.util.List;
  */
 public class BrowseUsersFragment extends Fragment {
 
-    private static final String TAG = "ViewEntrantsFragment";
+    private static final String TAG = "ViewUsersFragment";
     private RecyclerView recyclerView;
     private UserListAdapter adapter;
     private TextView emptyStateText;
     private List<User> users;
     private boolean isAdmin;
+    private TabLayout tabLayout;
 
-//    public static BrowseUsersFragment newInstance(String eventId) {
-//        BrowseUsersFragment fragment = new BrowseUsersFragment();
-//        Bundle args = new Bundle();
-//        fragment.setArguments(args);
-//        return fragment;
-//    }
+
+
+    public static BrowseUsersFragment newInstance(String eventId) {
+        BrowseUsersFragment fragment = new BrowseUsersFragment();
+        Bundle args = new Bundle();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,23 +64,39 @@ public class BrowseUsersFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_view_entrants, container, false);
-        
+
         // Initialize views
+        tabLayout = root.findViewById(R.id.tabLayout);
         recyclerView = root.findViewById(R.id.recyclerView);
         emptyStateText = root.findViewById(R.id.tvEmptyState);
-        
+
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new UserListAdapter(new ArrayList<>());
         recyclerView.setAdapter(adapter);
-        
+
+        // Setup tabs
+        tabLayout.addTab(tabLayout.newTab().setText("Users"));
+        tabLayout.addTab(tabLayout.newTab().setText("Organizers"));
+
+        // Tab selection listener
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                loadEntrantsForTab(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+
         return root;
     }
 
     private void loadEntrantsForTab(int position) {
-        updateReplacementButton(position);
-        if (currentEvent == null) return;
-
         switch (position) {
             case 0: // Waitlist
                 loadWaitlist();
@@ -94,60 +113,7 @@ public class BrowseUsersFragment extends Fragment {
         }
     }
 
-    private void loadWaitlist() {
-        List<String> waitlist = currentEvent.getWaitlist();
-        if (waitlist == null || waitlist.isEmpty()) {
-            showEmptyState("No users in waitlist");
-            return;
-        }
-
-        loadUsers(waitlist);
-    }
-
-    private void loadInvited() {
-        List<Invitation> invitations = currentEvent.getInvitations();
-        if (invitations == null || invitations.isEmpty()) {
-            showEmptyState("No invited users");
-            return;
-        }
-
-        // Extract user IDs from invitations
-        List<String> userIds = new ArrayList<>();
-        for (Invitation invitation : invitations) {
-            if (invitation.isPending()) {
-                userIds.add(invitation.getUserId());
-            }
-        }
-
-        if (userIds.isEmpty()) {
-            showEmptyState("No pending invitations");
-            return;
-        }
-
-        loadUsers(userIds);
-    }
-
-    private void loadAttendees() {
-        List<String> attendees = currentEvent.getAttendees();
-        if (attendees == null || attendees.isEmpty()) {
-            showEmptyState("No attendees yet");
-            return;
-        }
-
-        loadUsers(attendees);
-    }
-
-    private void loadDeclined() {
-        List<String> declined = currentEvent.getDeclined();
-        if (declined == null || declined.isEmpty()) {
-            showEmptyState("No declined users");
-            return;
-        }
-
-        loadUsers(declined);
-    }
-
-    private void loadUsers(List<String> userIds) {
+    private void loadUserList(List<String> userIds) {
         AuthManager.getInstance().getUsersByIds(userIds, new AuthManager.UsersCallback() {
             @Override
             public void onSuccess(List<User> users) {
@@ -168,6 +134,11 @@ public class BrowseUsersFragment extends Fragment {
         });
     }
 
+    private void loadOrganizers()
+    {
+
+    }
+
     private void showEmptyState(String message) {
         adapter.updateUsers(new ArrayList<>());
         recyclerView.setVisibility(View.GONE);
@@ -175,55 +146,6 @@ public class BrowseUsersFragment extends Fragment {
         emptyStateText.setText(message);
     }
 
-    private void updateReplacementButton(int tabPosition) {
-        if (drawReplacementButton == null) return;
-
-        if (!isOrganizer || tabPosition != 3) {
-            drawReplacementButton.setVisibility(View.GONE);
-            return;
-        }
-
-        drawReplacementButton.setVisibility(View.VISIBLE);
-        boolean hasWaitlist = currentEvent != null &&
-                currentEvent.getWaitlist() != null &&
-                !currentEvent.getWaitlist().isEmpty();
-        boolean hasDeclined = currentEvent != null &&
-                currentEvent.getDeclined() != null &&
-                !currentEvent.getDeclined().isEmpty();
-        drawReplacementButton.setEnabled(hasWaitlist && hasDeclined && !isDrawingReplacement);
-    }
-
-    private void drawReplacementEntrant() {
-        if (eventId == null || isDrawingReplacement) {
-            return;
-        }
-        if (currentEvent == null || currentEvent.getDeclined() == null || currentEvent.getDeclined().isEmpty()) {
-            showToast("No declined entrants to replace.");
-            return;
-        }
-        if (currentEvent.getWaitlist() == null || currentEvent.getWaitlist().isEmpty()) {
-            showToast("Waitlist is empty - no replacements available.");
-            return;
-        }
-        isDrawingReplacement = true;
-        updateReplacementButton(tabLayout != null ? tabLayout.getSelectedTabPosition() : 3);
-
-        eventService.drawReplacementAttendee(eventId, new IEventService.VoidCallback() {
-            @Override
-            public void onSuccess() {
-                isDrawingReplacement = false;
-                showToast("Replacement invitation sent.");
-                loadEventData();
-            }
-
-            @Override
-            public void onError(String error) {
-                isDrawingReplacement = false;
-                showToast(error != null ? error : "Unable to draw replacement.");
-                updateReplacementButton(tabLayout != null ? tabLayout.getSelectedTabPosition() : 3);
-            }
-        });
-    }
 
     private void showToast(String message) {
         if (getContext() != null) {
