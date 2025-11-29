@@ -54,6 +54,11 @@ public interface INotificationService {
      */
     void updateNotificationPreference(String userId, boolean enabled, VoidCallback callback);
     
+    /**
+     * Get all notifications (admin only - for log review)
+     */
+    void getAllNotifications(NotificationListCallback callback);
+    
     // Callback interfaces
     interface VoidCallback {
         void onSuccess();

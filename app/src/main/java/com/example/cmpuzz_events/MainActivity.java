@@ -50,9 +50,25 @@ public class MainActivity extends AppCompatActivity {
             navView.getMenu().clear();
             navView.inflateMenu(R.menu.bottom_nav_menu_organizer);
             
+            // Show notification log tab only for admins
+            if (currentUser.isAdmin()) {
+                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(true);
+                Log.d(TAG, "Admin user - showing notification log tab");
+            } else {
+                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(false);
+            }
+            
             AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
                     .build();
+            
+            // Add notification log to app bar config if admin
+            if (currentUser.isAdmin()) {
+                appBarConfiguration = new AppBarConfiguration.Builder(
+                        R.id.navigation_home, R.id.navigation_dashboard, 
+                        R.id.navigation_notifications, R.id.navigation_notification_log)
+                        .build();
+            }
             
             NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
             NavigationUI.setupWithNavController(navView, navController);

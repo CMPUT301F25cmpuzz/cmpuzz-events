@@ -3,6 +3,7 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string name="title_notification_log">Notification Log</string>
     <string name="title_profile">Profile</string>
     <!--fragment_organizer dashboard strings/content descriptions -->
     <string name="header_organizer_navbar">Organizer Dashboard</string>

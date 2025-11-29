@@ -16,14 +16,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
-import com.example.cmpuzz_events.models.event.EventEntity;
-import com.example.cmpuzz_events.models.event.Invitation;
+// TODO: Uncomment when implementing full functionality
+//import com.example.cmpuzz_events.models.event.EventEntity;
+//import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.models.user.User;
-import com.example.cmpuzz_events.service.EventService;
-import com.example.cmpuzz_events.service.IEventService;
-import com.example.cmpuzz_events.ui.event.EnrolledUsersAdapter;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.tabs.TabLayout;
+//import com.example.cmpuzz_events.service.EventService;
+//import com.example.cmpuzz_events.service.IEventService;
+//import com.example.cmpuzz_events.ui.event.EnrolledUsersAdapter;
+//import com.google.android.material.button.MaterialButton;
+//import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,8 @@ public class BrowseUsersFragment extends Fragment {
         return root;
     }
 
+    // TODO: Complete implementation - these methods reference undefined variables
+    /*
     private void loadEntrantsForTab(int position) {
         updateReplacementButton(position);
         if (currentEvent == null) return;
@@ -146,6 +149,7 @@ public class BrowseUsersFragment extends Fragment {
 
         loadUsers(declined);
     }
+    */
 
     private void loadUsers(List<String> userIds) {
         AuthManager.getInstance().getUsersByIds(userIds, new AuthManager.UsersCallback() {
@@ -175,6 +179,8 @@ public class BrowseUsersFragment extends Fragment {
         emptyStateText.setText(message);
     }
 
+    // TODO: Complete implementation - these methods reference undefined variables
+    /*
     private void updateReplacementButton(int tabPosition) {
         if (drawReplacementButton == null) return;
 
@@ -224,6 +230,7 @@ public class BrowseUsersFragment extends Fragment {
             }
         });
     }
+    */
 
     private void showToast(String message) {
         if (getContext() != null) {

@@ -36,6 +36,13 @@
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
 
+    <!-- Admin-only: Notification Log -->
+    <fragment
+        android:id="@+id/navigation_notification_log"
+        android:name="com.example.cmpuzz_events.ui.admin.NotificationLogFragment"
+        android:label="@string/title_notification_log"
+        tools:layout="@layout/fragment_notification_log" />
+
     <!-- User Fragments -->
     <fragment
         android:id="@+id/navigation_browse"

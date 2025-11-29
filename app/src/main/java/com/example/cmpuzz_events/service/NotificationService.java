@@ -210,6 +210,42 @@ public class NotificationService implements INotificationService {
     }
     
     @Override
+    public void getAllNotifications(NotificationListCallback callback) {
+        db.collection(COLLECTION_NOTIFICATIONS)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<Notification> notifications = new ArrayList<>();
+                queryDocumentSnapshots.forEach(document -> {
+                    Notification notification = new Notification();
+                    notification.setId(document.getId());
+                    notification.setUserId(document.getString("userId"));
+                    notification.setEventId(document.getString("eventId"));
+                    notification.setEventName(document.getString("eventName"));
+                    notification.setTypeString(document.getString("type"));
+                    notification.setTitle(document.getString("title"));
+                    notification.setMessage(document.getString("message"));
+                    
+                    Long timestamp = document.getLong("timestamp");
+                    notification.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
+                    notification.setRead(Boolean.TRUE.equals(document.getBoolean("isRead")));
+                    notifications.add(notification);
+                });
+                
+                Log.d(TAG, "Loaded " + notifications.size() + " total notifications for admin log");
+                if (callback != null) {
+                    callback.onSuccess(notifications);
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error loading all notifications", e);
+                if (callback != null) {
+                    callback.onError(e.getMessage());
+                }
+            });
+    }
+    
+    @Override
     public void markAsRead(String notificationId, VoidCallback callback) {
         db.collection(COLLECTION_NOTIFICATIONS)
             .document(notificationId)
