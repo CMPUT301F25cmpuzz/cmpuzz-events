@@ -297,16 +297,6 @@ public class HomeFragment extends Fragment {
      * This method defines a {@link IEventService.EventListCallback} to handle the asynchronous
      * response from the service.
      * <p>
-     * On success, it performs the following actions:
-     * <ul>
-     *     <li>Checks if the fragment's view is still available to prevent crashes.</li>
-     *     <li>Clears any existing event data from {@code allEvents} and {@code allEventEntities}.</li>
-     *     <li>Converts the received {@link EventEntity} objects into UI-specific {@link Event} models.</li>
-     *     <li>Calls {@link #applyFilters()} to process and display the newly fetched data based on current filter settings.</li>
-     *     <li>Updates the UI to show the event list or an "empty state" message if no events are available after filtering.</li>
-     *     <li>Makes search and filter controls visible.</li>
-     * </ul>
-     * <p>
      * On error, it logs the failure, displays a toast message, and updates the UI to show an error
      * state, hiding the event list and filtering controls.
      *

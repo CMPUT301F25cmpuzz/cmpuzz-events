@@ -289,12 +289,15 @@ public class EventActionMenuFragment extends Fragment {
                     showToast("No enrolled entrants to export.");
                     return;
                 }
-                String filename = "enrolled_entrants_for_event_id_" + event.getEventId();
+
+                String filename = "enrolled_entrants_for_" + eventEntity.getTitle();
+
                 try {
                     csvExport(requireContext(), eeList, filename);
                     showToast("Successfully exported " + eeList.size() + " confirmed entrants to CSV.");
                 } catch (IOException e) {
                     showToast("Export failed.");
+                    Log.e(TAG, "CSV export failed for event: " + eventEntity.getTitle(), e);
                 }
             }
 
@@ -305,5 +308,7 @@ public class EventActionMenuFragment extends Fragment {
             }
         });
     }
+
+
 
 }
