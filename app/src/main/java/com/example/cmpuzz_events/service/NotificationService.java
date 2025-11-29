@@ -49,6 +49,7 @@ public class NotificationService implements INotificationService {
         data.put("message", notification.getMessage());
         data.put("timestamp", notification.getTimestamp());
         data.put("isRead", notification.isRead());
+        data.put("isImportant", notification.isImportant());
         
         db.collection(COLLECTION_NOTIFICATIONS)
             .add(data)
@@ -193,6 +194,7 @@ public class NotificationService implements INotificationService {
                     Long timestamp = document.getLong("timestamp");
                     notification.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
                     notification.setRead(Boolean.TRUE.equals(document.getBoolean("isRead")));
+                    notification.setImportant(Boolean.TRUE.equals(document.getBoolean("isImportant")));
                     notifications.add(notification);
                 });
                 
@@ -229,6 +231,7 @@ public class NotificationService implements INotificationService {
                     Long timestamp = document.getLong("timestamp");
                     notification.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
                     notification.setRead(Boolean.TRUE.equals(document.getBoolean("isRead")));
+                    notification.setImportant(Boolean.TRUE.equals(document.getBoolean("isImportant")));
                     notifications.add(notification);
                 });
                 
@@ -420,6 +423,25 @@ public class NotificationService implements INotificationService {
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error updating notification preference", e);
                 callback.onError(e.getMessage());
+            });
+    }
+    
+    @Override
+    public void updateImportantStatus(String notificationId, boolean isImportant, VoidCallback callback) {
+        db.collection(COLLECTION_NOTIFICATIONS)
+            .document(notificationId)
+            .update("isImportant", isImportant)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Notification important status updated: " + notificationId + " = " + isImportant);
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error updating notification important status", e);
+                if (callback != null) {
+                    callback.onError(e.getMessage());
+                }
             });
     }
     

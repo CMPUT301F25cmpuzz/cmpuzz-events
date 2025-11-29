@@ -111,18 +111,37 @@ public class NotificationLogFragment extends Fragment {
         
         adapter = new NotificationLogAdapter(new ArrayList<>());
         adapter.setOnStarClickListener((notificationId, isStarred) -> {
-            // Toggle starred state
-            if (isStarred) {
-                starredNotificationIds.add(notificationId);
-            } else {
-                starredNotificationIds.remove(notificationId);
-            }
-            // Update adapter with new starred set
-            adapter.setStarredNotificationIds(starredNotificationIds);
-            // Reapply filter if "Important" is selected
-            if (filterSpinner.getSelectedItemPosition() == FilterOption.IMPORTANT.ordinal()) {
-                applyFilter();
-            }
+            // Update in Firebase
+            notificationService.updateImportantStatus(notificationId, isStarred, new INotificationService.VoidCallback() {
+                @Override
+                public void onSuccess() {
+                    // Update local state
+                    if (isStarred) {
+                        starredNotificationIds.add(notificationId);
+                    } else {
+                        starredNotificationIds.remove(notificationId);
+                    }
+                    // Update the notification object in allNotifications
+                    for (Notification notification : allNotifications) {
+                        if (notification.getId() != null && notification.getId().equals(notificationId)) {
+                            notification.setImportant(isStarred);
+                            break;
+                        }
+                    }
+                    // Update adapter with new starred set
+                    adapter.setStarredNotificationIds(starredNotificationIds);
+                    // Reapply filter if "Important" is selected
+                    if (filterSpinner.getSelectedItemPosition() == FilterOption.IMPORTANT.ordinal()) {
+                        applyFilter();
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Error updating important status: " + error);
+                    // Optionally show a toast to the user
+                }
+            });
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
@@ -172,6 +191,14 @@ public class NotificationLogFragment extends Fragment {
         
         // Store all notifications for filtering
         allNotifications = notifications;
+        
+        // Populate starredNotificationIds from notifications' isImportant field
+        starredNotificationIds.clear();
+        for (Notification notification : notifications) {
+            if (notification.getId() != null && notification.isImportant()) {
+                starredNotificationIds.add(notification.getId());
+            }
+        }
         
         // Load events to get organizer info
         loadEvents(eventIds, () -> {
@@ -263,9 +290,8 @@ public class NotificationLogFragment extends Fragment {
                 break;
                 
             case IMPORTANT:
-                // Filter by starred notifications
-                filteredNotifications.removeIf(n -> 
-                    n.getId() == null || !starredNotificationIds.contains(n.getId()));
+                // Filter by important notifications (using isImportant field from Firebase)
+                filteredNotifications.removeIf(n -> !n.isImportant());
                 // Sort by timestamp descending
                 filteredNotifications.sort((n1, n2) -> Long.compare(n2.getTimestamp(), n1.getTimestamp()));
                 break;

@@ -73,7 +73,8 @@ public class NotificationLogAdapter extends RecyclerView.Adapter<NotificationLog
     @Override
     public void onBindViewHolder(@NonNull LogEntryViewHolder holder, int position) {
         Notification notification = notifications.get(position);
-        boolean isStarred = notification.getId() != null && starredNotificationIds.contains(notification.getId());
+        // Use the notification's isImportant field (from Firebase) as the source of truth
+        boolean isStarred = notification.isImportant();
         holder.bind(notification, eventCache, userCache, isStarred, starClickListener);
     }
     

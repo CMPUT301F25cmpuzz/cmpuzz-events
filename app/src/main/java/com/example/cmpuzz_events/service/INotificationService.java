@@ -59,6 +59,11 @@ public interface INotificationService {
      */
     void getAllNotifications(NotificationListCallback callback);
     
+    /**
+     * Update the important status of a notification
+     */
+    void updateImportantStatus(String notificationId, boolean isImportant, VoidCallback callback);
+    
     // Callback interfaces
     interface VoidCallback {
         void onSuccess();
