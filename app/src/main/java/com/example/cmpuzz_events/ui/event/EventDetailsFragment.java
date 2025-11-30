@@ -42,6 +42,9 @@ import com.google.firebase.storage.StorageReference;
 import android.net.Uri;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import com.example.cmpuzz_events.service.IImageService;
+import com.example.cmpuzz_events.service.ImageService;
+import com.example.cmpuzz_events.ui.admin.ImageItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -360,6 +363,7 @@ public class EventDetailsFragment extends Fragment {
                         waitlistIds
                 );
                 currentEvent.setMaxEntrants(eventEntity.getMaxEntrants());
+                currentEvent.setPosterUrl(eventEntity.getPosterUrl());
                 
                 displayEventDetails(eventEntity);
                 
@@ -602,14 +606,94 @@ public class EventDetailsFragment extends Fragment {
     }
     
     private void showEditOptionsDialog() {
-        new AlertDialog.Builder(requireContext())
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        
+        // Debug logging
+        if (currentUser != null) {
+            Log.d(TAG, "Current user role: " + currentUser.getRole());
+            Log.d(TAG, "Current user isAdmin(): " + currentUser.isAdmin());
+        } else {
+            Log.d(TAG, "Current user is NULL");
+        }
+        
+        if (currentEvent != null) {
+            Log.d(TAG, "Current event posterUrl: " + currentEvent.getPosterUrl());
+        } else {
+            Log.d(TAG, "Current event is NULL");
+        }
+        
+        // Check if user is admin
+        boolean isAdmin = currentUser != null && currentUser.isAdmin();
+        
+        Log.d(TAG, "Edit dialog - isAdmin: " + isAdmin);
+        
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
             .setTitle("Edit Event")
-            .setMessage("What would you like to edit?")
-            .setPositiveButton("Change Poster Image", (dialog, which) -> {
+            .setMessage("What would you like to do?");
+        
+        // Add delete option for admins (they can delete any event's poster)
+        if (isAdmin) {
+            builder.setNeutralButton("Delete Poster", (dialog, which) -> {
+                confirmDeletePosterImage();
+            });
+        }
+        
+        builder.setPositiveButton("Change Poster", (dialog, which) -> {
                 imagePickerLauncher.launch("image/*");
+            })
+            .setNegativeButton("Cancel", null);
+        
+        builder.show();
+    }
+    
+    private void confirmDeletePosterImage() {
+        new AlertDialog.Builder(requireContext())
+            .setTitle("Delete Poster Image")
+            .setMessage("Are you sure you want to delete this event's poster image?")
+            .setPositiveButton("Delete", (dialog, which) -> {
+                deletePosterImage();
             })
             .setNegativeButton("Cancel", null)
             .show();
+    }
+    
+    private void deletePosterImage() {
+        if (currentEvent == null || currentEvent.getPosterUrl() == null) {
+            Toast.makeText(getContext(), "No poster image to delete", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Create ImageItem from the current event's poster
+        String posterUrl = currentEvent.getPosterUrl();
+        String eventId = currentEvent.getEventId();
+        
+        // Get storage reference for the image
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference posterRef = storage.getReferenceFromUrl(posterUrl);
+        
+        ImageItem imageItem = new ImageItem();
+        imageItem.setUrl(posterUrl);
+        imageItem.setName(eventId + ".jpg");
+        imageItem.setReference(posterRef);
+        
+        Toast.makeText(getContext(), "Deleting poster image...", Toast.LENGTH_SHORT).show();
+        
+        // Use ImageService to delete the image and update events
+        ImageService imageService = ImageService.getInstance();
+        imageService.deleteImage(imageItem, new IImageService.VoidCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(getContext(), "Poster image deleted successfully", Toast.LENGTH_SHORT).show();
+                // Reload event details to show updated state
+                loadEventDetails();
+            }
+            
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error deleting poster: " + error);
+                Toast.makeText(getContext(), "Error deleting poster: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
     
     private void uploadNewEventImage() {
