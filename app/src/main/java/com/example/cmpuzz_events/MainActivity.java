@@ -136,20 +136,76 @@ public class MainActivity extends AppCompatActivity {
         }
         
         // Setup navigation based on user role
-        if (currentUser.canManageEvents()) {
-            // ORGANIZER or ADMIN - show organizer navigation
+        navView.getMenu().clear();
+        if(currentUser.isAdmin())
+        {
+            // ADMIN - show organizer navigation
+            Log.d(TAG, "Setting up ADMIN navigation");
+            navView.inflateMenu(R.menu.bottom_nav_menu_admin);
+
+//            // Show notification log tab only for admins
+//            if (currentUser.isAdmin()) {
+            navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(true);
+//                Log.d(TAG, "Admin user - showing notification log tab");
+//            } else {
+//                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(false);
+//                Log.d(TAG, "Organizer user - hiding notification log tab");
+//            }
+
+            AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
+                    R.id.navigation_browse,R.id.navigation_history ,R.id.navigation_browse_users, R.id.navigation_notification_log)
+                    .build();
+
+            // Add notification log to app bar config if admin
+            if (currentUser.isAdmin()) {
+                appBarConfiguration = new AppBarConfiguration.Builder(
+                        R.id.navigation_browse, R.id.navigation_dashboard,
+                        R.id.navigation_browse_users, R.id.navigation_notification_log)
+                        .build();
+            }
+
+            NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+            NavigationUI.setupWithNavController(navView, navController);
+
+            Log.d(TAG, "Navigation UI setup complete, attempting to navigate to home");
+
+            // Explicitly navigate to home fragment for organizers/admins
+            // Post to ensure NavHostFragment is fully initialized
+            navView.post(() -> {
+                try {
+                    // Check current destination and navigate if needed
+                    if (navController.getCurrentDestination() == null) {
+                        Log.d(TAG, "Current destination is null, navigating to navigation_home");
+                        navController.navigate(R.id.navigation_browse);
+                    } else {
+                        int currentId = navController.getCurrentDestination().getId();
+                        Log.d(TAG, "Current destination ID: " + currentId);
+                        if (currentId != R.id.navigation_browse) {
+                            Log.d(TAG, "Navigating from " + currentId + " to navigation_home");
+                            navController.navigate(R.id.navigation_browse);
+                        } else {
+                            Log.d(TAG, "Already at navigation_home destination");
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error navigating to navigation_home: " + e.getMessage(), e);
+                    e.printStackTrace();
+                }
+            });
+        }
+        else if (currentUser.isOrganizer()) {
+            // ORGANIZER - show organizer navigation
             Log.d(TAG, "Setting up ORGANIZER/ADMIN navigation");
-            navView.getMenu().clear();
             navView.inflateMenu(R.menu.bottom_nav_menu_organizer);
             
-            // Show notification log tab only for admins
-            if (currentUser.isAdmin()) {
-                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(true);
-                Log.d(TAG, "Admin user - showing notification log tab");
-            } else {
-                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(false);
-                Log.d(TAG, "Organizer user - hiding notification log tab");
-            }
+//            // Show notification log tab only for admins
+//            if (currentUser.isAdmin()) {
+//                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(true);
+//                Log.d(TAG, "Admin user - showing notification log tab");
+//            } else {
+//                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(false);
+//                Log.d(TAG, "Organizer user - hiding notification log tab");
+//            }
             
             AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home,R.id.navigation_history ,R.id.navigation_dashboard, R.id.navigation_notifications)
@@ -158,8 +214,8 @@ public class MainActivity extends AppCompatActivity {
             // Add notification log to app bar config if admin
             if (currentUser.isAdmin()) {
                 appBarConfiguration = new AppBarConfiguration.Builder(
-                        R.id.navigation_home, R.id.navigation_dashboard, 
-                        R.id.navigation_notifications, R.id.navigation_notification_log)
+                        R.id.navigation_home, R.id.navigation_dashboard,
+                        R.id.navigation_notifications)
                         .build();
             }
             
@@ -195,7 +251,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // REGULAR USER - show user navigation  
             Log.d(TAG, "Setting up USER navigation");
-            navView.getMenu().clear();
             navView.inflateMenu(R.menu.bottom_nav_menu_user);
             
             AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(

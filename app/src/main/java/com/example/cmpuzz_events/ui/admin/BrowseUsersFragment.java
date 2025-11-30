@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class BrowseUsersFragment extends Fragment {
 
-    private static final String TAG = "ViewUsersFragment";
+    private static final String TAG = "BrowseUsersFragment";
     private RecyclerView recyclerView;
     private UserListAdapter adapter;
     private TextView emptyStateText;
@@ -69,6 +69,10 @@ public class BrowseUsersFragment extends Fragment {
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new UserListAdapter(new ArrayList<>());
+        adapter.setOnItemClickListener((user, position) -> {
+            Log.d(TAG, "Clicked on user: " + user.getDisplayName());
+        });
+
         recyclerView.setAdapter(adapter);
 
         // Setup tabs

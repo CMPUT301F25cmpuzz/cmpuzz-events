@@ -3,6 +3,7 @@ package com.example.cmpuzz_events.ui.admin;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,7 +16,7 @@ import com.example.cmpuzz_events.ui.event.OnItemClickListener;
 import java.util.List;
 
 /**
- * Adapter to display enrolled users in an event's waitlist
+ * Adapter to display users with a clickable interface
  */
 public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserViewHolder> {
 
@@ -54,8 +55,8 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserVi
         holder.bind(currUser);
 
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null && holder.getAdapterPosition() != RecyclerView.NO_POSITION) {
-                listener.onItemClick(currUser, holder.getAdapterPosition());
+            if (listener != null) {
+                listener.onItemClick(currUser, position);
             }
         });
     }
@@ -67,10 +68,12 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserVi
 
     static class UserViewHolder extends RecyclerView.ViewHolder {
         private final TextView userName;
+        private final ImageView avatar;
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
             userName = itemView.findViewById(R.id.user_name);
+            avatar = itemView.findViewById(R.id.user_avatar);
         }
 
         public void bind(User user) {
@@ -84,6 +87,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserVi
                     displayName = user.getEmail();
                 }
                 userName.setText(displayName);
+                avatar.setImageResource(R.drawable.ic_profile);
             }
         }
     }

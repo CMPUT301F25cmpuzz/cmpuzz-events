@@ -43,6 +43,12 @@
         android:label="@string/title_notification_log"
         tools:layout="@layout/fragment_notification_log" />
 
+    <fragment
+        android:id="@+id/navigation_browse_users"
+        android:name="com.example.cmpuzz_events.ui.admin.BrowseUsersFragment"
+        android:label="@string/browse_users"
+        tools:layout="@layout/fragment_browse_users"/>
+
     <!-- User Fragments -->
     <fragment
         android:id="@+id/navigation_browse"

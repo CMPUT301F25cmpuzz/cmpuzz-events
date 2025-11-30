@@ -371,8 +371,6 @@ public class HomeFragment extends Fragment {
         eventService.getAllEventsN(eventCallback);
     }
 
-
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();

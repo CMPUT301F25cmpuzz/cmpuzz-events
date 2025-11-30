@@ -74,6 +74,11 @@ public class AdminService implements IAdminService {
         return user;
     }
 
+//    private User getUserByUid(String uid)
+//    {
+//
+//    }
+
     /**
      * Deletes the user account completely:
      * 1. Removes user from all event lists (waitlist, declined, attendees, invitations)
