@@ -244,11 +244,41 @@ public class AuthManager {
 
     /**
      * Checks whether a user is currently signed in.
+     * Firebase Auth automatically persists sessions, so we check if Firebase has a current user.
+     * The currentUser object will be loaded asynchronously via the auth state listener.
      *
-     * @return {@code true} if a user is signed in, otherwise {@code false}.
+     * @return {@code true} if a user is signed in (Firebase has a persisted session), otherwise {@code false}.
      */
     public boolean isSignedIn() {
-        return auth.getCurrentUser() != null && currentUser != null;
+        // Firebase Auth automatically persists sessions, so if getCurrentUser() is not null,
+        // the user has a valid persisted session. The currentUser object will be loaded
+        // asynchronously by the auth state listener.
+        return auth.getCurrentUser() != null;
+    }
+    
+    /**
+     * Checks if Firebase has a persisted session but user data hasn't been loaded yet.
+     * This can happen on app startup when Firebase has a session but loadUserData() hasn't completed.
+     *
+     * @return {@code true} if Firebase has a user but currentUser is null, otherwise {@code false}.
+     */
+    public boolean hasFirebaseSessionButNoUserData() {
+        return auth.getCurrentUser() != null && currentUser == null;
+    }
+    
+    /**
+     * Checks if automatic login is allowed for the current user.
+     * Only entrants (USER role) are allowed to use automatic login.
+     * Organizers and admins must log in each time.
+     *
+     * @return {@code true} if the user is an entrant (USER role), otherwise {@code false}.
+     */
+    public boolean isAutoLoginAllowed() {
+        if (currentUser == null) {
+            return false;
+        }
+        // Only allow auto-login for entrants (USER role)
+        return currentUser.isUser();
     }
 
     /**

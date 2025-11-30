@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.models.user.User;
+import com.example.cmpuzz_events.service.AdminService;
 import com.example.cmpuzz_events.service.IAdminService;
 import com.google.android.material.tabs.TabLayout;
 
@@ -40,8 +41,6 @@ public class BrowseUsersFragment extends Fragment {
     private TabLayout tabLayout;
     private IAdminService adminService;
 
-
-
     public static BrowseUsersFragment newInstance(String eventId) {
         BrowseUsersFragment fragment = new BrowseUsersFragment();
         Bundle args = new Bundle();
@@ -54,6 +53,7 @@ public class BrowseUsersFragment extends Fragment {
         super.onCreate(savedInstanceState);
         User currentUser = AuthManager.getInstance().getCurrentUser();
         isAdmin = currentUser != null && currentUser.isAdmin();
+        adminService = AdminService.getInstance();
     }
 
     @Nullable
@@ -135,7 +135,6 @@ public class BrowseUsersFragment extends Fragment {
         emptyStateText.setVisibility(View.VISIBLE);
         emptyStateText.setText(message);
     }
-
 
     private void showToast(String message) {
         if (getContext() != null) {
