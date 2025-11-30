@@ -38,6 +38,10 @@ import com.google.firebase.firestore.DocumentReference;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Displays the detailed information for a single event.
+ * It handles different UI states based on user roles (organizer vs. regular user) and event status.
+ */
 public class EventDetailsFragment extends Fragment {
 
     private static final String TAG = "EventDetailsFragment";
@@ -71,6 +75,9 @@ public class EventDetailsFragment extends Fragment {
 
     private FusedLocationProviderClient fusedLocationClient;
 
+    /**
+     * Factory method to create a new instance of this fragment using the provided event ID.
+     */
     public static EventDetailsFragment newInstance(String eventId) {
         EventDetailsFragment fragment = new EventDetailsFragment();
         Bundle args = new Bundle();
@@ -78,7 +85,9 @@ public class EventDetailsFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-
+    /**
+     * Called when the fragment is first created. Initializes services and retrieves the event ID from arguments.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,7 +99,10 @@ public class EventDetailsFragment extends Fragment {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
     }
-
+    /**
+     * Inflates the fragment's layout, initializes all views, and triggers the loading of event details.
+     * @return The root view for the fragment's UI.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -126,7 +138,9 @@ public class EventDetailsFragment extends Fragment {
         
         return root;
     }
-
+    /**
+     * Configures the visibility and functionality of UI elements based on the current user's role.
+     */
     private void setupRoleBasedUI(View root) {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         boolean isOrganizer = currentUser != null && currentUser.canManageEvents();
@@ -182,7 +196,9 @@ public class EventDetailsFragment extends Fragment {
             joinButton.setOnClickListener(v -> joinEvent());
         }
     }
-
+    /**
+     * Activity result launcher for handling the location permission request.
+     */
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
@@ -191,7 +207,9 @@ public class EventDetailsFragment extends Fragment {
                     Toast.makeText(getContext(), "Location required to join this event", Toast.LENGTH_SHORT).show();
                 }
             });
-
+    /**
+     * Initiates the process for a user to join an event, checking for location requirements.
+     */
     private void joinEvent() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -221,7 +239,9 @@ public class EventDetailsFragment extends Fragment {
             });
         }
     }
-
+    /**
+     * Checks if location permission has been granted; if not, it requests the permission.
+     */
     private void checkPermissionAndJoin() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -231,6 +251,9 @@ public class EventDetailsFragment extends Fragment {
         }
     }
 
+    /**
+     * Fetches the user's last known location and then attempts to join the event with that location.
+     */
     private void fetchLocationAndJoin() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) return;
@@ -259,7 +282,9 @@ public class EventDetailsFragment extends Fragment {
                     }
                 });
     }
-
+    /**
+     * Allows the current user to leave the event's waitlist.
+     */
     private void leaveEvent() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -283,7 +308,9 @@ public class EventDetailsFragment extends Fragment {
             }
         });
     }
-
+    /**
+     * Fetches all details for the specified event from the service and updates the UI.
+     */
     private void loadEventDetails() {
         if (eventId == null || eventId.isEmpty()) {
             Toast.makeText(getContext(), "Invalid event", Toast.LENGTH_SHORT).show();
@@ -325,7 +352,9 @@ public class EventDetailsFragment extends Fragment {
             }
         });
     }
-
+    /**
+     * Fetches user profiles for all IDs associated with an event (waitlist, invited, attending) and displays them.
+     */
     private void loadEnrolledUsers(List<String> waitlist) {
         // Combine all user IDs: waitlist + invited + attendees
         List<String> allUserIds = new ArrayList<>();
@@ -387,7 +416,9 @@ public class EventDetailsFragment extends Fragment {
             }
         });
     }
-
+    /**
+     * Populates the UI fields with data from the event object. This method must be called on the UI thread.
+     */
     private void displayEventDetails(EventEntity event) {
         if (getActivity() == null) return;
         

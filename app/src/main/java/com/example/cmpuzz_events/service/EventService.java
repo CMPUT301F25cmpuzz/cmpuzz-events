@@ -71,7 +71,6 @@ public class EventService implements IEventService {
      * Convert EventEntity to UI Event
      */
     private Event convertToUIEvent(EventEntity entity) {
-        List<String> waitlistIds = entity.getWaitlist();
         Event uiEvent = new Event(
             entity.getEventId(),
             entity.getTitle(),
@@ -82,9 +81,10 @@ public class EventService implements IEventService {
             entity.getOrganizerId(),
             entity.getOrganizerName(),
             entity.isGeolocationRequired(),
-                waitlistIds
+            entity.getWaitlist()
         );
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
+        uiEvent.setEntrants(entity.getEntrants());
         return uiEvent;
     }
 
@@ -866,6 +866,10 @@ public class EventService implements IEventService {
         List<String> declined = (List<String>) doc.get("declined");
         if (declined != null) entity.setDeclined(declined);
 
+        // Entrants
+        List<String> entrants = (List<String>) doc.get("entrants");
+        if (entrants != null) entity.setEntrants(entrants);
+
         // Invitations
         List<Map<String, Object>> invitationMaps = (List<Map<String, Object>>) doc.get("invitations");
         if (invitationMaps != null) {
@@ -924,31 +928,6 @@ public class EventService implements IEventService {
         }
         
         return entity;
-    }
-
-
-    /**
-     * Retrieves all events as EventEntity objects.
-     * This is used by the HomeFragment to show all public events to non-organizers.
-     *
-     * @param callback Callback returning a list of EventEntity or an error.
-     */
-    @Override
-    public void getAllEventsN(EventListCallback callback) {
-        db.collection(COLLECTION_EVENTS)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<EventEntity> entities = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        entities.add(documentToEventEntity(doc));
-                    }
-                    Log.d(TAG, "Retrieved " + entities.size() + " event entities for HomeFragment");
-                    callback.onSuccess(entities);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error getting all event entities", e);
-                    callback.onError(e.getMessage());
-                });
     }
 }
 

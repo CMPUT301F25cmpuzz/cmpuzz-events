@@ -37,7 +37,9 @@ public class ViewAllEntrantsFragment extends Fragment {
     private RecyclerView recyclerView;
     private EnrolledUsersAdapter adapter;
     private TextView emptyStateText;
-
+    /**
+     * Factory method to create a new instance of the fragment with a given event ID.
+     */
     public static ViewAllEntrantsFragment newInstance(String eventId) {
         ViewAllEntrantsFragment fragment = new ViewAllEntrantsFragment();
         Bundle args = new Bundle();
@@ -45,7 +47,9 @@ public class ViewAllEntrantsFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-
+    /**
+     * Retrieves the event ID from fragment arguments when the fragment is created.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +57,10 @@ public class ViewAllEntrantsFragment extends Fragment {
             eventId = getArguments().getString(ARG_EVENT_ID);
         }
     }
-
+    /**
+     * Inflates the layout, initializes views, and starts the process of loading the entrant list.
+     * @return The root view for the fragment's UI.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -73,7 +80,9 @@ public class ViewAllEntrantsFragment extends Fragment {
         
         return root;
     }
-
+    /**
+     * Fetches the event details to compile a list of all user IDs (waitlist, invited, attendees).
+     */
     private void loadAllEntrants() {
         EventService.getInstance().getEvent(eventId, new IEventService.EventCallback() {
             @Override
@@ -110,7 +119,7 @@ public class ViewAllEntrantsFragment extends Fragment {
                     showEmptyState("No entrants yet");
                     return;
                 }
-                
+
                 loadUsers(allUserIds);
             }
 
@@ -121,7 +130,9 @@ public class ViewAllEntrantsFragment extends Fragment {
             }
         });
     }
-
+    /**
+     * Fetches the User objects corresponding to the provided list of user IDs and updates the adapter.
+     */
     private void loadUsers(List<String> userIds) {
         AuthManager.getInstance().getUsersByIds(userIds, new AuthManager.UsersCallback() {
             @Override
@@ -142,7 +153,9 @@ public class ViewAllEntrantsFragment extends Fragment {
             }
         });
     }
-
+    /**
+     * Displays a message to the user when the entrant list is empty or fails to load.
+     */
     private void showEmptyState(String message) {
         adapter.updateUsers(new ArrayList<>());
         recyclerView.setVisibility(View.GONE);

@@ -31,6 +31,11 @@ import com.example.cmpuzz_events.utils.QRCodeGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A {@link Fragment} responsible for displaying a list of all available public events
+ * It fetches event data using the {@link EventService} and presents it in a
+ * {@link androidx.recyclerview.widget.RecyclerView}.
+ */
 public class BrowseEventsFragment extends Fragment {
 
     private FragmentBrowseEventsBinding binding;
@@ -38,6 +43,20 @@ public class BrowseEventsFragment extends Fragment {
     private MyEventsAdapter adapter;
     private static final String TAG = "BrowseEventsFragment";
 
+    /**
+     * inflates the layout, initilizes viewbinding,sets up recyclerview,
+     * and initiates the data loading.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return View
+     */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -53,6 +72,10 @@ public class BrowseEventsFragment extends Fragment {
         
         // Set click listener to navigate to event details
         adapter.setOnEventClickListener(new MyEventsAdapter.OnEventClickListener() {
+            /**
+             * handles click events on an event item.
+             * @param event The {@link Event} object that was click
+             */
             @Override
             public void onViewEventClick(Event event) {
                 Bundle bundle = new Bundle();
@@ -63,6 +86,11 @@ public class BrowseEventsFragment extends Fragment {
                 );
             }
 
+            /**
+             * Handles clicks on the "Draw Attendees" action. since users can't do this
+             * nothing happens.
+             * @param event The event associated with the action.
+             */
             @Override
             public void onDrawAttendeesClick(Event event) {
                 // Do nothing - users can't draw attendees
@@ -82,6 +110,9 @@ public class BrowseEventsFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Fetches the list of all events from the {@link EventService}.
+     */
     private void loadAllEvents() {
         eventService.getAllEvents(new IEventService.UIEventListCallback() {
             @Override
