@@ -39,14 +39,4 @@ public class QRCodeGenerator {
             return null;
         }
     }
-
-    /**
-     * Generate a QR code with default size (512x512)
-     * 
-     * @param url The URL to encode
-     * @return Bitmap of the QR code
-     */
-    public static Bitmap generateQRCode(String url) {
-        return generateQRCode(url, 512, 512);
-    }
 }

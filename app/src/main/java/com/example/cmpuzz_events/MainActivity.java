@@ -1,6 +1,7 @@
 package com.example.cmpuzz_events;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -31,11 +32,60 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        setupNavigationForUserRole();
+
+        // Handle deep links from QR codes
+        handleDeepLink(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
+    }
+
+    /**
+     * Handle deep links from QR codes (cmpuzzevents://event/{eventId})
+     */
+    private void handleDeepLink(Intent intent) {
+        Uri data = intent.getData();
+        if (data != null && "cmpuzzevents".equals(data.getScheme())) {
+            String host = data.getHost();
+            if ("event".equals(host)) {
+                // Extract event ID from the path
+                String eventId = data.getLastPathSegment();
+                if (eventId != null && !eventId.isEmpty()) {
+                    Log.d(TAG, "Deep link detected for event: " + eventId);
+                    navigateToEventDetails(eventId);
+                }
+            }
+        }
+    }
+
+    /**
+     * Navigate to event details screen
+     */
+    private void navigateToEventDetails(String eventId) {
+        // Wait for navigation controller to be ready
+        if (navController != null) {
+            Bundle bundle = new Bundle();
+            bundle.putString("eventId", eventId);
+            navController.navigate(R.id.action_to_event_details, bundle);
+        } else {
+            // If nav controller isn't ready yet, post the navigation
+            binding.getRoot().post(() -> {
+                navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", eventId);
+                navController.navigate(R.id.action_to_event_details, bundle);
+            });
+        }
         // Check if this is a manual login (user explicitly logged in)
         boolean isManualLogin = getIntent().getBooleanExtra("is_manual_login", false);
         checkAuthenticationAndSetup(isManualLogin);
     }
-    
+
     /**
      * Checks authentication state and sets up navigation.
      * If user is not authenticated, redirects to LoginActivity.
@@ -46,14 +96,14 @@ public class MainActivity extends AppCompatActivity {
      */
     private void checkAuthenticationAndSetup(boolean isManualLogin) {
         AuthManager authManager = AuthManager.getInstance();
-        
+
         // If no Firebase session at all, redirect to login
         if (!authManager.isSignedIn()) {
             Log.d(TAG, "No Firebase session, redirecting to login");
             redirectToLogin();
             return;
         }
-        
+
         // If Firebase has a session but user data isn't loaded yet, wait for it
         if (authManager.hasFirebaseSessionButNoUserData()) {
             Log.d(TAG, "Firebase session exists but user data not loaded, waiting...");
@@ -79,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
             authManager.addAuthStateListener(authStateListener);
             return;
         }
-        
+
         // User is authenticated and data is loaded
         // If this is a manual login, allow all roles through
         // If this is an auto-login, only allow entrants
@@ -92,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
             redirectToLogin();
         }
     }
-    
+
     /**
      * Redirects to LoginActivity and finishes this activity.
      */
@@ -112,12 +162,12 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        Log.d(TAG, "Setting up navigation for user: " + currentUser.getDisplayName() + 
-              ", role: " + currentUser.getRole() + 
+        Log.d(TAG, "Setting up navigation for user: " + currentUser.getDisplayName() +
+              ", role: " + currentUser.getRole() +
               ", canManageEvents: " + currentUser.canManageEvents());
 
         BottomNavigationView navView = binding.navView;
-        
+
         try {
             navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
             Log.d(TAG, "NavController found successfully");
@@ -194,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
             AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home,R.id.navigation_history ,R.id.navigation_dashboard, R.id.navigation_notifications)
                     .build();
-            
+
             // Add notification log to app bar config if admin
             if (currentUser.isAdmin()) {
                 appBarConfiguration = new AppBarConfiguration.Builder(
@@ -202,12 +252,12 @@ public class MainActivity extends AppCompatActivity {
                         R.id.navigation_notifications)
                         .build();
             }
-            
+
             NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
             NavigationUI.setupWithNavController(navView, navController);
             
             Log.d(TAG, "Navigation UI setup complete, attempting to navigate to home");
-            
+
             // Explicitly navigate to home fragment for organizers/admins
             // Post to ensure NavHostFragment is fully initialized
             navView.post(() -> {
@@ -231,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             });
-            
+
         } else {
             // REGULAR USER - show user navigation  
             Log.d(TAG, "Setting up USER navigation");
@@ -257,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
-    
+
     @Override
     protected void onDestroy() {
         super.onDestroy();

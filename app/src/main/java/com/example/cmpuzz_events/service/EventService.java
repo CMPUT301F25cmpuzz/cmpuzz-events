@@ -19,10 +19,6 @@ import java.util.Random;
 
 import com.example.cmpuzz_events.models.notification.Notification;
 
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.DocumentSnapshot;
-import java.util.Date;
-
 /**
  * Implementation of IEventService.
  * Handles Event CRUD operations with Firebase Firestore.
@@ -53,25 +49,28 @@ public class EventService implements IEventService {
      * Convert UI Event to EventEntity
      */
     private EventEntity convertToEntity(Event uiEvent) {
-        return new EventEntity(
-            uiEvent.getEventId(),
-            uiEvent.getTitle(),
-            uiEvent.getDescription(),
-            uiEvent.getCapacity(),
-            uiEvent.getRegistrationStart(),
-            uiEvent.getRegistrationEnd(),
-            uiEvent.getOrganizerId(),
-            uiEvent.getOrganizerName(),
-            uiEvent.isGeolocationRequired(),
-            uiEvent.getMaxEntrants()
+        EventEntity entity = new EventEntity(
+                uiEvent.getEventId(),
+                uiEvent.getTitle(),
+                uiEvent.getDescription(),
+                uiEvent.getCapacity(),
+                uiEvent.getRegistrationStart(),
+                uiEvent.getRegistrationEnd(),
+                uiEvent.getOrganizerId(),
+                uiEvent.getOrganizerName(),
+                uiEvent.isGeolocationRequired(),
+                uiEvent.getMaxEntrants()
         );
+
+        entity.setPosterUrl(uiEvent.getPosterUrl());  // carry poster
+
+        return entity;
     }
 
     /**
      * Convert EventEntity to UI Event
      */
     private Event convertToUIEvent(EventEntity entity) {
-        List<String> waitlistIds = entity.getWaitlist();
         Event uiEvent = new Event(
             entity.getEventId(),
             entity.getTitle(),
@@ -82,9 +81,11 @@ public class EventService implements IEventService {
             entity.getOrganizerId(),
             entity.getOrganizerName(),
             entity.isGeolocationRequired(),
-                waitlistIds
+            entity.getWaitlist()
         );
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
+        uiEvent.setEntrants(entity.getEntrants());
+        uiEvent.setPosterUrl(entity.getPosterUrl());
         return uiEvent;
     }
 
@@ -184,6 +185,34 @@ public class EventService implements IEventService {
                 callback.onError(e.getMessage());
             });
     }
+
+    /**
+     * Retrieves all UI events for a specific organizer.
+     *
+     * @param organizerId Organizer's user ID
+     * @param callback Callback with list of UI Event or error
+     */
+    @Override
+    public void getEventsForOrganizerUI(String organizerId, UIEventListCallback callback) {
+        db.collection(COLLECTION_EVENTS)
+            .whereEqualTo("organizerId", organizerId)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<Event> uiEvents = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    EventEntity entity = documentToEventEntity(doc);
+                    Event uiEvent = convertToUIEvent(entity);
+                    uiEvents.add(uiEvent);
+                }
+                Log.d(TAG, "Retrieved " + uiEvents.size() + " UI events for organizer");
+                callback.onSuccess(uiEvents);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting events for organizer", e);
+                callback.onError(e.getMessage());
+            });
+    }
+
     /**
      * This method retrieves the event history where the specific user was an entrant..
      *
@@ -474,10 +503,10 @@ public class EventService implements IEventService {
         getEvent(eventId, new EventCallback() {
             @Override
             public void onSuccess(EventEntity event) {
-                if (event.getMaxEntrants() == 0) {
-                    callback.onError("This event is not accepting new entrants.");
-                    return;
-                }
+//                if (event.getMaxEntrants() == 0) {
+//                    callback.onError("This event is not accepting new entrants.");
+//                    return;
+//                }
                 if (event.addToWaitlist(userId)) {
                     updateEvent(event, callback);
                 } else {
@@ -654,10 +683,10 @@ public class EventService implements IEventService {
                     return;
                 }
 
-                if (event.getMaxEntrants() == 0) {
-                    callback.onError("Event max entrants is zero; cannot draw attendees.");
-                    return;
-                }
+//                if (event.getMaxEntrants() == 0) {
+//                    callback.onError("Event max entrants is zero; cannot draw attendees.");
+//                    return;
+//                }
 
                 // Count already invited and attending users
                 int alreadyInvitedOrAttending = 0;
@@ -772,10 +801,10 @@ public class EventService implements IEventService {
                     return;
                 }
 
-                if (event.getMaxEntrants() == 0) {
-                    callback.onError("Event max entrants is zero; cannot draw replacement.");
-                    return;
-                }
+//                if (event.getMaxEntrants() == 0) {
+//                    callback.onError("Event max entrants is zero; cannot draw replacement.");
+//                    return;
+//                }
 
                 int invitedCount = event.getInvitations() != null ? event.getInvitations().size() : 0;
                 int attendeeCount = event.getAttendees() != null ? event.getAttendees().size() : 0;
@@ -866,6 +895,10 @@ public class EventService implements IEventService {
         List<String> declined = (List<String>) doc.get("declined");
         if (declined != null) entity.setDeclined(declined);
 
+        // Entrants
+        List<String> entrants = (List<String>) doc.get("entrants");
+        if (entrants != null) entity.setEntrants(entrants);
+
         // Invitations
         List<Map<String, Object>> invitationMaps = (List<Map<String, Object>>) doc.get("invitations");
         if (invitationMaps != null) {
@@ -907,6 +940,13 @@ public class EventService implements IEventService {
         entity.setCreatedAt(doc.getDate("createdAt"));
         entity.setUpdatedAt(doc.getDate("updatedAt"));
 
+        // Poster URL
+        String posterUrl = doc.getString("posterUrl");
+        Log.d("EventService", "documentToEventEntity: posterUrl from Firestore = " + posterUrl);
+        if (posterUrl != null) entity.setPosterUrl(posterUrl);
+
+
+
         // Data overwrite occurs when another user joins event
         Map<String, Object> locationsMap = (Map<String, Object>) doc.get("entrantLocations");
         if (locationsMap != null) {
@@ -922,33 +962,8 @@ public class EventService implements IEventService {
                 }
             }
         }
-        
+
         return entity;
-    }
-
-
-    /**
-     * Retrieves all events as EventEntity objects.
-     * This is used by the HomeFragment to show all public events to non-organizers.
-     *
-     * @param callback Callback returning a list of EventEntity or an error.
-     */
-    @Override
-    public void getAllEventsN(EventListCallback callback) {
-        db.collection(COLLECTION_EVENTS)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<EventEntity> entities = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        entities.add(documentToEventEntity(doc));
-                    }
-                    Log.d(TAG, "Retrieved " + entities.size() + " event entities for HomeFragment");
-                    callback.onSuccess(entities);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error getting all event entities", e);
-                    callback.onError(e.getMessage());
-                });
     }
 }
 

@@ -1,11 +1,16 @@
 package com.example.cmpuzz_events.ui.home;
 
+import android.app.Dialog;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.widget.SearchView;
 
@@ -15,6 +20,8 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.databinding.FragmentHomeBinding;
@@ -23,10 +30,10 @@ import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
 import com.example.cmpuzz_events.ui.event.Event;
+import com.example.cmpuzz_events.utils.QRCodeGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class HomeFragment extends Fragment {
 
@@ -37,8 +44,6 @@ public class HomeFragment extends Fragment {
 
     // Lists to hold all events for filtering
     private List<Event> allEvents = new ArrayList<>();
-    private List<EventEntity> allEventEntities = new ArrayList<>();
-
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -56,7 +61,7 @@ public class HomeFragment extends Fragment {
             loadMyEvents();
         } else {
             binding.tvMyEventsTitle.setText("All Events");
-            getAllEventsN();
+            loadAllEvents();
         }
 
         return root;
@@ -93,6 +98,11 @@ public class HomeFragment extends Fragment {
             public void onDrawAttendeesClick(Event event) {
                 drawAttendeesForEvent(event);
             }
+
+            @Override
+            public void onOverflowClick(Event event, View anchorView) {
+                showEventOptionsBottomSheet(event);
+            }
         });
 
         recyclerView.setAdapter(adapter);
@@ -118,14 +128,13 @@ public class HomeFragment extends Fragment {
 
     /**
      * Filters the main event list based on the search query and availability radio buttons.
-     * It then updates the adapter to show only the events that match.
      */
     private void applyFilters() {
         // Null safety check - binding can be null if view is being destroyed
         if (binding == null) {
             return;
         }
-        
+
         // Get the query and selected availability from the UI
         String query = binding.eventSearchView.getQuery().toString();
         int selectedAvailabilityId = binding.availabilityFilterGroup.getCheckedRadioButtonId();
@@ -133,42 +142,22 @@ public class HomeFragment extends Fragment {
         List<Event> filteredEvents = new ArrayList<>();
         String lowerCaseQuery = (query == null) ? "" : query.toLowerCase();
 
-        List<EventEntity> detailedEvents = this.allEventEntities;
-
-        // Apply filters to the list of all events
         for (Event event : allEvents) {
-            // Find the matching EventEntity for the current Event using its ID.
-            EventEntity correspondingEntity = null;
-            if (detailedEvents != null) {
-                for (EventEntity entity : detailedEvents) {
-                    if (entity.getEventId().equals(event.getEventId())) {
-                        correspondingEntity = entity;
-                        break; // Found it, no need to keep searching.
-                    }
-                }
-            }
-
-            if (correspondingEntity == null) {
-                continue; // Skip this event if its details are missing.
-            }
-
+            // Filter by availability
             boolean availabilityMatch = false;
-            int currentEntrantCount = (correspondingEntity.getEntrants() != null) ? correspondingEntity.getEntrants().size() : 0;
-            int capacity = correspondingEntity.getCapacity();
+            int currentEntrantCount = (event.getEntrants() != null) ? event.getEntrants().size() : 0;
+            int capacity = event.getCapacity();
 
             if (selectedAvailabilityId == R.id.radio_not_full) {
-                if (capacity == 0 || currentEntrantCount < capacity) {
-                    availabilityMatch = true;
-                }
+                availabilityMatch = (capacity == 0 || currentEntrantCount < capacity);
             } else if (selectedAvailabilityId == R.id.radio_full) {
-                if (capacity > 0 && currentEntrantCount >= capacity) {
-                    availabilityMatch = true;
-                }
+                availabilityMatch = (capacity > 0 && currentEntrantCount >= capacity);
             } else {
-                // This handles the "Any" case
+                // "Any" case
                 availabilityMatch = true;
             }
 
+            // Filter by search query
             if (availabilityMatch) {
                 if (lowerCaseQuery.isEmpty() ||
                         event.getTitle().toLowerCase().contains(lowerCaseQuery) ||
@@ -177,12 +166,9 @@ public class HomeFragment extends Fragment {
                 }
             }
         }
-        // update the view's adapter with the filtered events
+
         adapter.updateEvents(filteredEvents);
     }
-
-
-
 
     private void drawAttendeesForEvent(Event event) {
         Log.d(TAG, "Drawing attendees for event: " + event.getTitle());
@@ -228,6 +214,7 @@ public class HomeFragment extends Fragment {
      * @see IEventService#getEventsForOrganizer(String, IEventService.EventListCallback)
      * @see #applyFilters()
      */
+
     private void loadMyEvents() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
 
@@ -248,19 +235,17 @@ public class HomeFragment extends Fragment {
 
         eventService.getEventsForOrganizer(currentUser.getUid(), new IEventService.EventListCallback() {
             @Override
-            public void onSuccess(List<EventEntity> events) {
+            public void onSuccess(List<EventEntity> entities) {
+                Log.d("HomeFragment", "Loaded " + entities.size() + " events");
                 if (binding == null) {
                     Log.w(TAG, "HomeFragment view was destroyed. Ignoring event list response.");
                     return;
                 }
-                
-                Log.d("HomeFragment", "Loaded " + events.size() + " events");
-                allEvents.clear();
-                allEventEntities.clear();
-                allEventEntities.addAll(events);
 
-                for (EventEntity entity : events) {
-                    List<String> waitlistIds = entity.getWaitlist();
+                allEvents.clear();
+
+                // Convert entities to UI Events
+                for (EventEntity entity : entities) {
                     Event uiEvent = new Event(
                             entity.getEventId(),
                             entity.getTitle(),
@@ -271,9 +256,11 @@ public class HomeFragment extends Fragment {
                             entity.getOrganizerId(),
                             entity.getOrganizerName(),
                             entity.isGeolocationRequired(),
-                            waitlistIds
+                            entity.getWaitlist()
                     );
                     uiEvent.setMaxEntrants(entity.getMaxEntrants());
+                    uiEvent.setEntrants(entity.getEntrants());
+                    uiEvent.setPosterUrl(entity.getPosterUrl());
                     allEvents.add(uiEvent);
                 }
 
@@ -295,7 +282,7 @@ public class HomeFragment extends Fragment {
                     Log.w(TAG, "HomeFragment view was destroyed. Ignoring error response.");
                     return;
                 }
-                
+
                 Log.e("HomeFragment", "Error loading events: " + error);
                 Toast.makeText(getContext(), "Error loading events", Toast.LENGTH_SHORT).show();
                 binding.tvEmptyState.setText("Could not load your events.");
@@ -307,21 +294,12 @@ public class HomeFragment extends Fragment {
 
 
     /**
-     * Fetches all public events from the {@link EventService} and updates the UI.
-     * <p>
-     * This method defines a {@link IEventService.EventListCallback} to handle the asynchronous
-     * response from the service.
-     * <p>
-     * On error, it logs the failure, displays a toast message, and updates the UI to show an error
-     * state, hiding the event list and filtering controls.
-     *
-     * @see IEventService#getAllEventsN(IEventService.EventListCallback)
-     * @see #applyFilters()
+     * Fetches all public events using proper UI layer (Event model).
      */
-    private void getAllEventsN() {
-        IEventService.EventListCallback eventCallback = new IEventService.EventListCallback() {
+    private void loadAllEvents() {
+        eventService.getAllEvents(new IEventService.UIEventListCallback() {
             @Override
-            public void onSuccess(List<EventEntity> events) {
+            public void onSuccess(List<Event> events) {
                 if (binding == null) {
                     Log.w(TAG, "HomeFragment view was destroyed. Ignoring event list response.");
                     return;
@@ -329,25 +307,7 @@ public class HomeFragment extends Fragment {
 
                 Log.d(TAG, "Successfully loaded " + events.size() + " public events.");
                 allEvents.clear();
-                allEventEntities.clear();
-                allEventEntities.addAll(events);
-
-                for (EventEntity entity : events) {
-                    Event uiEvent = new Event(
-                            entity.getEventId(),
-                            entity.getTitle(),
-                            entity.getDescription(),
-                            entity.getCapacity(),
-                            entity.getRegistrationStart(),
-                            entity.getRegistrationEnd(),
-                            entity.getOrganizerId(),
-                            entity.getOrganizerName(),
-                            entity.isGeolocationRequired(),
-                            entity.getWaitlist()
-                    );
-                    uiEvent.setMaxEntrants(entity.getMaxEntrants());
-                    allEvents.add(uiEvent);
-                }
+                allEvents.addAll(events);
 
                 applyFilters();
 
@@ -381,10 +341,106 @@ public class HomeFragment extends Fragment {
                 binding.eventSearchView.setVisibility(View.GONE);
                 binding.availabilityFilterGroup.setVisibility(View.GONE);
             }
-        };
-
-        eventService.getAllEventsN(eventCallback);
+        });
     }
+
+
+
+    /**
+     * Show bottom sheet with event options (Share and QR Code)
+     */
+    private void showEventOptionsBottomSheet(Event event) {
+        BottomSheetDialog bottomSheet = new BottomSheetDialog(requireContext());
+        View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_event_options, null);
+        bottomSheet.setContentView(sheetView);
+
+        // Handle Share option
+        View shareOption = sheetView.findViewById(R.id.layoutShareOption);
+        shareOption.setOnClickListener(v -> {
+            bottomSheet.dismiss();
+            shareEvent(event);
+        });
+
+        // Handle QR Code option
+        View qrCodeOption = sheetView.findViewById(R.id.layoutQrCodeOption);
+        qrCodeOption.setOnClickListener(v -> {
+            bottomSheet.dismiss();
+            showQRCodeDialog(event);
+        });
+
+        bottomSheet.show();
+    }
+
+    /**
+     * Share event using Android's share intent with deep link
+     */
+    private void shareEvent(Event event) {
+        // Create deep link URL
+        String deepLink = "cmpuzzevents://event/" + event.getEventId();
+
+        String shareText = "Check out this event: " + event.getTitle() + "\n\n" +
+                event.getDescription() + "\n\n" +
+                "Tap to view details and enroll:\n" + deepLink;
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Event: " + event.getTitle());
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+
+        startActivity(Intent.createChooser(shareIntent, "Share Event"));
+    }
+
+    /**
+     * Show QR code dialog for the event
+     */
+    private void showQRCodeDialog(Event event) {
+        Dialog dialog = new Dialog(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_qr_code, null);
+        dialog.setContentView(dialogView);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+        TextView tvEventTitle = dialogView.findViewById(R.id.tvEventTitle);
+        ImageView imgQrCode = dialogView.findViewById(R.id.imgQrCode);
+        View btnClose = dialogView.findViewById(R.id.btnClose);
+
+        tvEventTitle.setText(event.getTitle());
+
+        // Generate QR code
+        // First, get the event entity to access the QR code URL
+        eventService.getEvent(event.getEventId(), new IEventService.EventCallback() {
+            @Override
+            public void onSuccess(EventEntity eventEntity) {
+                if (eventEntity != null && eventEntity.getQrCodeUrl() != null) {
+                    String qrCodeUrl = eventEntity.getQrCodeUrl();
+                    Bitmap qrBitmap = QRCodeGenerator.generateQRCode(qrCodeUrl, 512, 512);
+
+                    if (qrBitmap != null) {
+                        imgQrCode.setImageBitmap(qrBitmap);
+                    } else {
+                        Toast.makeText(getContext(), "Failed to generate QR code", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "QR code URL not available", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getContext(), "Error loading event details: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadMyEvents();   // refresh events (and posterUrl) whenever you come back to Home
+    }
+
 
     @Override
     public void onDestroyView() {

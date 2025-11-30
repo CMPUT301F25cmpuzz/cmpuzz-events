@@ -71,12 +71,20 @@ public interface IEventService {
     void getUIEventById(String eventId, UIEventCallback callback);
 
     /**
-     * Get all events for an organizer
+     * Get all events for an organizer (returns EventEntity for admin operations)
      *
      * @param organizerId The organizer's ID
-     * @param callback Callback with list of events or error
+     * @param callback Callback with list of EventEntity or error
      */
     void getEventsForOrganizer(String organizerId, EventListCallback callback);
+
+    /**
+     * Get all events for an organizer as UI Event objects
+     *
+     * @param organizerId The organizer's ID
+     * @param callback Callback with list of UI Events or error
+     */
+    void getEventsForOrganizerUI(String organizerId, UIEventListCallback callback);
 
     /**
      * Get all events as UI Events (for browsing/joining)
@@ -224,17 +232,4 @@ public interface IEventService {
      * @param callback Callback on success or error
      */
     void drawReplacementAttendee(String eventId, VoidCallback callback);
-    /** * Retrieves all events from the data source as a list of {@link EventEntity} objects.
-     * <p>
-     * This method is intended for fetching the complete, raw data for all events,
-     * which can then be processed or displayed in the UI. It is particularly useful for
-     * features like a global event search or an event directory for all users.
-     * <p>
-     * The result is delivered asynchronously through the provided callback.
-     *
-     * @param callback The callback that will be invoked upon completion.
-     *                 On success, {@code onSuccess} is called with a list of all event entities.
-     *                 On failure, {@code onError} is called with an error message.
-     */
-    void getAllEventsN(EventListCallback callback);
 }
