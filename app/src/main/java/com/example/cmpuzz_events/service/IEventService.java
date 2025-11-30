@@ -71,12 +71,20 @@ public interface IEventService {
     void getUIEventById(String eventId, UIEventCallback callback);
 
     /**
-     * Get all events for an organizer
+     * Get all events for an organizer (returns EventEntity for admin operations)
      *
      * @param organizerId The organizer's ID
-     * @param callback Callback with list of events or error
+     * @param callback Callback with list of EventEntity or error
      */
     void getEventsForOrganizer(String organizerId, EventListCallback callback);
+
+    /**
+     * Get all events for an organizer as UI Event objects
+     *
+     * @param organizerId The organizer's ID
+     * @param callback Callback with list of UI Events or error
+     */
+    void getEventsForOrganizerUI(String organizerId, UIEventListCallback callback);
 
     /**
      * Get all events as UI Events (for browsing/joining)

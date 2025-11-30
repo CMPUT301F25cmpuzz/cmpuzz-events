@@ -184,6 +184,34 @@ public class EventService implements IEventService {
                 callback.onError(e.getMessage());
             });
     }
+
+    /**
+     * Retrieves all UI events for a specific organizer.
+     *
+     * @param organizerId Organizer's user ID
+     * @param callback Callback with list of UI Event or error
+     */
+    @Override
+    public void getEventsForOrganizerUI(String organizerId, UIEventListCallback callback) {
+        db.collection(COLLECTION_EVENTS)
+            .whereEqualTo("organizerId", organizerId)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<Event> uiEvents = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    EventEntity entity = documentToEventEntity(doc);
+                    Event uiEvent = convertToUIEvent(entity);
+                    uiEvents.add(uiEvent);
+                }
+                Log.d(TAG, "Retrieved " + uiEvents.size() + " UI events for organizer");
+                callback.onSuccess(uiEvents);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting events for organizer", e);
+                callback.onError(e.getMessage());
+            });
+    }
+
     /**
      * This method retrieves the event history where the specific user was an entrant..
      *
