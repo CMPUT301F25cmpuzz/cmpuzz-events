@@ -5,6 +5,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import com.example.cmpuzz_events.models.event.EventEntity;
+import com.example.cmpuzz_events.models.event.Invitation;
 
 import java.util.Date;
 import java.util.Map;
@@ -133,4 +134,56 @@ public class EventEntityTest {
         assertTrue(((java.util.List<String>)map.get("waitlist")).contains("user1"));
         assertTrue(((java.util.List<String>)map.get("attendees")).contains("user2"));
     }
+
+    @Test
+    public void testInvitationManagement() {
+        Invitation inv1 = new Invitation("user1", "Alice");
+        Invitation inv2 = new Invitation("user2", "Bob");
+
+        // Test Adding
+        event.addInvitation(inv1);
+        event.addInvitation(inv2);
+        assertEquals(2, event.getInvitations().size());
+
+        // Test Getting by ID
+        Invitation retrieved = event.getInvitationByUserId("user1");
+        assertNotNull(retrieved);
+        assertEquals("Alice", retrieved.getUsername());
+
+        assertNull(event.getInvitationByUserId("nonexistent"));
+
+        // Test Removing by ID (User 1)
+        assertTrue(event.removeInvitation("user1"));
+        assertEquals(1, event.getInvitations().size());
+        assertNull(event.getInvitationByUserId("user1"));
+
+        // Test removing nonexistent user
+        assertFalse(event.removeInvitation("user1"));
+    }
+
+    @Test
+    public void testRemoveFromInvitationsList() {
+        // This tests the specific list removal method
+        Invitation inv = new Invitation("user1", "Alice");
+        event.addInvitation(inv);
+
+        assertTrue(event.removeFromInvitationsList("user1"));
+        assertTrue(event.getInvitations().isEmpty());
+    }
+
+    @Test
+    public void testDeclinedListManagement() {
+        // Test that the declined list is initialized empty
+        assertNotNull(event.getDeclined());
+        assertTrue(event.getDeclined().isEmpty());
+
+        // Test setting and retrieving
+        java.util.List<String> declinedUsers = new java.util.ArrayList<>();
+        declinedUsers.add("user1");
+        event.setDeclined(declinedUsers);
+
+        assertEquals(1, event.getDeclined().size());
+        assertTrue(event.getDeclined().contains("user1"));
+    }
+
 }

@@ -80,9 +80,11 @@ public class EventService implements IEventService {
             entity.getRegistrationEnd(),
             entity.getOrganizerId(),
             entity.getOrganizerName(),
-            entity.isGeolocationRequired()
+            entity.isGeolocationRequired(),
+            entity.getWaitlist()
         );
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
+        uiEvent.setEntrants(entity.getEntrants());
         uiEvent.setPosterUrl(entity.getPosterUrl());
         return uiEvent;
     }
@@ -182,6 +184,74 @@ public class EventService implements IEventService {
                 Log.e(TAG, "Error getting events for organizer", e);
                 callback.onError(e.getMessage());
             });
+    }
+
+    /**
+     * Retrieves all UI events for a specific organizer.
+     *
+     * @param organizerId Organizer's user ID
+     * @param callback Callback with list of UI Event or error
+     */
+    @Override
+    public void getEventsForOrganizerUI(String organizerId, UIEventListCallback callback) {
+        db.collection(COLLECTION_EVENTS)
+            .whereEqualTo("organizerId", organizerId)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<Event> uiEvents = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    EventEntity entity = documentToEventEntity(doc);
+                    Event uiEvent = convertToUIEvent(entity);
+                    uiEvents.add(uiEvent);
+                }
+                Log.d(TAG, "Retrieved " + uiEvents.size() + " UI events for organizer");
+                callback.onSuccess(uiEvents);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error getting events for organizer", e);
+                callback.onError(e.getMessage());
+            });
+    }
+
+    /**
+     * This method retrieves the event history where the specific user was an entrant..
+     *
+     * @param userId   The ID of the user whose registration history is being
+     *                 retrieved.
+     * @param callback The callback invoked on success with a list of past
+     *                 {@link EventEntity} instances, or on error with a message.
+     */
+    @Override
+    public void getRegistrationHistory(String userId, RegistrationHistoryCallback callback) {
+        if (userId == null || userId.isEmpty()) {
+            callback.onError("User ID is required.");
+            return;
+        }
+        db.collection("events").whereArrayContains("entrants", userId).get().addOnCompleteListener(task -> {
+                // Find all events where the user's ID is in the 'entrants' list
+                    if (task.isSuccessful()) {
+                        List<EventEntity> pastEvents = new ArrayList<>();
+                        Date now = new Date(); // Current time
+
+                        for (com.google.firebase.firestore.QueryDocumentSnapshot document : task.getResult()) {
+                            EventEntity event = document.toObject(EventEntity.class);
+                            event.setEventId(document.getId());
+
+                            // check to see if the event has ended
+                            if (event.getRegistrationEnd() != null && event.getRegistrationEnd().before(now)) {
+                                pastEvents.add(event);
+                            }
+                        }
+
+                        // Sort events by end date, most recent first
+                        pastEvents.sort((e1, e2) -> e2.getRegistrationEnd().compareTo(e1.getRegistrationEnd()));
+
+                        callback.onSuccess(pastEvents);
+                    } else {
+                        Log.e(TAG, "Error getting registration history", task.getException());
+                        callback.onError(task.getException() != null ? task.getException().getMessage() : "Unknown error");
+                    }
+                });
     }
 
     /**
@@ -386,6 +456,40 @@ public class EventService implements IEventService {
                 callback.onError(e.getMessage());
             });
     }
+
+    /**
+     * Joins an event with geolocation data.
+     *
+     * @param eventId   The ID of the event to join.
+     * @param userId    The ID of the user joining.
+     * @param latitude  The user's latitude.
+     * @param longitude The user's longitude.
+     * @param callback  Callback for success or error.
+     */
+    @Override
+    public void joinEventWithLocation(String eventId, String userId, double latitude, double longitude, VoidCallback callback) {
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                // Add to waitlist logic
+                boolean added = event.addToWaitlist(userId);
+
+                if (added) {
+                    // Save location if added successfully
+                    event.addLocation(userId, latitude, longitude);
+                    updateEvent(event, callback);
+                } else {
+                    callback.onError("Failed to join: User already in waitlist or full.");
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
 
     /**
      * Adds a user to an event waitlist.
@@ -741,41 +845,60 @@ public class EventService implements IEventService {
     }
 
     /**
-     * Convert Firestore document to EventEntity
+     * Helper method to turn a Firestore document into an EventEntity object.
+     * It safely handles missing numbers (like capacity) by defaulting them to 0.
+     * @param doc The document snapshot from Firestore.
+     * @return A complete EventEntity.
      */
     private EventEntity documentToEventEntity(DocumentSnapshot doc) {
         EventEntity entity = new EventEntity();
-        
+
         entity.setEventId(doc.getString("eventId"));
         entity.setTitle(doc.getString("title"));
         entity.setDescription(doc.getString("description"));
-        
+
+        // fix for the getter issue relating to the availbility of each event
         Long capacity = doc.getLong("capacity");
-        if (capacity != null) entity.setCapacity(capacity.intValue());
-        
+        if (capacity != null) {
+            entity.setCapacity(capacity.intValue());
+        } else {
+            entity.setCapacity(0);
+        }
+
+
         entity.setRegistrationStart(doc.getDate("registrationStart"));
         entity.setRegistrationEnd(doc.getDate("registrationEnd"));
         entity.setOrganizerId(doc.getString("organizerId"));
         entity.setOrganizerName(doc.getString("organizerName"));
-        
+
         Boolean geoRequired = doc.getBoolean("geolocationRequired");
         if (geoRequired != null) entity.setGeolocationRequired(geoRequired);
-        
+
+        // same as the fix for capacity above
         Long maxEntrants = doc.getLong("maxEntrants");
-        if (maxEntrants != null) entity.setMaxEntrants(maxEntrants.intValue());
-        
+        if (maxEntrants != null) {
+            entity.setMaxEntrants(maxEntrants.intValue());
+        } else {
+            entity.setMaxEntrants(0);
+        }
+
+
         // Waitlist
         List<String> waitlist = (List<String>) doc.get("waitlist");
         if (waitlist != null) entity.setWaitlist(waitlist);
-        
+
         // Attendees
         List<String> attendees = (List<String>) doc.get("attendees");
         if (attendees != null) entity.setAttendees(attendees);
-        
+
         // Declined
         List<String> declined = (List<String>) doc.get("declined");
         if (declined != null) entity.setDeclined(declined);
-        
+
+        // Entrants
+        List<String> entrants = (List<String>) doc.get("entrants");
+        if (entrants != null) entity.setEntrants(entrants);
+
         // Invitations
         List<Map<String, Object>> invitationMaps = (List<Map<String, Object>>) doc.get("invitations");
         if (invitationMaps != null) {
@@ -784,12 +907,12 @@ public class EventService implements IEventService {
                 Invitation inv = new Invitation();
                 inv.setUserId((String) invMap.get("userId"));
                 inv.setUsername((String) invMap.get("username"));
-                
+
                 String statusStr = (String) invMap.get("status");
                 if (statusStr != null) {
                     inv.setStatus(Invitation.InvitationStatus.fromString(statusStr));
                 }
-                
+
                 // Handle both Timestamp and Date types
                 Object invitedAtObj = invMap.get("invitedAt");
                 if (invitedAtObj instanceof Timestamp) {
@@ -797,23 +920,23 @@ public class EventService implements IEventService {
                 } else if (invitedAtObj instanceof Date) {
                     inv.setInvitedAt((Date) invitedAtObj);
                 }
-                
+
                 Object respondedAtObj = invMap.get("respondedAt");
                 if (respondedAtObj instanceof Timestamp) {
                     inv.setRespondedAt(((Timestamp) respondedAtObj).toDate());
                 } else if (respondedAtObj instanceof Date) {
                     inv.setRespondedAt((Date) respondedAtObj);
                 }
-                
+
                 invitations.add(inv);
             }
-        entity.setInvitations(invitations);
+            entity.setInvitations(invitations);
         }
-        
+
         // QR Code URL
         String qrCodeUrl = doc.getString("qrCodeUrl");
         if (qrCodeUrl != null) entity.setQrCodeUrl(qrCodeUrl);
-        
+
         entity.setCreatedAt(doc.getDate("createdAt"));
         entity.setUpdatedAt(doc.getDate("updatedAt"));
 
@@ -823,6 +946,25 @@ public class EventService implements IEventService {
         if (posterUrl != null) entity.setPosterUrl(posterUrl);
 
 
+
+        // Data overwrite occurs when another user joins event
+        Map<String, Object> locationsMap = (Map<String, Object>) doc.get("entrantLocations");
+        if (locationsMap != null) {
+            for (Map.Entry<String, Object> entry : locationsMap.entrySet()) {
+                if (entry.getValue() instanceof List) {
+                    List<?> coords = (List<?>) entry.getValue();
+                    if (coords.size() >= 2) {
+                        // Convert List<Double> back to double primitive or Double object
+                        double lat = ((Number) coords.get(0)).doubleValue();
+                        double lon = ((Number) coords.get(1)).doubleValue();
+                        entity.addLocation(entry.getKey(), lat, lon);
+                    }
+                }
+            }
+        }
+
         return entity;
     }
 }
+
+

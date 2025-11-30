@@ -22,6 +22,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
@@ -191,7 +192,7 @@ public class CreateEventFragment extends Fragment {
         // Create UI Event object with current user's UID and name as organizer
         String eventId = UUID.randomUUID().toString();
         Event uiEvent = new Event(eventId, title, description, capacity,
-                start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired);
+                start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired, new ArrayList<>());
         uiEvent.setMaxEntrants(maxEntrants);
 
         // CASE 1: No poster selected -> just create event as before

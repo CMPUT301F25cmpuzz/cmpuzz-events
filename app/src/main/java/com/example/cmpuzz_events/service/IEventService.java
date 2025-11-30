@@ -25,6 +25,11 @@ public interface IEventService {
         void onError(String error);
     }
 
+    interface RegistrationHistoryCallback {
+        void onSuccess(List<EventEntity> pastEvents);
+        void onError(String error);
+    }
+
     interface UIEventCallback {
         void onSuccess(Event event);
         void onError(String error);
@@ -66,12 +71,20 @@ public interface IEventService {
     void getUIEventById(String eventId, UIEventCallback callback);
 
     /**
-     * Get all events for an organizer
+     * Get all events for an organizer (returns EventEntity for admin operations)
      *
      * @param organizerId The organizer's ID
-     * @param callback Callback with list of events or error
+     * @param callback Callback with list of EventEntity or error
      */
     void getEventsForOrganizer(String organizerId, EventListCallback callback);
+
+    /**
+     * Get all events for an organizer as UI Event objects
+     *
+     * @param organizerId The organizer's ID
+     * @param callback Callback with list of UI Events or error
+     */
+    void getEventsForOrganizerUI(String organizerId, UIEventListCallback callback);
 
     /**
      * Get all events as UI Events (for browsing/joining)
@@ -142,6 +155,17 @@ public interface IEventService {
     void joinEvent(String eventId, String userId, VoidCallback callback);
 
     /**
+     * Joins an event with geolocation data.
+     *
+     * @param eventId   The ID of the event to join.
+     * @param userId    The ID of the user joining.
+     * @param latitude  The user's latitude.
+     * @param longitude The user's longitude.
+     * @param callback  Callback for success or error.
+     */
+    void joinEventWithLocation(String eventId, String userId, double latitude, double longitude, VoidCallback callback);
+
+    /**
      * Remove a user from event waitlist
      *
      * @param eventId The event ID
@@ -191,6 +215,15 @@ public interface IEventService {
      */
     void drawAttendees(String eventId, Integer sampleSize, VoidCallback callback);
 
+
+    /**
+     * Retrieves the registration history for a specified user.
+     *
+     * @param userId  The ID of the user whose registration history is requested.
+     * @param callback Callback invoked with the registration history on success,
+     *                 or an error on failure.
+     */
+    void getRegistrationHistory(String userId, RegistrationHistoryCallback callback);
     /**
      * Draw a single replacement attendee from the waitlist.
      * Used when a previously selected entrant cancels or declines.
