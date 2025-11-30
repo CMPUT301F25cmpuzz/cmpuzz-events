@@ -608,7 +608,7 @@ public class EventDetailsFragment extends Fragment {
     private void showEditOptionsDialog() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         
-        // Debug logging
+        // Debug logging.. FML
         if (currentUser != null) {
             Log.d(TAG, "Current user role: " + currentUser.getRole());
             Log.d(TAG, "Current user isAdmin(): " + currentUser.isAdmin());
