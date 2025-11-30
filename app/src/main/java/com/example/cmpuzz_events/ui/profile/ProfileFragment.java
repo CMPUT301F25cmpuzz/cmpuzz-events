@@ -111,6 +111,7 @@ public class ProfileFragment extends Fragment {
             Log.d(TAG, "Args Passed, user: " + passedUser.getDisplayName());
         }
         currentUser = AuthManager.getInstance().getCurrentUser();
+        binding.tvEventsEnrolledTitle.setVisibility(View.GONE);
 
         if(passedUser != null) // If profile was triggered by passing a user (i.e. from an adapter click)
         {
@@ -120,6 +121,7 @@ public class ProfileFragment extends Fragment {
             binding.btnSettings.setVisibility(View.GONE);
             binding.btnLotteryGuidelines.setVisibility(View.GONE);
             binding.btnLogout.setVisibility(View.GONE);
+            // Bro
             if(currentUser.isAdmin())
             {
                 binding.btnEditProfile.setVisibility(View.VISIBLE);
@@ -130,7 +132,7 @@ public class ProfileFragment extends Fragment {
             }
 
             // Setup enrolled events RecyclerView
-            setupEnrolledEvents(root, passedUser);
+            // setupEnrolledEvents(root, passedUser);
         } else if (currentUser != null) { // If profile was triggered by the user themselves
             binding.tvUserName.setText(currentUser.getDisplayName());
             binding.tvUserEmail.setText(currentUser.getEmail());
@@ -141,9 +143,11 @@ public class ProfileFragment extends Fragment {
             binding.btnLogout.setVisibility(View.VISIBLE);
             binding.btnDeleteAccount.setVisibility(View.GONE);
 
-
             // Setup enrolled events RecyclerView
-            setupEnrolledEvents(root, currentUser);
+            if(currentUser.isUser())
+            {
+                setupEnrolledEvents(root, currentUser);
+            }
         }
 
         binding.btnEditProfile.setOnClickListener(v -> showEditDialog());
@@ -182,6 +186,7 @@ public class ProfileFragment extends Fragment {
      */
     private void setupEnrolledEvents(View root, User currentUser) {
         binding.recyclerViewEnrolledEvents.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding.tvEventsEnrolledTitle.setVisibility(View.VISIBLE);
         adapter = new EnrolledEventsAdapter(new ArrayList<>());
 
         adapter.setOnEventActionListener(new EnrolledEventsAdapter.OnEventActionListener() {
@@ -622,8 +627,14 @@ public class ProfileFragment extends Fragment {
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            adminService.deleteAccountByUid(passedUser.getUid());
-                            Navigation.findNavController(requireView()).popBackStack();
+                            adminService.deleteAccountByUid(passedUser.getUid())
+                                    .addOnSuccessListener(v -> {
+                                        Log.d(TAG, "Account " + passedUser.getUsername() + " successfully deleted");
+                                        Navigation.findNavController(requireView()).popBackStack();
+                                    })
+                                    .addOnFailureListener(v -> {
+                                        Log.e(TAG, "Error deleting account: " + v.getMessage());
+                                    });
                         }
                     })
                     .setNegativeButton("Cancel", null)
