@@ -47,7 +47,9 @@
         android:id="@+id/navigation_browse_users"
         android:name="com.example.cmpuzz_events.ui.admin.BrowseUsersFragment"
         android:label="@string/browse_users"
-        tools:layout="@layout/fragment_browse_users"/>
+        tools:layout="@layout/fragment_browse_users">
+        <
+    </fragment>
 
     <!-- User Fragments -->
     <fragment

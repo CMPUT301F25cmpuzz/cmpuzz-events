@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -70,6 +71,15 @@ public class BrowseUsersFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new UserListAdapter(new ArrayList<>());
         adapter.setOnItemClickListener((user, position) -> {
+            if(user != null)
+            {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("user", user);
+                Navigation.findNavController(root).navigate(
+                        R.id.action_to_account_profile,
+                        bundle
+                );
+            }
             Log.d(TAG, "Clicked on user: " + user.getDisplayName());
         });
 
