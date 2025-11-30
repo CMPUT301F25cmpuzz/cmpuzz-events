@@ -211,4 +211,16 @@ public class ProfileService {
                     return Tasks.whenAll(updateTasks);
                 });
     }
+
+    public Task<String> getDisplayNameById(String userId) {
+        return db.collection("users").document(userId).get()
+                .onSuccessTask(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String displayName = documentSnapshot.getString("displayName");
+                        return Tasks.forResult(displayName);
+                    } else {
+                        return Tasks.forResult(null);
+                    }
+                });
+    }
 }

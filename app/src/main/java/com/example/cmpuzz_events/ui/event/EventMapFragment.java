@@ -14,6 +14,7 @@ import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.example.cmpuzz_events.service.ProfileService;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -23,20 +24,30 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 import java.util.Map;
-
+/**
+ * A fragment that displays a Google Map with markers for the locations of event entrants.
+ */
 public class EventMapFragment extends Fragment implements OnMapReadyCallback {
 
     private String eventId;
     private GoogleMap googleMap;
+    private ProfileService profileService;
 
+    /**
+     * Retrieves the event ID from fragment arguments upon creation.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        profileService = new ProfileService();
         if (getArguments() != null) {
             eventId = getArguments().getString("eventId");
         }
     }
-
+    /**
+     * Inflates the layout, sets up the back button, and initializes the map fragment.
+     * @return The root view for the fragment's UI.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -52,13 +63,17 @@ public class EventMapFragment extends Fragment implements OnMapReadyCallback {
         }
         return root;
     }
-
+    /**
+     * Callback triggered when the map is ready to be used.
+     */
     @Override
     public void onMapReady(@NonNull GoogleMap map) {
         this.googleMap = map;
         loadEntrantLocations();
     }
-
+    /**
+     * Fetches the event details to get entrant locations and places markers on the map.
+     */
     private void loadEntrantLocations() {
         if (eventId == null) return;
 
@@ -80,12 +95,14 @@ public class EventMapFragment extends Fragment implements OnMapReadyCallback {
                         Double lat = coords.get(0);
                         Double lon = coords.get(1);
                         String userId = entry.getKey();
-
                         LatLng position = new LatLng(lat, lon);
-                        googleMap.addMarker(new MarkerOptions()
-                                .position(position)
-                                .title("Entrant ID: " + userId)); // You could fetch user names if desired
 
+                        profileService.getDisplayNameById(userId).addOnSuccessListener(displayName -> {
+                            String markerTitle = displayName != null ? displayName : "Entrant ID: " + userId;
+                            googleMap.addMarker(new MarkerOptions()
+                                    .position(position)
+                                    .title(markerTitle));
+                        });
                         lastLocation = position;
                     }
                 }

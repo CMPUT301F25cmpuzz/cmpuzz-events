@@ -33,6 +33,7 @@
     <string name="additional_actions">Additional Actions</string>
     <string name="users_enrolled">Users Enrolled</string>
     <string name="view_map">View Map</string>
+    <string name="waitlist_count_format">%1$d on Waitlist</string>
 
     <!-- notifications fragment -->
     <string name="decline">DECLINE</string>
