@@ -2,6 +2,7 @@ package com.example.cmpuzz_events.ui.home;
 
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ImageButton;
 import android.content.Context;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import com.example.cmpuzz_events.Entrant;
+import com.bumptech.glide.Glide;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.ui.event.Event;
 
@@ -20,6 +22,7 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
     private final TextView tvMaxAttendees;
     private final Button btnView;
     private final Button btnDraw;
+    private final ImageView imgBanner;
     private final TextView tvWaitlistCount;
     private final ImageButton btnOverflow;
 
@@ -32,6 +35,7 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
         btnDraw = itemView.findViewById(R.id.btnDraw);
         tvWaitlistCount = itemView.findViewById(R.id.tvWaitlistCount);
         btnOverflow = itemView.findViewById(R.id.btnOverflow);
+        imgBanner = itemView.findViewById(R.id.imgBanner);   // hook up ImageView
     }
 
     public void bind(Event event, MyEventsAdapter.OnEventClickListener listener, boolean isOrganizerView) {
@@ -49,7 +53,23 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
         } else {
             tvWaitlistCount.setVisibility(View.GONE);
         }
-        
+
+
+        // load poster image if available
+        String posterUrl = event.getPosterUrl();
+        android.util.Log.d("EventViewHolder", "bind: " + event.getTitle() +
+                " posterUrl = " + posterUrl);
+
+        if (posterUrl != null && !posterUrl.isEmpty()) {
+            Glide.with(itemView.getContext())
+                    .load(posterUrl)
+                    .placeholder(R.drawable.bg_image_placeholder)
+                    .error(R.drawable.bg_image_placeholder)
+                    .into(imgBanner);
+        } else {
+            imgBanner.setImageResource(R.drawable.bg_image_placeholder);
+        }
+
         // Show/hide Draw button based on role
         if (isOrganizerView) {
             btnDraw.setVisibility(View.VISIBLE);

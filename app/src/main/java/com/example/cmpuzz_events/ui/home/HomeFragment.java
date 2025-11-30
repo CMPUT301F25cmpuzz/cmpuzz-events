@@ -34,7 +34,6 @@ import com.example.cmpuzz_events.utils.QRCodeGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class HomeFragment extends Fragment {
 
@@ -45,7 +44,6 @@ public class HomeFragment extends Fragment {
 
     // Lists to hold all events for filtering
     private List<Event> allEvents = new ArrayList<>();
-
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -162,12 +160,9 @@ public class HomeFragment extends Fragment {
                 }
             }
         }
-        
+
         adapter.updateEvents(filteredEvents);
     }
-
-
-
 
     private void drawAttendeesForEvent(Event event) {
         Log.d(TAG, "Drawing attendees for event: " + event.getTitle());
@@ -213,6 +208,7 @@ public class HomeFragment extends Fragment {
      * @see IEventService#getEventsForOrganizer(String, IEventService.EventListCallback)
      * @see #applyFilters()
      */
+
     private void loadMyEvents() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
 
@@ -253,6 +249,7 @@ public class HomeFragment extends Fragment {
                     );
                     uiEvent.setMaxEntrants(entity.getMaxEntrants());
                     uiEvent.setEntrants(entity.getEntrants());
+                    uiEvent.setPosterUrl(entity.getPosterUrl());
                     allEvents.add(uiEvent);
                 }
 
@@ -364,7 +361,7 @@ public class HomeFragment extends Fragment {
     private void shareEvent(Event event) {
         // Create deep link URL
         String deepLink = "cmpuzzevents://event/" + event.getEventId();
-        
+
         String shareText = "Check out this event: " + event.getTitle() + "\n\n" +
                 event.getDescription() + "\n\n" +
                 "Tap to view details and enroll:\n" + deepLink;
@@ -421,6 +418,13 @@ public class HomeFragment extends Fragment {
 
         dialog.show();
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadMyEvents();   // refresh events (and posterUrl) whenever you come back to Home
+    }
+
 
     @Override
     public void onDestroyView() {

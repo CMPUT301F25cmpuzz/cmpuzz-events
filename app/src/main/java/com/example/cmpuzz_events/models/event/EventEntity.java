@@ -42,6 +42,7 @@ public class EventEntity {
     private Map<String, List<Double>> entrantLocations; // Key: UserID, Value: {Lat, Lon}
     private List<String> entrants;
     private boolean selectionsFinalized = false;
+    private String posterUrl;
 
     /**
      * Default constructor required for Firebase deserialization
@@ -110,6 +111,8 @@ public class EventEntity {
         map.put("attendees", attendees);
         map.put("declined", declined);
 
+        map.put("posterUrl", posterUrl);
+
         // Convert invitations to list of maps
         List<Map<String, Object>> invitationMaps = new ArrayList<>();
         for (Invitation inv : invitations) {
@@ -135,9 +138,9 @@ public class EventEntity {
         if (waitlist.contains(userId)) {
             return false; // Already on waitlist
         }
-        if (maxEntrants == 0) {
-            return false; // Event not accepting entrants
-        }
+//        if (maxEntrants == 0) {
+//            return false; // Event not accepting entrants
+//        }
         if (maxEntrants > 0 && waitlist.size() >= maxEntrants) {
             return false; // Waitlist is full
         }
@@ -539,6 +542,16 @@ public class EventEntity {
     public void setQrCodeUrl(String qrCodeUrl) {
         this.qrCodeUrl = qrCodeUrl;
     }
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
+        this.updatedAt = new Date();
+    }
+
+
 
     /**
      * Grabs the full list of everyone who signed up for the event.

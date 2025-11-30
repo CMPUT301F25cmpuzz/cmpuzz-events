@@ -53,6 +53,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage")
     
     // QR Code generation
     implementation("com.google.zxing:core:3.5.3")
@@ -68,4 +69,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    implementation("com.github.bumptech.glide:glide:5.0.0-rc01")
+    annotationProcessor("com.github.bumptech.glide:compiler:5.0.0-rc01")
+
 }
