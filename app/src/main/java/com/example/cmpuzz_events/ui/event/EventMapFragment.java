@@ -23,12 +23,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 import java.util.Map;
-
+/**
+ * A fragment that displays a Google Map with markers for the locations of event entrants.
+ */
 public class EventMapFragment extends Fragment implements OnMapReadyCallback {
 
     private String eventId;
     private GoogleMap googleMap;
 
+    /**
+     * Retrieves the event ID from fragment arguments upon creation.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,7 +41,10 @@ public class EventMapFragment extends Fragment implements OnMapReadyCallback {
             eventId = getArguments().getString("eventId");
         }
     }
-
+    /**
+     * Inflates the layout, sets up the back button, and initializes the map fragment.
+     * @return The root view for the fragment's UI.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -52,13 +60,17 @@ public class EventMapFragment extends Fragment implements OnMapReadyCallback {
         }
         return root;
     }
-
+    /**
+     * Callback triggered when the map is ready to be used.
+     */
     @Override
     public void onMapReady(@NonNull GoogleMap map) {
         this.googleMap = map;
         loadEntrantLocations();
     }
-
+    /**
+     * Fetches the event details to get entrant locations and places markers on the map.
+     */
     private void loadEntrantLocations() {
         if (eventId == null) return;
 
