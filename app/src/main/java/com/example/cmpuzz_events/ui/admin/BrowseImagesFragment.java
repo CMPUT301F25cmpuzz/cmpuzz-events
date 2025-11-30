@@ -20,6 +20,7 @@ import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.models.user.User;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ public class BrowseImagesFragment extends Fragment {
     private FirebaseStorage storage;
     private StorageReference eventPostersRef;
     private User currentUser;
+    private boolean hasLoadedImages = false;
     
     @Nullable
     @Override
@@ -69,9 +71,19 @@ public class BrowseImagesFragment extends Fragment {
         
         recyclerView.setAdapter(adapter);
         
-        loadImages();
-        
+        // Don't load images immediately, wait until fragment is actually visible or app wil shit itself LOL
+
         return root;
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Only load images when the fragment is actually visible to the user
+        if (!hasLoadedImages) {
+            loadImages();
+            hasLoadedImages = true;
+        }
     }
     
     private void loadImages() {
@@ -121,16 +133,55 @@ public class BrowseImagesFragment extends Fragment {
     }
     
     private void deleteImage(ImageItem imageItem) {
+        String imageUrl = imageItem.getUrl();
+        
+        // First, delete the image from Storage
         imageItem.getReference().delete()
             .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Deleted image from storage: " + imageItem.getName());
+                
+                // Then, remove posterUrl from any events using this image
+                updateEventsUsingImage(imageUrl);
+                
                 Toast.makeText(getContext(), "Image deleted successfully", Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "Deleted image: " + imageItem.getName());
                 // Reload images
                 loadImages();
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error deleting image: " + imageItem.getName(), e);
                 Toast.makeText(getContext(), "Error deleting image", Toast.LENGTH_SHORT).show();
+            });
+    }
+    
+    private void updateEventsUsingImage(String imageUrl) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        
+        // Find all events with this posterUrl
+        db.collection("events")
+            .whereEqualTo("posterUrl", imageUrl)
+            .get()
+            .addOnSuccessListener(querySnapshot -> {
+                if (querySnapshot.isEmpty()) {
+                    Log.d(TAG, "No events found using this image");
+                    return;
+                }
+                
+                // Update each event to remove the posterUrl
+                int eventCount = querySnapshot.size();
+                Log.d(TAG, "Removing posterUrl from " + eventCount + " event(s)");
+                
+                querySnapshot.forEach(document -> {
+                    document.getReference().update("posterUrl", null)
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d(TAG, "Removed posterUrl from event: " + document.getId());
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Error updating event: " + document.getId(), e);
+                        });
+                });
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error querying events by posterUrl", e);
             });
     }
     
