@@ -81,9 +81,10 @@ public class AdminService implements IAdminService {
 
     /**
      * Deletes the user account completely:
-     * 1. Removes user from all event lists (waitlist, declined, attendees, invitations)
-     * 2. Deletes user document from Firestore
-     * 3. Deletes the Firebase Auth user (including email)
+     * 1. Deletes all events created by the user (if they are an organizer)
+     * 2. Removes user from all event lists (waitlist, declined, attendees, invitations)
+     * 3. Deletes user document from Firestore
+     * 4. Deletes the Firebase Auth user (including email)
      */
     public Task<Void> deleteAccountByUid(@NonNull String uid) {
         FirebaseUser fu = auth.getCurrentUser();
@@ -91,14 +92,45 @@ public class AdminService implements IAdminService {
             return Tasks.forException(new IllegalStateException("Not signed in"));
         }
 
-        // First, remove user from all event lists
-        return removeUserFromAllEvents(uid)
+        // First, delete all events created by this organizer
+        return deleteEventsCreatedByOrganizer(uid)
             .onSuccessTask(v -> {
-                // Then delete user document from Firestore
+                // Then remove user from all event lists
+                return removeUserFromAllEvents(uid);
+            })
+            .onSuccessTask(v -> {
+                // Finally delete user document from Firestore
                 return db.collection("users").document(uid).delete();
             });
     }
 
+    /**
+     * Deletes all events created by the specified organizer.
+     * This is called when an organizer account is being deleted.
+     */
+    private Task<Void> deleteEventsCreatedByOrganizer(String uid) {
+        return db.collection("events")
+                .whereEqualTo("organizerId", uid)
+                .get()
+                .onSuccessTask(querySnapshot -> {
+                    List<Task<Void>> deleteTasks = new ArrayList<>();
+                    
+                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        Log.d(TAG, "Deleting event created by organizer: " + doc.getId());
+                        Task<Void> deleteTask = doc.getReference().delete();
+                        deleteTasks.add(deleteTask);
+                    }
+                    
+                    if (deleteTasks.isEmpty()) {
+                        Log.d(TAG, "No events found for organizer: " + uid);
+                        return Tasks.forResult(null);
+                    }
+                    
+                    Log.d(TAG, "Deleting " + deleteTasks.size() + " events created by organizer");
+                    return Tasks.whenAll(deleteTasks);
+                });
+    }
+    
     /**
      * Removes the user from all event lists they're in:
      * - waitlist
