@@ -1,5 +1,7 @@
 package com.example.cmpuzz_events;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -29,6 +31,54 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setupNavigationForUserRole();
+        
+        // Handle deep links from QR codes
+        handleDeepLink(getIntent());
+    }
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
+    }
+    
+    /**
+     * Handle deep links from QR codes (cmpuzzevents://event/{eventId})
+     */
+    private void handleDeepLink(Intent intent) {
+        Uri data = intent.getData();
+        if (data != null && "cmpuzzevents".equals(data.getScheme())) {
+            String host = data.getHost();
+            if ("event".equals(host)) {
+                // Extract event ID from the path
+                String eventId = data.getLastPathSegment();
+                if (eventId != null && !eventId.isEmpty()) {
+                    Log.d(TAG, "Deep link detected for event: " + eventId);
+                    navigateToEventDetails(eventId);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Navigate to event details screen
+     */
+    private void navigateToEventDetails(String eventId) {
+        // Wait for navigation controller to be ready
+        if (navController != null) {
+            Bundle bundle = new Bundle();
+            bundle.putString("eventId", eventId);
+            navController.navigate(R.id.action_to_event_details, bundle);
+        } else {
+            // If nav controller isn't ready yet, post the navigation
+            binding.getRoot().post(() -> {
+                navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", eventId);
+                navController.navigate(R.id.action_to_event_details, bundle);
+            });
+        }
     }
 
     private void setupNavigationForUserRole() {
