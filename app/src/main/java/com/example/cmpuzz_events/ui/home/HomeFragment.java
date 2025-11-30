@@ -37,7 +37,6 @@ public class HomeFragment extends Fragment {
 
     // Lists to hold all events for filtering
     private List<Event> allEvents = new ArrayList<>();
-    private List<EventEntity> allEventEntities = new ArrayList<>();
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -56,7 +55,7 @@ public class HomeFragment extends Fragment {
             loadMyEvents();
         } else {
             binding.tvMyEventsTitle.setText("All Events");
-            getAllEventsN();
+            loadAllEvents();
         }
 
         return root;
@@ -118,52 +117,30 @@ public class HomeFragment extends Fragment {
 
     /**
      * Filters the main event list based on the search query and availability radio buttons.
-     * It then updates the adapter to show only the events that match.
      */
     private void applyFilters() {
-        // Get the query and selected availability from the UI
         String query = binding.eventSearchView.getQuery().toString();
         int selectedAvailabilityId = binding.availabilityFilterGroup.getCheckedRadioButtonId();
 
         List<Event> filteredEvents = new ArrayList<>();
         String lowerCaseQuery = (query == null) ? "" : query.toLowerCase();
 
-        List<EventEntity> detailedEvents = this.allEventEntities;
-
-        // Apply filters to the list of all events
         for (Event event : allEvents) {
-            // Find the matching EventEntity for the current Event using its ID.
-            EventEntity correspondingEntity = null;
-            if (detailedEvents != null) {
-                for (EventEntity entity : detailedEvents) {
-                    if (entity.getEventId().equals(event.getEventId())) {
-                        correspondingEntity = entity;
-                        break; // Found it, no need to keep searching.
-                    }
-                }
-            }
-
-            if (correspondingEntity == null) {
-                continue; // Skip this event if its details are missing.
-            }
-
+            // Filter by availability
             boolean availabilityMatch = false;
-            int currentEntrantCount = (correspondingEntity.getEntrants() != null) ? correspondingEntity.getEntrants().size() : 0;
-            int capacity = correspondingEntity.getCapacity();
+            int currentEntrantCount = (event.getEntrants() != null) ? event.getEntrants().size() : 0;
+            int capacity = event.getCapacity();
 
             if (selectedAvailabilityId == R.id.radio_not_full) {
-                if (capacity == 0 || currentEntrantCount < capacity) {
-                    availabilityMatch = true;
-                }
+                availabilityMatch = (capacity == 0 || currentEntrantCount < capacity);
             } else if (selectedAvailabilityId == R.id.radio_full) {
-                if (capacity > 0 && currentEntrantCount >= capacity) {
-                    availabilityMatch = true;
-                }
+                availabilityMatch = (capacity > 0 && currentEntrantCount >= capacity);
             } else {
-                // This handles the "Any" case
+                // "Any" case
                 availabilityMatch = true;
             }
 
+            // Filter by search query
             if (availabilityMatch) {
                 if (lowerCaseQuery.isEmpty() ||
                         event.getTitle().toLowerCase().contains(lowerCaseQuery) ||
@@ -172,7 +149,7 @@ public class HomeFragment extends Fragment {
                 }
             }
         }
-        // update the view's adapter with the filtered events
+        
         adapter.updateEvents(filteredEvents);
     }
 
@@ -243,14 +220,12 @@ public class HomeFragment extends Fragment {
 
         eventService.getEventsForOrganizer(currentUser.getUid(), new IEventService.EventListCallback() {
             @Override
-            public void onSuccess(List<EventEntity> events) {
-                Log.d("HomeFragment", "Loaded " + events.size() + " events");
+            public void onSuccess(List<EventEntity> entities) {
+                Log.d("HomeFragment", "Loaded " + entities.size() + " events");
                 allEvents.clear();
-                allEventEntities.clear();
-                allEventEntities.addAll(events);
 
-                for (EventEntity entity : events) {
-                    List<String> waitlistIds = entity.getWaitlist();
+                // Convert entities to UI Events
+                for (EventEntity entity : entities) {
                     Event uiEvent = new Event(
                             entity.getEventId(),
                             entity.getTitle(),
@@ -261,9 +236,10 @@ public class HomeFragment extends Fragment {
                             entity.getOrganizerId(),
                             entity.getOrganizerName(),
                             entity.isGeolocationRequired(),
-                            waitlistIds
+                            entity.getWaitlist()
                     );
                     uiEvent.setMaxEntrants(entity.getMaxEntrants());
+                    uiEvent.setEntrants(entity.getEntrants());
                     allEvents.add(uiEvent);
                 }
 
@@ -292,21 +268,12 @@ public class HomeFragment extends Fragment {
 
 
     /**
-     * Fetches all public events from the {@link EventService} and updates the UI.
-     * <p>
-     * This method defines a {@link IEventService.EventListCallback} to handle the asynchronous
-     * response from the service.
-     * <p>
-     * On error, it logs the failure, displays a toast message, and updates the UI to show an error
-     * state, hiding the event list and filtering controls.
-     *
-     * @see IEventService#getAllEventsN(IEventService.EventListCallback)
-     * @see #applyFilters()
+     * Fetches all public events using proper UI layer (Event model).
      */
-    private void getAllEventsN() {
-        IEventService.EventListCallback eventCallback = new IEventService.EventListCallback() {
+    private void loadAllEvents() {
+        eventService.getAllEvents(new IEventService.UIEventListCallback() {
             @Override
-            public void onSuccess(List<EventEntity> events) {
+            public void onSuccess(List<Event> events) {
                 if (binding == null) {
                     Log.w(TAG, "HomeFragment view was destroyed. Ignoring event list response.");
                     return;
@@ -314,25 +281,7 @@ public class HomeFragment extends Fragment {
 
                 Log.d(TAG, "Successfully loaded " + events.size() + " public events.");
                 allEvents.clear();
-                allEventEntities.clear();
-                allEventEntities.addAll(events);
-
-                for (EventEntity entity : events) {
-                    Event uiEvent = new Event(
-                            entity.getEventId(),
-                            entity.getTitle(),
-                            entity.getDescription(),
-                            entity.getCapacity(),
-                            entity.getRegistrationStart(),
-                            entity.getRegistrationEnd(),
-                            entity.getOrganizerId(),
-                            entity.getOrganizerName(),
-                            entity.isGeolocationRequired(),
-                            entity.getWaitlist()
-                    );
-                    uiEvent.setMaxEntrants(entity.getMaxEntrants());
-                    allEvents.add(uiEvent);
-                }
+                allEvents.addAll(events);
 
                 applyFilters();
 
@@ -366,9 +315,7 @@ public class HomeFragment extends Fragment {
                 binding.eventSearchView.setVisibility(View.GONE);
                 binding.availabilityFilterGroup.setVisibility(View.GONE);
             }
-        };
-
-        eventService.getAllEventsN(eventCallback);
+        });
     }
 
 
