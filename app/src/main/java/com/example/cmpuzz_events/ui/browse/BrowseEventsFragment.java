@@ -9,8 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -42,6 +44,7 @@ public class BrowseEventsFragment extends Fragment {
     private EventService eventService;
     private MyEventsAdapter adapter;
     private static final String TAG = "BrowseEventsFragment";
+    private List<Event> allEvents = new ArrayList<>();
 
     /**
      * inflates the layout, initilizes viewbinding,sets up recyclerview,
@@ -104,10 +107,86 @@ public class BrowseEventsFragment extends Fragment {
         
         binding.recyclerViewBrowseEvents.setAdapter(adapter);
         
+        // Setup search and filters
+        setupSearchView();
+        setupAvailabilityFilter();
+        
         // Load all events
         loadAllEvents();
         
         return root;
+    }
+
+    private void setupSearchView() {
+        binding.eventSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                applyFilters();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                applyFilters();
+                return true;
+            }
+        });
+    }
+
+    private void setupAvailabilityFilter() {
+        binding.availabilityFilterGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                applyFilters();
+            }
+        });
+    }
+
+    private void applyFilters() {
+        if (binding == null) {
+            return;
+        }
+
+        String query = binding.eventSearchView.getQuery().toString();
+        int selectedAvailabilityId = binding.availabilityFilterGroup.getCheckedRadioButtonId();
+
+        List<Event> filteredEvents = new ArrayList<>();
+        String lowerCaseQuery = (query == null) ? "" : query.toLowerCase();
+
+        for (Event event : allEvents) {
+            // Filter by availability
+            boolean availabilityMatch = false;
+            int currentEntrantCount = (event.getEntrants() != null) ? event.getEntrants().size() : 0;
+            int capacity = event.getCapacity();
+
+            if (selectedAvailabilityId == R.id.radio_not_full) {
+                availabilityMatch = (capacity == 0 || currentEntrantCount < capacity);
+            } else if (selectedAvailabilityId == R.id.radio_full) {
+                availabilityMatch = (capacity > 0 && currentEntrantCount >= capacity);
+            } else {
+                availabilityMatch = true;
+            }
+
+            // Filter by search query
+            if (availabilityMatch) {
+                if (lowerCaseQuery.isEmpty() ||
+                        event.getTitle().toLowerCase().contains(lowerCaseQuery) ||
+                        event.getDescription().toLowerCase().contains(lowerCaseQuery)) {
+                    filteredEvents.add(event);
+                }
+            }
+        }
+
+        adapter.updateEvents(filteredEvents);
+        
+        // Show/hide empty state
+        if (filteredEvents.isEmpty()) {
+            binding.recyclerViewBrowseEvents.setVisibility(View.GONE);
+            binding.tvEmptyState.setVisibility(View.VISIBLE);
+        } else {
+            binding.recyclerViewBrowseEvents.setVisibility(View.VISIBLE);
+            binding.tvEmptyState.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -117,17 +196,15 @@ public class BrowseEventsFragment extends Fragment {
         eventService.getAllEvents(new IEventService.UIEventListCallback() {
             @Override
             public void onSuccess(List<Event> events) {
-                Log.d(TAG, "Loaded " + events.size() + " events");
-                adapter.updateEvents(events);
-                
-                // Show/hide empty state
-                if (events.isEmpty()) {
-                    binding.recyclerViewBrowseEvents.setVisibility(View.GONE);
-                    binding.tvEmptyState.setVisibility(View.VISIBLE);
-                } else {
-                    binding.recyclerViewBrowseEvents.setVisibility(View.VISIBLE);
-                    binding.tvEmptyState.setVisibility(View.GONE);
+                if (binding == null) {
+                    return;
                 }
+                
+                Log.d(TAG, "Loaded " + events.size() + " events");
+                allEvents.clear();
+                allEvents.addAll(events);
+                
+                applyFilters();
             }
 
             @Override
