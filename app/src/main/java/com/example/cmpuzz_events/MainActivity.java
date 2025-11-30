@@ -196,14 +196,16 @@ public class MainActivity extends AppCompatActivity {
             navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(true);
 
             AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.navigation_browse,R.id.navigation_history ,R.id.navigation_browse_users, R.id.navigation_notification_log)
+                    R.id.navigation_browse,R.id.navigation_history ,R.id.navigation_browse_users, R.id.navigation_notification_log,
+                    R.id.navigation_profile)
                     .build();
 
             // Add notification log to app bar config if admin
             if (currentUser.isAdmin()) {
                 appBarConfiguration = new AppBarConfiguration.Builder(
                         R.id.navigation_browse, R.id.navigation_dashboard,
-                        R.id.navigation_browse_users, R.id.navigation_notification_log)
+                        R.id.navigation_browse_users, R.id.navigation_notification_log,
+                        R.id.navigation_profile)
                         .build();
             }
 

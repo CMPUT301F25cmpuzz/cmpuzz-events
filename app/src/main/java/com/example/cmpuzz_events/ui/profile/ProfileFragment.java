@@ -138,15 +138,19 @@ public class ProfileFragment extends Fragment {
             binding.tvUserEmail.setText(currentUser.getEmail());
             binding.tvUserRole.setText("Role: " + currentUser.getRole().getRoleName());
             binding.btnEditProfile.setVisibility(View.VISIBLE);
-            binding.btnSettings.setVisibility(View.VISIBLE);
-            binding.btnLotteryGuidelines.setVisibility(View.VISIBLE);
+
             binding.btnLogout.setVisibility(View.VISIBLE);
             binding.btnDeleteAccount.setVisibility(View.GONE);
 
-            // Setup enrolled events RecyclerView
             if(currentUser.isUser())
             {
+                binding.btnSettings.setVisibility(View.VISIBLE);
+                binding.btnLotteryGuidelines.setVisibility(View.VISIBLE);
                 setupEnrolledEvents(root, currentUser);
+            } else if(currentUser.canManageEvents())
+            {
+                binding.btnSettings.setVisibility(View.GONE);
+                binding.btnLotteryGuidelines.setVisibility(View.GONE);
             }
         }
 
