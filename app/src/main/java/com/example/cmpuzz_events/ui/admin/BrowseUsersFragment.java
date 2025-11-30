@@ -16,13 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
-import com.example.cmpuzz_events.models.event.EventEntity;
-import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.models.user.User;
-import com.example.cmpuzz_events.service.EventService;
-import com.example.cmpuzz_events.service.IEventService;
-import com.example.cmpuzz_events.ui.event.EnrolledUsersAdapter;
-import com.google.android.material.button.MaterialButton;
+import com.example.cmpuzz_events.service.IAdminService;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -43,6 +38,7 @@ public class BrowseUsersFragment extends Fragment {
     private List<User> users;
     private boolean isAdmin;
     private TabLayout tabLayout;
+    private IAdminService adminService;
 
 
 
@@ -97,24 +93,23 @@ public class BrowseUsersFragment extends Fragment {
     }
 
     private void loadEntrantsForTab(int position) {
+        User.UserRole role;
         switch (position) {
-            case 0: // Waitlist
-                loadWaitlist();
+            case 0:
+                role = User.UserRole.USER;
                 break;
-            case 1: // Invited
-                loadInvited();
+            case 1:
+                role = User.UserRole.ORGANIZER;
                 break;
-            case 2: // Attendees
-                loadAttendees();
-                break;
-            case 3: // Declined
-                loadDeclined();
+            default:
+                role = User.UserRole.USER;
                 break;
         }
+        loadUserList(role);
     }
 
-    private void loadUserList(List<String> userIds) {
-        AuthManager.getInstance().getUsersByIds(userIds, new AuthManager.UsersCallback() {
+    private void loadUserList(User.UserRole role) {
+        adminService.getAllAccountsByRole(role, new IAdminService.UIAccountListCallback() {
             @Override
             public void onSuccess(List<User> users) {
                 if (users.isEmpty()) {
@@ -132,11 +127,6 @@ public class BrowseUsersFragment extends Fragment {
                 showEmptyState("Error loading users");
             }
         });
-    }
-
-    private void loadOrganizers()
-    {
-
     }
 
     private void showEmptyState(String message) {

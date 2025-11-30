@@ -1,7 +1,6 @@
 package com.example.cmpuzz_events.ui.settings;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -130,7 +129,7 @@ public class SettingsFragment extends Fragment {
         // Show progress
         Toast.makeText(getContext(), "Deleting account...", Toast.LENGTH_SHORT).show();
 
-        profileService.deleteAccount(currentUser.getUid())
+        profileService.deleteCurrentAccount(currentUser.getUid())
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
                     
