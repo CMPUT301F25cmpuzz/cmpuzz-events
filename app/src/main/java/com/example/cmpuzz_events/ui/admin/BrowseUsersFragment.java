@@ -159,4 +159,15 @@ public class BrowseUsersFragment extends Fragment {
             Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Reload the currently selected tab
+        if (tabLayout != null) {
+            int selected = tabLayout.getSelectedTabPosition();
+            loadEntrantsForTab(selected);
+        }
+    }
 }
