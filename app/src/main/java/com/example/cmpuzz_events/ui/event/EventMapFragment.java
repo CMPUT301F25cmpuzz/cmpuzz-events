@@ -14,6 +14,7 @@ import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.example.cmpuzz_events.service.ProfileService;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,10 +29,12 @@ public class EventMapFragment extends Fragment implements OnMapReadyCallback {
 
     private String eventId;
     private GoogleMap googleMap;
+    private ProfileService profileService;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        profileService = new ProfileService();
         if (getArguments() != null) {
             eventId = getArguments().getString("eventId");
         }
@@ -80,12 +83,14 @@ public class EventMapFragment extends Fragment implements OnMapReadyCallback {
                         Double lat = coords.get(0);
                         Double lon = coords.get(1);
                         String userId = entry.getKey();
-
                         LatLng position = new LatLng(lat, lon);
-                        googleMap.addMarker(new MarkerOptions()
-                                .position(position)
-                                .title("Entrant ID: " + userId)); // You could fetch user names if desired
 
+                        profileService.getDisplayNameById(userId).addOnSuccessListener(displayName -> {
+                            String markerTitle = displayName != null ? displayName : "Entrant ID: " + userId;
+                            googleMap.addMarker(new MarkerOptions()
+                                    .position(position)
+                                    .title(markerTitle));
+                        });
                         lastLocation = position;
                     }
                 }
