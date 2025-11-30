@@ -25,6 +25,11 @@ public interface IEventService {
         void onError(String error);
     }
 
+    interface RegistrationHistoryCallback {
+        void onSuccess(List<EventEntity> pastEvents);
+        void onError(String error);
+    }
+
     interface UIEventCallback {
         void onSuccess(Event event);
         void onError(String error);
@@ -142,6 +147,17 @@ public interface IEventService {
     void joinEvent(String eventId, String userId, VoidCallback callback);
 
     /**
+     * Joins an event with geolocation data.
+     *
+     * @param eventId   The ID of the event to join.
+     * @param userId    The ID of the user joining.
+     * @param latitude  The user's latitude.
+     * @param longitude The user's longitude.
+     * @param callback  Callback for success or error.
+     */
+    void joinEventWithLocation(String eventId, String userId, double latitude, double longitude, VoidCallback callback);
+
+    /**
      * Remove a user from event waitlist
      *
      * @param eventId The event ID
@@ -191,6 +207,15 @@ public interface IEventService {
      */
     void drawAttendees(String eventId, Integer sampleSize, VoidCallback callback);
 
+
+    /**
+     * Retrieves the registration history for a specified user.
+     *
+     * @param userId  The ID of the user whose registration history is requested.
+     * @param callback Callback invoked with the registration history on success,
+     *                 or an error on failure.
+     */
+    void getRegistrationHistory(String userId, RegistrationHistoryCallback callback);
     /**
      * Draw a single replacement attendee from the waitlist.
      * Used when a previously selected entrant cancels or declines.
@@ -199,4 +224,17 @@ public interface IEventService {
      * @param callback Callback on success or error
      */
     void drawReplacementAttendee(String eventId, VoidCallback callback);
+    /** * Retrieves all events from the data source as a list of {@link EventEntity} objects.
+     * <p>
+     * This method is intended for fetching the complete, raw data for all events,
+     * which can then be processed or displayed in the UI. It is particularly useful for
+     * features like a global event search or an event directory for all users.
+     * <p>
+     * The result is delivered asynchronously through the provided callback.
+     *
+     * @param callback The callback that will be invoked upon completion.
+     *                 On success, {@code onSuccess} is called with a list of all event entities.
+     *                 On failure, {@code onError} is called with an error message.
+     */
+    void getAllEventsN(EventListCallback callback);
 }
