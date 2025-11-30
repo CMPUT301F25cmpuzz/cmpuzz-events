@@ -101,14 +101,6 @@ public class NotificationLogFragment extends Fragment {
         emptyStateText = root.findViewById(R.id.tvEmptyState);
         filterSpinner = root.findViewById(R.id.spinnerFilter);
         
-        // Hide action bar completely to prevent it from blocking the filter
-        if (getActivity() instanceof AppCompatActivity) {
-            AppCompatActivity activity = (AppCompatActivity) getActivity();
-            if (activity.getSupportActionBar() != null) {
-                activity.getSupportActionBar().hide();
-            }
-        }
-        
         adapter = new NotificationLogAdapter(new ArrayList<>());
         adapter.setOnStarClickListener((notificationId, isStarred) -> {
             // Update in Firebase
