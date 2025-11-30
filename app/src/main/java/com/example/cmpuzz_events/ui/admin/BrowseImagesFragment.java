@@ -18,9 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.models.user.User;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.cmpuzz_events.service.IImageService;
+import com.example.cmpuzz_events.service.ImageService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +33,7 @@ public class BrowseImagesFragment extends Fragment {
     private RecyclerView recyclerView;
     private ImageListAdapter adapter;
     private TextView emptyStateText;
-    private FirebaseStorage storage;
-    private StorageReference eventPostersRef;
+    private IImageService imageService;
     private User currentUser;
     private boolean hasLoadedImages = false;
     
@@ -52,8 +50,7 @@ public class BrowseImagesFragment extends Fragment {
             return root;
         }
         
-        storage = FirebaseStorage.getInstance();
-        eventPostersRef = storage.getReference().child("event_posters");
+        imageService = ImageService.getInstance();
         
         recyclerView = root.findViewById(R.id.recyclerViewImages);
         emptyStateText = root.findViewById(R.id.tvEmptyState);
@@ -87,40 +84,27 @@ public class BrowseImagesFragment extends Fragment {
     }
     
     private void loadImages() {
-        eventPostersRef.listAll()
-            .addOnSuccessListener(listResult -> {
-                if (listResult.getItems().isEmpty()) {
+        recyclerView.setVisibility(View.VISIBLE);
+        emptyStateText.setVisibility(View.GONE);
+        
+        imageService.loadAllImages(new IImageService.ImageListCallback() {
+            @Override
+            public void onSuccess(List<ImageItem> images) {
+                if (images.isEmpty()) {
                     showEmptyState("No images found");
-                    return;
+                } else {
+                    adapter.updateImages(images);
+                    recyclerView.setVisibility(View.VISIBLE);
+                    emptyStateText.setVisibility(View.GONE);
                 }
-                
-                List<ImageItem> imageItems = new ArrayList<>();
-                
-                // Show empty adapter first for immediate feedback
-                recyclerView.setVisibility(View.VISIBLE);
-                emptyStateText.setVisibility(View.GONE);
-                
-                // Load URLs asynchronously but update UI immediately as each loads
-                for (StorageReference item : listResult.getItems()) {
-                    // Get download URL for each image
-                    item.getDownloadUrl().addOnSuccessListener(uri -> {
-                        ImageItem imageItem = new ImageItem();
-                        imageItem.setName(item.getName());
-                        imageItem.setUrl(uri.toString());
-                        imageItem.setReference(item);
-                        imageItems.add(imageItem);
-                        
-                        // Update adapter immediately as each image URL is loaded
-                        adapter.updateImages(new ArrayList<>(imageItems));
-                    }).addOnFailureListener(e -> {
-                        Log.e(TAG, "Error getting download URL for: " + item.getName(), e);
-                    });
-                }
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error listing images", e);
+            }
+            
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error loading images: " + error);
                 showEmptyState("Error loading images");
-            });
+            }
+        });
     }
     
     private void showDeleteConfirmation(ImageItem imageItem) {
@@ -133,56 +117,21 @@ public class BrowseImagesFragment extends Fragment {
     }
     
     private void deleteImage(ImageItem imageItem) {
-        String imageUrl = imageItem.getUrl();
-        
-        // First, delete the image from Storage
-        imageItem.getReference().delete()
-            .addOnSuccessListener(aVoid -> {
-                Log.d(TAG, "Deleted image from storage: " + imageItem.getName());
-                
-                // Then, remove posterUrl from any events using this image
-                updateEventsUsingImage(imageUrl);
-                
+        imageService.deleteImage(imageItem, new IImageService.VoidCallback() {
+            @Override
+            public void onSuccess() {
                 Toast.makeText(getContext(), "Image deleted successfully", Toast.LENGTH_SHORT).show();
                 // Reload images
+                hasLoadedImages = false;
                 loadImages();
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error deleting image: " + imageItem.getName(), e);
-                Toast.makeText(getContext(), "Error deleting image", Toast.LENGTH_SHORT).show();
-            });
-    }
-    
-    private void updateEventsUsingImage(String imageUrl) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        
-        // Find all events with this posterUrl
-        db.collection("events")
-            .whereEqualTo("posterUrl", imageUrl)
-            .get()
-            .addOnSuccessListener(querySnapshot -> {
-                if (querySnapshot.isEmpty()) {
-                    Log.d(TAG, "No events found using this image");
-                    return;
-                }
-                
-                // Update each event to remove the posterUrl
-                int eventCount = querySnapshot.size();
-                Log.d(TAG, "Removing posterUrl from " + eventCount + " event(s)");
-                
-                querySnapshot.forEach(document -> {
-                    document.getReference().update("posterUrl", null)
-                        .addOnSuccessListener(aVoid -> {
-                            Log.d(TAG, "Removed posterUrl from event: " + document.getId());
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Error updating event: " + document.getId(), e);
-                        });
-                });
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error querying events by posterUrl", e);
-            });
+            }
+            
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error deleting image: " + error);
+                Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
     
     private void showEmptyState(String message) {
