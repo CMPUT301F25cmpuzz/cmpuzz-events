@@ -36,7 +36,7 @@
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
 
-    <!-- Admin-only: Notification Log -->
+    <!-- Admin Fragments -->
     <fragment
         android:id="@+id/navigation_notification_log"
         android:name="com.example.cmpuzz_events.ui.admin.NotificationLogFragment"
@@ -49,7 +49,7 @@
         android:label="@string/browse_users"
         tools:layout="@layout/fragment_browse_users">
         <action
-            android:id="@+id/action_to_account_profile"
+            android:id="@+id/action_browse_users_to_profile"
             app:destination="@id/navigation_profile"/>
     </fragment>
 

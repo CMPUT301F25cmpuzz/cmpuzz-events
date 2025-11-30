@@ -93,10 +93,10 @@ public class AdminService implements IAdminService {
 
         // First, remove user from all event lists
         return removeUserFromAllEvents(uid)
-                .onSuccessTask(v -> {
-                    // Then delete user document from Firestore
-                    return db.collection("users").document(uid).delete();
-                });
+            .onSuccessTask(v -> {
+                // Then delete user document from Firestore
+                return db.collection("users").document(uid).delete();
+            });
     }
 
     /**

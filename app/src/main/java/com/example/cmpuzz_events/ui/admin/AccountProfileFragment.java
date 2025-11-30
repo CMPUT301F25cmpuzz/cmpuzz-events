@@ -77,9 +77,14 @@ public class AccountProfileFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-
         binding = FragmentProfileBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        User passedUser;
+        if(getArguments() != null)
+        {
+            passedUser = (User) getArguments().getSerializable("user");
+        }
 
         eventService = EventService.getInstance();
         notificationService = NotificationService.getInstance();
@@ -87,7 +92,6 @@ public class AccountProfileFragment extends Fragment {
         preferences = requireContext().getSharedPreferences("user_preferences", Context.MODE_PRIVATE);
 
         // Display user info
-        currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser != null) {
             binding.tvUserName.setText(currentUser.getDisplayName());
             binding.tvUserEmail.setText(currentUser.getEmail());

@@ -76,7 +76,7 @@ public class BrowseUsersFragment extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("user", user);
                 Navigation.findNavController(root).navigate(
-                        R.id.action_to_account_profile,
+                        R.id.action_browse_users_to_profile,
                         bundle
                 );
             }
@@ -102,6 +102,10 @@ public class BrowseUsersFragment extends Fragment {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {}
         });
+
+        // Load users
+        tabLayout.getTabAt(0);
+        loadEntrantsForTab(0);
 
         return root;
     }

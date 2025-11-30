@@ -191,15 +191,6 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Setting up ORGANIZER/ADMIN navigation");
             navView.inflateMenu(R.menu.bottom_nav_menu_organizer);
             
-//            // Show notification log tab only for admins
-//            if (currentUser.isAdmin()) {
-//                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(true);
-//                Log.d(TAG, "Admin user - showing notification log tab");
-//            } else {
-//                navView.getMenu().findItem(R.id.navigation_notification_log).setVisible(false);
-//                Log.d(TAG, "Organizer user - hiding notification log tab");
-//            }
-            
             AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home,R.id.navigation_history ,R.id.navigation_dashboard, R.id.navigation_notifications)
                     .build();

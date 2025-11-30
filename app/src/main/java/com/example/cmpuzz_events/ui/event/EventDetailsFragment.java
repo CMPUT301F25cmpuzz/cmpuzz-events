@@ -535,33 +535,33 @@ public class EventDetailsFragment extends Fragment {
             });
 
             deleteButton.setOnClickListener(v -> {
-                new AlertDialog.Builder(requireContext())
-                        .setTitle("Confirm")
-                        .setMessage("Are you sure you want to delete this Event? This action can not be undone.")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String eventId = event.getEventId();
-                                eventService.deleteEvent(eventId, new IEventService.VoidCallback() {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Confirm")
+                    .setMessage("Are you sure you want to delete this Event? This action can not be undone.")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String eventId = event.getEventId();
+                            eventService.deleteEvent(eventId, new IEventService.VoidCallback() {
 
-                                    @Override
-                                    public void onSuccess() {
-                                        Log.d("Event Deletion", "Event Deleted Successful");
-                                        NavHostFragment.findNavController(EventDetailsFragment.this)
-                                                .popBackStack();
-                                    }
+                                @Override
+                                public void onSuccess() {
+                                    Log.d("Event Deletion", "Event Deleted Successful");
+                                    NavHostFragment.findNavController(EventDetailsFragment.this)
+                                            .popBackStack();
+                                }
 
-                                    @Override
-                                    public void onError(String error) {
-                                        Log.d("Event Deletion Error", error);
+                                @Override
+                                public void onError(String error) {
+                                    Log.d("Event Deletion Error", error);
 
-                                    }
-                                });
-                            }
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show();
+                                }
+                            });
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
             });
 
             

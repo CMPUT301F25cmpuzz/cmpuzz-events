@@ -63,5 +63,6 @@
 
     <string name="delete_event">Delete Event</string>
     <string name="browse_users">Browse Users</string>
+    <string name="delete_account">Delete Account</string>
 
 </resources>
