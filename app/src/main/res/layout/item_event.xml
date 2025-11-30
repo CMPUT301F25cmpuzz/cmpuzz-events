@@ -6,7 +6,9 @@
     android:layout_margin="12dp"
     app:cardCornerRadius="12dp"
     app:cardUseCompatPadding="true"
-    app:cardElevation="4dp">
+    app:cardElevation="4dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    >
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -143,6 +145,25 @@
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="4dp"/>
+
+
+        <!-- WaitList -->
+        <TextView
+            android:id="@+id/tvWaitlistCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:gravity="center_vertical"
+            android:drawablePadding="4dp"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:drawableStartCompat="@drawable/ic_waitlist"
+            app:layout_constraintBottom_toBottomOf="@id/tvMaxAttendees"
+            app:layout_constraintStart_toEndOf="@id/tvMaxAttendees"
+            app:layout_constraintTop_toTopOf="@id/tvMaxAttendees"
+            tools:text="15 on Waitlist"
+            tools:visibility="visible" />
 
 
 

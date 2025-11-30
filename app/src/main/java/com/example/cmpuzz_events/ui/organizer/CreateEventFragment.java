@@ -19,6 +19,7 @@ import com.example.cmpuzz_events.databinding.CreateEventFragmentBinding;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
@@ -165,7 +166,7 @@ public class CreateEventFragment extends Fragment {
         // Create UI Event object with current user's UID and name as organizer
         String eventId = UUID.randomUUID().toString();
         Event uiEvent = new Event(eventId, title, description, capacity,
-                start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired);
+                start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired, new ArrayList<>());
         uiEvent.setMaxEntrants(maxEntrants);
 
         // Save to Firebase via EventService

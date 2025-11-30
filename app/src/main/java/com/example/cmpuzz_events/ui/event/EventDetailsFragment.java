@@ -17,6 +17,7 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.cmpuzz_events.Entrant;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.models.user.User;
@@ -24,11 +25,23 @@ import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.firestore.DocumentReference;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Displays the detailed information for a single event.
+ * It handles different UI states based on user roles (organizer vs. regular user) and event status.
+ */
 public class EventDetailsFragment extends Fragment {
 
     private static final String TAG = "EventDetailsFragment";
@@ -58,7 +71,13 @@ public class EventDetailsFragment extends Fragment {
     private TextView usersEnrolledTitle;
     private RecyclerView usersRecyclerView;
     private EnrolledUsersAdapter usersAdapter;
+    private TextView tvWaitlistCount;
 
+    private FusedLocationProviderClient fusedLocationClient;
+
+    /**
+     * Factory method to create a new instance of this fragment using the provided event ID.
+     */
     public static EventDetailsFragment newInstance(String eventId) {
         EventDetailsFragment fragment = new EventDetailsFragment();
         Bundle args = new Bundle();
@@ -66,7 +85,9 @@ public class EventDetailsFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-
+    /**
+     * Called when the fragment is first created. Initializes services and retrieves the event ID from arguments.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,8 +96,13 @@ public class EventDetailsFragment extends Fragment {
         }
 
         eventService = EventService.getInstance();
-    }
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+    }
+    /**
+     * Inflates the fragment's layout, initializes all views, and triggers the loading of event details.
+     * @return The root view for the fragment's UI.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -98,6 +124,7 @@ public class EventDetailsFragment extends Fragment {
         dividerBottom = root.findViewById(R.id.divider_bottom);
         usersEnrolledTitle = root.findViewById(R.id.users_enrolled_title);
         usersRecyclerView = root.findViewById(R.id.users_recycler_view);
+        tvWaitlistCount = root.findViewById(R.id.tvWaitlistCount);
         
         // Setup RecyclerView
         usersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -111,7 +138,9 @@ public class EventDetailsFragment extends Fragment {
         
         return root;
     }
-
+    /**
+     * Configures the visibility and functionality of UI elements based on the current user's role.
+     */
     private void setupRoleBasedUI(View root) {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         boolean isOrganizer = currentUser != null && currentUser.canManageEvents();
@@ -167,32 +196,95 @@ public class EventDetailsFragment extends Fragment {
             joinButton.setOnClickListener(v -> joinEvent());
         }
     }
-
+    /**
+     * Activity result launcher for handling the location permission request.
+     */
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    fetchLocationAndJoin();
+                } else {
+                    Toast.makeText(getContext(), "Location required to join this event", Toast.LENGTH_SHORT).show();
+                }
+            });
+    /**
+     * Initiates the process for a user to join an event, checking for location requirements.
+     */
     private void joinEvent() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser == null) {
             Toast.makeText(getContext(), "Please log in to join events", Toast.LENGTH_SHORT).show();
             return;
         }
-        
-        // Use user ID to join waitlist
-        String userId = currentUser.getUid();
-        
-        eventService.joinEvent(eventId, userId, new IEventService.VoidCallback() {
-            @Override
-            public void onSuccess() {
-                Toast.makeText(getContext(), "Successfully joined event!", Toast.LENGTH_SHORT).show();
-                // Reload event details to update button state
-                loadEventDetails();
-            }
 
-            @Override
-            public void onError(String error) {
-                Toast.makeText(getContext(), "Failed to join: " + error, Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (currentEvent.isGeolocationRequired()) {
+            checkPermissionAndJoin();
+        } else {
+
+            // Use user ID to join waitlist
+            String userId = currentUser.getUid();
+
+            eventService.joinEvent(eventId, userId, new IEventService.VoidCallback() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(getContext(), "Successfully joined event!", Toast.LENGTH_SHORT).show();
+                    // Reload event details to update button state
+                    loadEventDetails();
+                }
+
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(getContext(), "Failed to join: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+    /**
+     * Checks if location permission has been granted; if not, it requests the permission.
+     */
+    private void checkPermissionAndJoin() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            fetchLocationAndJoin();
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
     }
 
+    /**
+     * Fetches the user's last known location and then attempts to join the event with that location.
+     */
+    private void fetchLocationAndJoin() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) return;
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        String userId = AuthManager.getInstance().getCurrentUser().getUid();
+
+                        // Call the NEW service method
+                        eventService.joinEventWithLocation(eventId, userId,
+                                location.getLatitude(), location.getLongitude(),
+                                new IEventService.VoidCallback() {
+                                    @Override
+                                    public void onSuccess() {
+                                        Toast.makeText(getContext(), "Joined with location!", Toast.LENGTH_SHORT).show();
+                                        loadEventDetails();
+                                    }
+                                    @Override
+                                    public void onError(String error) {
+                                        Toast.makeText(getContext(), "Failed: " + error, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    } else {
+                        Toast.makeText(getContext(), "Could not determine location. Try opening Maps first.", Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+    /**
+     * Allows the current user to leave the event's waitlist.
+     */
     private void leaveEvent() {
         User currentUser = AuthManager.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -216,7 +308,9 @@ public class EventDetailsFragment extends Fragment {
             }
         });
     }
-
+    /**
+     * Fetches all details for the specified event from the service and updates the UI.
+     */
     private void loadEventDetails() {
         if (eventId == null || eventId.isEmpty()) {
             Toast.makeText(getContext(), "Invalid event", Toast.LENGTH_SHORT).show();
@@ -226,6 +320,7 @@ public class EventDetailsFragment extends Fragment {
         eventService.getEvent(eventId, new IEventService.EventCallback() {
             @Override
             public void onSuccess(EventEntity eventEntity) {
+                List<String> waitlistIds = eventEntity.getWaitlist();
                 // Convert to UI Event and store
                 currentEvent = new Event(
                     eventEntity.getEventId(),
@@ -236,7 +331,8 @@ public class EventDetailsFragment extends Fragment {
                     eventEntity.getRegistrationEnd(),
                     eventEntity.getOrganizerId(),
                     eventEntity.getOrganizerName(),
-                    eventEntity.isGeolocationRequired()
+                    eventEntity.isGeolocationRequired(),
+                        waitlistIds
                 );
                 currentEvent.setMaxEntrants(eventEntity.getMaxEntrants());
                 
@@ -256,7 +352,9 @@ public class EventDetailsFragment extends Fragment {
             }
         });
     }
-
+    /**
+     * Fetches user profiles for all IDs associated with an event (waitlist, invited, attending) and displays them.
+     */
     private void loadEnrolledUsers(List<String> waitlist) {
         // Combine all user IDs: waitlist + invited + attendees
         List<String> allUserIds = new ArrayList<>();
@@ -318,7 +416,9 @@ public class EventDetailsFragment extends Fragment {
             }
         });
     }
-
+    /**
+     * Populates the UI fields with data from the event object. This method must be called on the UI thread.
+     */
     private void displayEventDetails(EventEntity event) {
         if (getActivity() == null) return;
         
@@ -330,7 +430,20 @@ public class EventDetailsFragment extends Fragment {
                     : "Hosted by: " + event.getOrganizerId();
             eventHost.setText(hostText);
             descriptionText.setText(event.getDescription());
-            
+
+            // same as in eventviewholder
+            List<String> waitlist = event.getWaitlist();
+            int waitlistCount = (waitlist != null) ? waitlist.size() : 0;
+
+            if (waitlistCount >= 0) {
+                // If the waitlist has people, show the count
+                tvWaitlistCount.setVisibility(View.VISIBLE);
+                tvWaitlistCount.setText(getString(R.string.waitlist_count_format, waitlistCount));
+            } else {
+                // Otherwise, make sure the view is hidden
+                tvWaitlistCount.setVisibility(View.GONE);
+            }
+
             // Format dates
             if (event.getRegistrationStart() != null) {
                 datePosted.setText("Registration Start: " + event.getRegistrationStart());
@@ -417,9 +530,19 @@ public class EventDetailsFragment extends Fragment {
             shareButton.setOnClickListener(v -> {
                 Toast.makeText(getContext(), "Share functionality coming soon", Toast.LENGTH_SHORT).show();
             });
-            
+
             viewMapButton.setOnClickListener(v -> {
-                Toast.makeText(getContext(), "Map functionality coming soon", Toast.LENGTH_SHORT).show();
+                if (currentEvent == null) return;
+
+                // Check if there are any locations to show
+                // (Optional: prevents opening empty map, though Fragment handles empty state too)
+
+                Bundle bundle = new Bundle();
+                bundle.putString("eventId", currentEvent.getEventId());
+
+                // Ensure you have added this action/destination to your nav_graph.xml
+                // OR use ID navigation if you added the fragment to the graph
+                Navigation.findNavController(v).navigate(R.id.action_event_details_to_event_map, bundle);
             });
         });
     }

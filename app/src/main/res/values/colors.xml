@@ -17,4 +17,5 @@
     <color name="surface">#F9FAFB</color>
     <color name="text_primary">#111827</color>
     <color name="text_secondary">#6B7280</color>
+    <color name="color_completed">#4CAF50</color>
 </resources>
