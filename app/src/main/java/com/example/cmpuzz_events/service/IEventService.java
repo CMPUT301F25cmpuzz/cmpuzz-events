@@ -232,4 +232,13 @@ public interface IEventService {
      * @param callback Callback on success or error
      */
     void drawReplacementAttendee(String eventId, VoidCallback callback);
+    
+    /**
+     * Update the poster URL for an event
+     *
+     * @param eventId The event ID
+     * @param posterUrl The new poster URL
+     * @param callback Callback on success or error
+     */
+    void updateEventPoster(String eventId, String posterUrl, VoidCallback callback);
 }

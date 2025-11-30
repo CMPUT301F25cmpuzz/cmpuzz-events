@@ -13,6 +13,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -964,6 +965,24 @@ public class EventService implements IEventService {
         }
 
         return entity;
+    }
+    
+    @Override
+    public void updateEventPoster(String eventId, String posterUrl, VoidCallback callback) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("posterUrl", posterUrl);
+        updates.put("updatedAt", new Date());
+        
+        db.collection("events").document(eventId)
+            .update(updates)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Event poster updated successfully for event: " + eventId);
+                callback.onSuccess();
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error updating event poster: " + e.getMessage());
+                callback.onError(e.getMessage());
+            });
     }
 }
 

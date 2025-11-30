@@ -44,6 +44,12 @@
         tools:layout="@layout/fragment_notification_log" />
 
     <fragment
+        android:id="@+id/navigation_browse_images"
+        android:name="com.example.cmpuzz_events.ui.admin.BrowseImagesFragment"
+        android:label="Browse Images"
+        tools:layout="@layout/fragment_browse_images" />
+
+    <fragment
         android:id="@+id/navigation_browse_users"
         android:name="com.example.cmpuzz_events.ui.admin.BrowseUsersFragment"
         android:label="@string/browse_users"

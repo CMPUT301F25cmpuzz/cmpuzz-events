@@ -37,6 +37,11 @@ import androidx.core.content.ContextCompat;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import android.net.Uri;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,6 +83,8 @@ public class EventDetailsFragment extends Fragment {
     private TextView tvWaitlistCount;
 
     private FusedLocationProviderClient fusedLocationClient;
+    private ActivityResultLauncher<String> imagePickerLauncher;
+    private Uri selectedImageUri;
 
     /**
      * Factory method to create a new instance of this fragment using the provided event ID.
@@ -102,6 +109,17 @@ public class EventDetailsFragment extends Fragment {
         eventService = EventService.getInstance();
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        
+        // Setup image picker for editing event poster
+        imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    selectedImageUri = uri;
+                    uploadNewEventImage();
+                }
+            }
+        );
     }
     /**
      * Inflates the fragment's layout, initializes all views, and triggers the loading of event details.
@@ -529,10 +547,8 @@ public class EventDetailsFragment extends Fragment {
                 }
             }
             
-            // Setup buttons (placeholder functionality for now)
-            editButton.setOnClickListener(v -> {
-                Toast.makeText(getContext(), "Edit functionality coming soon", Toast.LENGTH_SHORT).show();
-            });
+            // Setup edit button to change event poster
+            editButton.setOnClickListener(v -> showEditOptionsDialog());
 
             deleteButton.setOnClickListener(v -> {
             new AlertDialog.Builder(requireContext())
@@ -583,5 +599,55 @@ public class EventDetailsFragment extends Fragment {
                 Navigation.findNavController(v).navigate(R.id.action_event_details_to_event_map, bundle);
             });
         });
+    }
+    
+    private void showEditOptionsDialog() {
+        new AlertDialog.Builder(requireContext())
+            .setTitle("Edit Event")
+            .setMessage("What would you like to edit?")
+            .setPositiveButton("Change Poster Image", (dialog, which) -> {
+                imagePickerLauncher.launch("image/*");
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+    
+    private void uploadNewEventImage() {
+        if (selectedImageUri == null || currentEvent == null) {
+            return;
+        }
+        
+        Toast.makeText(getContext(), "Uploading new image...", Toast.LENGTH_SHORT).show();
+        
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReference();
+        String filename = currentEvent.getEventId() + ".jpg";
+        StorageReference posterRef = storageRef.child("event_posters/" + filename);
+        
+        posterRef.putFile(selectedImageUri)
+            .addOnSuccessListener(taskSnapshot -> {
+                // Get the download URL
+                posterRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    // Update the event with the new poster URL
+                    eventService.updateEventPoster(currentEvent.getEventId(), uri.toString(), new IEventService.VoidCallback() {
+                        @Override
+                        public void onSuccess() {
+                            Toast.makeText(getContext(), "Poster updated successfully", Toast.LENGTH_SHORT).show();
+                            // Reload event details to show new image
+                            loadEventDetails();
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Error updating poster URL: " + error);
+                            Toast.makeText(getContext(), "Error updating poster", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                });
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error uploading image: " + e.getMessage());
+                Toast.makeText(getContext(), "Error uploading image", Toast.LENGTH_SHORT).show();
+            });
     }
 }

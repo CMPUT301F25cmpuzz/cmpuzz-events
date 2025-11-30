@@ -22,4 +22,9 @@
         android:title="@string/title_notification_log"
         android:visible="false" />
 
+    <item
+        android:id="@+id/navigation_browse_images"
+        android:icon="@drawable/ic_image"
+        android:title="Browse Images" />
+
 </menu>
