@@ -36,6 +36,23 @@
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
 
+    <!-- Admin Fragments -->
+    <fragment
+        android:id="@+id/navigation_notification_log"
+        android:name="com.example.cmpuzz_events.ui.admin.NotificationLogFragment"
+        android:label="@string/title_notification_log"
+        tools:layout="@layout/fragment_notification_log" />
+
+    <fragment
+        android:id="@+id/navigation_browse_users"
+        android:name="com.example.cmpuzz_events.ui.admin.BrowseUsersFragment"
+        android:label="@string/browse_users"
+        tools:layout="@layout/fragment_browse_users">
+        <action
+            android:id="@+id/action_browse_users_to_profile"
+            app:destination="@id/navigation_profile"/>
+    </fragment>
+
     <!-- User Fragments -->
     <fragment
         android:id="@+id/navigation_browse"

@@ -154,22 +154,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Delete Account Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnDeleteAccount"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="@string/delete_account"
-        android:textColor="@android:color/holo_red_dark"
-        app:strokeColor="@android:color/holo_red_dark"
-        app:cornerRadius="8dp"
-        app:icon="@drawable/ic_logout"
-        app:iconTint="@android:color/holo_red_dark"
-        app:layout_constraintTop_toBottomOf="@id/recyclerViewEnrolledEvents"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

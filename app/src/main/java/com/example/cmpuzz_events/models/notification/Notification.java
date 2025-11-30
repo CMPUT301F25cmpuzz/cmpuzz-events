@@ -15,6 +15,7 @@ public class Notification implements Serializable {
     private String message;
     private long timestamp;
     private boolean isRead;
+    private boolean isImportant;
 
     public enum NotificationType {
         INVITED("invited"),
@@ -66,6 +67,7 @@ public class Notification implements Serializable {
         this.message = message;
         this.timestamp = System.currentTimeMillis();
         this.isRead = false;
+        this.isImportant = false;
     }
 
     // Getters and Setters
@@ -148,5 +150,13 @@ public class Notification implements Serializable {
 
     public void setRead(boolean read) {
         isRead = read;
+    }
+
+    public boolean isImportant() {
+        return isImportant;
+    }
+
+    public void setImportant(boolean important) {
+        isImportant = important;
     }
 }

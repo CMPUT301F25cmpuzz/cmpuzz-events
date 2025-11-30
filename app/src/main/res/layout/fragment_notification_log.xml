@@ -7,63 +7,44 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:paddingBottom="16dp"
-    android:paddingTop="30dp">
+    android:paddingTop="80dp">
 
-    <TextView
-        android:id="@+id/tvTitle"
+    <Spinner
+        android:id="@+id/spinnerFilter"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="View Entrants"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:paddingBottom="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:tabMode="fixed"
-        app:tabGravity="fill"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnDrawReplacement"
-        style="@style/Widget.MaterialComponents.Button"
-        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="@string/draw_replacement"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/tabLayout"
+        android:layout_marginBottom="16dp"
+        android:minHeight="56dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+        android:id="@+id/recyclerViewLog"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/btnDrawReplacement"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/spinnerFilter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/list_attendee" />
+        tools:listitem="@layout/item_notification_log" />
 
     <TextView
         android:id="@+id/tvEmptyState"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No data available"
+        android:text="No notifications found"
         android:textSize="16sp"
         android:textColor="@android:color/darker_gray"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="@id/recyclerView"
+        app:layout_constraintTop_toTopOf="@id/recyclerViewLog"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

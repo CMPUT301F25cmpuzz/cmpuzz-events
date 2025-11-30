@@ -1,9 +1,9 @@
-package com.example.cmpuzz_events.ui.event;
+package com.example.cmpuzz_events.ui.admin;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -11,18 +11,28 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.models.user.User;
-import com.google.android.play.core.integrity.IntegrityManagerFactory;
+import com.example.cmpuzz_events.ui.event.OnItemClickListener;
 
 import java.util.List;
 
 /**
- * Adapter to display enrolled users in an event's waitlist
+ * Adapter to display users with a clickable interface
  */
-public class EnrolledUsersAdapter extends RecyclerView.Adapter<EnrolledUsersAdapter.UserViewHolder> {
+public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserViewHolder> {
 
     private List<User> users;
+    private OnItemClickListener listener;
 
-    public EnrolledUsersAdapter(List<User> users) {
+    public interface OnItemClickListener {
+        void onItemClick(User user, int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener)
+    {
+        this.listener = listener;
+    }
+
+    public UserListAdapter(List<User> users) {
         this.users = users;
     }
 
@@ -41,20 +51,29 @@ public class EnrolledUsersAdapter extends RecyclerView.Adapter<EnrolledUsersAdap
 
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
-        holder.bind(users.get(position));
+        User currUser = users.get(position);
+        holder.bind(currUser);
 
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(currUser, position);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
         return users != null ? users.size() : 0;
     }
+
     static class UserViewHolder extends RecyclerView.ViewHolder {
         private final TextView userName;
+        private final ImageView avatar;
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
             userName = itemView.findViewById(R.id.user_name);
+            avatar = itemView.findViewById(R.id.user_avatar);
         }
 
         public void bind(User user) {
@@ -68,6 +87,7 @@ public class EnrolledUsersAdapter extends RecyclerView.Adapter<EnrolledUsersAdap
                     displayName = user.getEmail();
                 }
                 userName.setText(displayName);
+                avatar.setImageResource(R.drawable.ic_profile);
             }
         }
     }

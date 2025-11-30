@@ -49,6 +49,7 @@ public class NotificationService implements INotificationService {
         data.put("message", notification.getMessage());
         data.put("timestamp", notification.getTimestamp());
         data.put("isRead", notification.isRead());
+        data.put("isImportant", notification.isImportant());
         
         db.collection(COLLECTION_NOTIFICATIONS)
             .add(data)
@@ -193,6 +194,7 @@ public class NotificationService implements INotificationService {
                     Long timestamp = document.getLong("timestamp");
                     notification.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
                     notification.setRead(Boolean.TRUE.equals(document.getBoolean("isRead")));
+                    notification.setImportant(Boolean.TRUE.equals(document.getBoolean("isImportant")));
                     notifications.add(notification);
                 });
                 
@@ -203,6 +205,43 @@ public class NotificationService implements INotificationService {
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error loading notifications", e);
+                if (callback != null) {
+                    callback.onError(e.getMessage());
+                }
+            });
+    }
+    
+    @Override
+    public void getAllNotifications(NotificationListCallback callback) {
+        db.collection(COLLECTION_NOTIFICATIONS)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                List<Notification> notifications = new ArrayList<>();
+                queryDocumentSnapshots.forEach(document -> {
+                    Notification notification = new Notification();
+                    notification.setId(document.getId());
+                    notification.setUserId(document.getString("userId"));
+                    notification.setEventId(document.getString("eventId"));
+                    notification.setEventName(document.getString("eventName"));
+                    notification.setTypeString(document.getString("type"));
+                    notification.setTitle(document.getString("title"));
+                    notification.setMessage(document.getString("message"));
+                    
+                    Long timestamp = document.getLong("timestamp");
+                    notification.setTimestamp(timestamp != null ? timestamp : System.currentTimeMillis());
+                    notification.setRead(Boolean.TRUE.equals(document.getBoolean("isRead")));
+                    notification.setImportant(Boolean.TRUE.equals(document.getBoolean("isImportant")));
+                    notifications.add(notification);
+                });
+                
+                Log.d(TAG, "Loaded " + notifications.size() + " total notifications for admin log");
+                if (callback != null) {
+                    callback.onSuccess(notifications);
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error loading all notifications", e);
                 if (callback != null) {
                     callback.onError(e.getMessage());
                 }
@@ -384,6 +423,25 @@ public class NotificationService implements INotificationService {
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error updating notification preference", e);
                 callback.onError(e.getMessage());
+            });
+    }
+    
+    @Override
+    public void updateImportantStatus(String notificationId, boolean isImportant, VoidCallback callback) {
+        db.collection(COLLECTION_NOTIFICATIONS)
+            .document(notificationId)
+            .update("isImportant", isImportant)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Notification important status updated: " + notificationId + " = " + isImportant);
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error updating notification important status", e);
+                if (callback != null) {
+                    callback.onError(e.getMessage());
+                }
             });
     }
     

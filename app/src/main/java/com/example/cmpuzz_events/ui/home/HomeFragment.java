@@ -130,6 +130,12 @@ public class HomeFragment extends Fragment {
      * Filters the main event list based on the search query and availability radio buttons.
      */
     private void applyFilters() {
+        // Null safety check - binding can be null if view is being destroyed
+        if (binding == null) {
+            return;
+        }
+
+        // Get the query and selected availability from the UI
         String query = binding.eventSearchView.getQuery().toString();
         int selectedAvailabilityId = binding.availabilityFilterGroup.getCheckedRadioButtonId();
 
@@ -231,6 +237,11 @@ public class HomeFragment extends Fragment {
             @Override
             public void onSuccess(List<EventEntity> entities) {
                 Log.d("HomeFragment", "Loaded " + entities.size() + " events");
+                if (binding == null) {
+                    Log.w(TAG, "HomeFragment view was destroyed. Ignoring event list response.");
+                    return;
+                }
+
                 allEvents.clear();
 
                 // Convert entities to UI Events
@@ -267,6 +278,11 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onError(String error) {
+                if (binding == null) {
+                    Log.w(TAG, "HomeFragment view was destroyed. Ignoring error response.");
+                    return;
+                }
+
                 Log.e("HomeFragment", "Error loading events: " + error);
                 Toast.makeText(getContext(), "Error loading events", Toast.LENGTH_SHORT).show();
                 binding.tvEmptyState.setText("Could not load your events.");

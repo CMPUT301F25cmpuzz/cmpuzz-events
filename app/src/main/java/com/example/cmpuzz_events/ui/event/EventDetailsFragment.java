@@ -1,5 +1,7 @@
 package com.example.cmpuzz_events.ui.event;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,6 +16,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -64,6 +67,7 @@ public class EventDetailsFragment extends Fragment {
     private MaterialButton shareButton;
     private MaterialButton viewMapButton;
     private MaterialButton joinButton;
+    private MaterialButton deleteButton;
     private MaterialButton viewAllEntrantsButton;
     private TextView additionalActionsButton;
     private View dividerTop;
@@ -118,6 +122,7 @@ public class EventDetailsFragment extends Fragment {
         shareButton = root.findViewById(R.id.share_button);
         viewMapButton = root.findViewById(R.id.view_map_button);
         joinButton = root.findViewById(R.id.join_button);
+        deleteButton = root.findViewById(R.id.delete_button);
         viewAllEntrantsButton = root.findViewById(R.id.view_all_entrants_button);
         additionalActionsButton = root.findViewById(R.id.additional_actions_button);
         dividerTop = root.findViewById(R.id.divider_top);
@@ -143,11 +148,12 @@ public class EventDetailsFragment extends Fragment {
      */
     private void setupRoleBasedUI(View root) {
         User currentUser = AuthManager.getInstance().getCurrentUser();
-        boolean isOrganizer = currentUser != null && currentUser.canManageEvents();
+        assert currentUser != null;
         
-        if (isOrganizer) {
+        if (currentUser.canManageEvents()) {
             // Organizer view - show all management controls
             editButton.setVisibility(View.VISIBLE);
+            deleteButton.setVisibility(View.VISIBLE);
             additionalActionsButton.setVisibility(View.VISIBLE);
             dividerTop.setVisibility(View.VISIBLE);
             dividerBottom.setVisibility(View.VISIBLE);
@@ -179,9 +185,10 @@ public class EventDetailsFragment extends Fragment {
                 }
             });
             
-        } else {
+        } else if (currentUser.isUser()) {
             // User view - show Join button, essential info, and entrants list
             editButton.setVisibility(View.GONE);
+            deleteButton.setVisibility(View.GONE);
             shareButton.setVisibility(View.GONE);
             viewMapButton.setVisibility(View.GONE);
             additionalActionsButton.setVisibility(View.GONE);
@@ -526,6 +533,37 @@ public class EventDetailsFragment extends Fragment {
             editButton.setOnClickListener(v -> {
                 Toast.makeText(getContext(), "Edit functionality coming soon", Toast.LENGTH_SHORT).show();
             });
+
+            deleteButton.setOnClickListener(v -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Confirm")
+                    .setMessage("Are you sure you want to delete this Event? This action can not be undone.")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String eventId = event.getEventId();
+                            eventService.deleteEvent(eventId, new IEventService.VoidCallback() {
+
+                                @Override
+                                public void onSuccess() {
+                                    Log.d("Event Deletion", "Event Deleted Successful");
+                                    NavHostFragment.findNavController(EventDetailsFragment.this)
+                                            .popBackStack();
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    Log.d("Event Deletion Error", error);
+
+                                }
+                            });
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            });
+
             
             shareButton.setOnClickListener(v -> {
                 Toast.makeText(getContext(), "Share functionality coming soon", Toast.LENGTH_SHORT).show();

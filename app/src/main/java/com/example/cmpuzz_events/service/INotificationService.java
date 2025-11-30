@@ -54,6 +54,16 @@ public interface INotificationService {
      */
     void updateNotificationPreference(String userId, boolean enabled, VoidCallback callback);
     
+    /**
+     * Get all notifications (admin only - for log review)
+     */
+    void getAllNotifications(NotificationListCallback callback);
+    
+    /**
+     * Update the important status of a notification
+     */
+    void updateImportantStatus(String notificationId, boolean isImportant, VoidCallback callback);
+    
     // Callback interfaces
     interface VoidCallback {
         void onSuccess();

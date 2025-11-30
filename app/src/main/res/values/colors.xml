@@ -17,5 +17,7 @@
     <color name="surface">#F9FAFB</color>
     <color name="text_primary">#111827</color>
     <color name="text_secondary">#6B7280</color>
+    <color name="primary_soft">#EEF2FF</color>      <!-- very light version of primary -->
+    <color name="primary_soft_border">#E0E7FF</color>
     <color name="color_completed">#4CAF50</color>
 </resources>

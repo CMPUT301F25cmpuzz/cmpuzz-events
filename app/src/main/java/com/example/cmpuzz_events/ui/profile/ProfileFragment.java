@@ -1,6 +1,7 @@
 package com.example.cmpuzz_events.ui.profile;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -16,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.cmpuzz_events.R;
@@ -24,11 +26,13 @@ import com.example.cmpuzz_events.databinding.FragmentProfileBinding;
 import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.models.event.Invitation;
 import com.example.cmpuzz_events.models.user.User;
+import com.example.cmpuzz_events.service.AdminService;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
 import com.example.cmpuzz_events.service.INotificationService;
 import com.example.cmpuzz_events.service.NotificationService;
 import com.example.cmpuzz_events.ui.event.Event;
+import com.example.cmpuzz_events.ui.event.EventDetailsFragment;
 import com.example.cmpuzz_events.ui.profile.EnrolledEventsAdapter.EventWithStatus;
 
 import java.util.ArrayList;
@@ -69,12 +73,14 @@ public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
     private EventService eventService;
+    private AdminService adminService;
     private NotificationService notificationService;
     private EnrolledEventsAdapter adapter;
     private static final String TAG = "ProfileFragment";
 
     private ProfileService profileService;
     private User currentUser;
+    private User passedUser;
     private SharedPreferences preferences;
 
     /**
@@ -94,20 +100,57 @@ public class ProfileFragment extends Fragment {
         View root = binding.getRoot();
 
         eventService = EventService.getInstance();
+        adminService = AdminService.getInstance();
         notificationService = NotificationService.getInstance();
         notificationService.setContext(requireContext().getApplicationContext());
         preferences = requireContext().getSharedPreferences("user_preferences", Context.MODE_PRIVATE);
 
-        // Display user info
+        if(getArguments() != null)
+        {
+            passedUser = (User) getArguments().getSerializable("user");
+            Log.d(TAG, "Args Passed, user: " + passedUser.getDisplayName());
+        }
         currentUser = AuthManager.getInstance().getCurrentUser();
-        if (currentUser != null) {
+        binding.tvEventsEnrolledTitle.setVisibility(View.GONE);
+
+        if(passedUser != null) // If profile was triggered by passing a user (i.e. from an adapter click)
+        {
+            binding.tvUserName.setText(passedUser.getDisplayName());
+            binding.tvUserEmail.setText(passedUser.getEmail());
+            binding.tvUserRole.setText("Role: " + passedUser.getRole().getRoleName());
+            binding.btnSettings.setVisibility(View.GONE);
+            binding.btnLotteryGuidelines.setVisibility(View.GONE);
+            binding.btnLogout.setVisibility(View.GONE);
+            // Bro
+            if(currentUser.isAdmin())
+            {
+                binding.btnEditProfile.setVisibility(View.VISIBLE);
+                binding.btnDeleteAccount.setVisibility(View.VISIBLE);
+            } else {
+                binding.btnEditProfile.setVisibility(View.GONE);
+                binding.btnDeleteAccount.setVisibility(View.GONE);
+            }
+
+            // Setup enrolled events RecyclerView
+            // setupEnrolledEvents(root, passedUser);
+        } else if (currentUser != null) { // If profile was triggered by the user themselves
             binding.tvUserName.setText(currentUser.getDisplayName());
             binding.tvUserEmail.setText(currentUser.getEmail());
             binding.tvUserRole.setText("Role: " + currentUser.getRole().getRoleName());
+            binding.btnEditProfile.setVisibility(View.VISIBLE);
+            binding.btnSettings.setVisibility(View.VISIBLE);
+            binding.btnLotteryGuidelines.setVisibility(View.VISIBLE);
+            binding.btnLogout.setVisibility(View.VISIBLE);
+            binding.btnDeleteAccount.setVisibility(View.GONE);
 
             // Setup enrolled events RecyclerView
-            setupEnrolledEvents(root, currentUser);
+            if(currentUser.isUser())
+            {
+                setupEnrolledEvents(root, currentUser);
+            }
         }
+
+        binding.btnEditProfile.setOnClickListener(v -> showEditDialog());
 
         // Setup settings button
         binding.btnSettings.setOnClickListener(v -> {
@@ -125,10 +168,11 @@ public class ProfileFragment extends Fragment {
         if (currentUser == null) {
             currentUser = AuthManager.getInstance().getCurrentUser();
         }
-        binding.btnEditProfile.setOnClickListener(v -> showEditDialog());
 
         // Setup logout button
         binding.btnLogout.setOnClickListener(v -> logout());
+
+        binding.btnDeleteAccount.setOnClickListener(v->deleteAccount());
 
         return root;
     }
@@ -142,6 +186,7 @@ public class ProfileFragment extends Fragment {
      */
     private void setupEnrolledEvents(View root, User currentUser) {
         binding.recyclerViewEnrolledEvents.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding.tvEventsEnrolledTitle.setVisibility(View.VISIBLE);
         adapter = new EnrolledEventsAdapter(new ArrayList<>());
 
         adapter.setOnEventActionListener(new EnrolledEventsAdapter.OnEventActionListener() {
@@ -570,6 +615,32 @@ public class ProfileFragment extends Fragment {
                 Snackbar.make(binding.getRoot(), err.getMessage(), Snackbar.LENGTH_LONG).show();
             });
         });
+    }
+
+    private void deleteAccount()
+    {
+        if(passedUser != null)
+        {
+            new android.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Confirm")
+                    .setMessage("Are you sure you want to delete this account? This action can not be undone.")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            adminService.deleteAccountByUid(passedUser.getUid())
+                                    .addOnSuccessListener(v -> {
+                                        Log.d(TAG, "Account " + passedUser.getUsername() + " successfully deleted");
+                                        Navigation.findNavController(requireView()).popBackStack();
+                                    })
+                                    .addOnFailureListener(v -> {
+                                        Log.e(TAG, "Error deleting account: " + v.getMessage());
+                                    });
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        }
     }
 
     /**
