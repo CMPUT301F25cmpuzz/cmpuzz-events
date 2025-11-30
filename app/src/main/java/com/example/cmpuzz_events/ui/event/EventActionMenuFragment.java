@@ -19,8 +19,10 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.cmpuzz_events.R;
+import com.example.cmpuzz_events.auth.AuthManager;
 import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.models.notification.Notification;
+import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
 import com.example.cmpuzz_events.service.INotificationService;
@@ -78,10 +80,33 @@ public class EventActionMenuFragment extends Fragment {
             }
         });
 
+        // Hide notifications section for admins
+        setupNotificationsVisibility(root);
+
         // Setup click listeners for all menu items
         setupClickListeners(root);
 
         return root;
+    }
+
+    /**
+     * Hides the notifications section for admin users.
+     * Organizers can see all sections, admins can only see the entrants section.
+     */
+    private void setupNotificationsVisibility(View root) {
+        User currentUser = AuthManager.getInstance().getCurrentUser();
+        
+        if (currentUser != null && currentUser.isAdmin()) {
+            // Hide notifications section header
+            root.findViewById(R.id.tvNotificationsSection).setVisibility(View.GONE);
+            
+            // Hide all notification cards
+            root.findViewById(R.id.cardNotifyDeclined).setVisibility(View.GONE);
+            root.findViewById(R.id.cardNotifyWaitlist).setVisibility(View.GONE);
+            root.findViewById(R.id.cardNotifyInvited).setVisibility(View.GONE);
+            root.findViewById(R.id.cardNotifyAttendees).setVisibility(View.GONE);
+        }
+        // If organizer or regular user, show everything (default visibility)
     }
 
     private void setupClickListeners(View root) {

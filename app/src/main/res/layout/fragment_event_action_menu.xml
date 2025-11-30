@@ -292,6 +292,7 @@
 
             <!-- NOTIFICATIONS Section -->
             <TextView
+                android:id="@+id/tvNotificationsSection"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="NOTIFICATIONS"
