@@ -231,12 +231,30 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        eventService.getEventsForOrganizerUI(currentUser.getUid(), new IEventService.UIEventListCallback() {
+        eventService.getEventsForOrganizer(currentUser.getUid(), new IEventService.EventListCallback() {
             @Override
-            public void onSuccess(List<Event> events) {
-                Log.d("HomeFragment", "Loaded " + events.size() + " events");
+            public void onSuccess(List<EventEntity> entities) {
+                Log.d("HomeFragment", "Loaded " + entities.size() + " events");
                 allEvents.clear();
-                allEvents.addAll(events);
+
+                // Convert entities to UI Events
+                for (EventEntity entity : entities) {
+                    Event uiEvent = new Event(
+                            entity.getEventId(),
+                            entity.getTitle(),
+                            entity.getDescription(),
+                            entity.getCapacity(),
+                            entity.getRegistrationStart(),
+                            entity.getRegistrationEnd(),
+                            entity.getOrganizerId(),
+                            entity.getOrganizerName(),
+                            entity.isGeolocationRequired(),
+                            entity.getWaitlist()
+                    );
+                    uiEvent.setMaxEntrants(entity.getMaxEntrants());
+                    uiEvent.setEntrants(entity.getEntrants());
+                    allEvents.add(uiEvent);
+                }
 
                 applyFilters();
 
