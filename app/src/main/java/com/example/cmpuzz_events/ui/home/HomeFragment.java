@@ -140,9 +140,13 @@ public class HomeFragment extends Fragment {
                         entity.isGeolocationRequired()
                     );
                     uiEvent.setMaxEntrants(entity.getMaxEntrants());
+                    uiEvent.setPosterUrl(entity.getPosterUrl());
                     uiEvents.add(uiEvent);
                 }
-                
+                for (Event uiEvent : uiEvents) {
+                    Log.d("HomeFragment", "UI Event " + uiEvent.getTitle() +
+                            " posterUrl = " + uiEvent.getPosterUrl());
+                }
                 adapter.updateEvents(uiEvents);
                 
                 // Show/hide empty state
@@ -164,6 +168,13 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadMyEvents();   // refresh events (and posterUrl) whenever you come back to Home
+    }
+
 
     @Override
     public void onDestroyView() {

@@ -18,12 +18,18 @@ import com.example.cmpuzz_events.ui.event.Event;
 import com.example.cmpuzz_events.databinding.CreateEventFragmentBinding;
 import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import android.net.Uri;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 /**
  * Controller for the Organizer "Create Event" screen.
@@ -38,6 +44,9 @@ public class CreateEventFragment extends Fragment {
     private Date registrationStart;
     private Date registrationEnd;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private Uri posterUri;
+    private ActivityResultLauncher<String> pickPosterLauncher;
+
 
     @Nullable
     @Override
@@ -49,6 +58,19 @@ public class CreateEventFragment extends Fragment {
 
 
         binding = CreateEventFragmentBinding.inflate(inflater, container, false);
+
+        // Image picker for poster
+        pickPosterLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        posterUri = uri;
+                        binding.ivEventImage.setImageURI(uri);  // preview
+                    }
+                }
+        );
+
+
         View root = binding.getRoot();
 
         // Initialize services
@@ -99,6 +121,10 @@ public class CreateEventFragment extends Fragment {
             if (!isChecked) {
                 binding.setEntrantsInput.setText("");
             }
+        });
+
+        binding.btnUploadImage.setOnClickListener(v -> {
+            pickPosterLauncher.launch("image/*");   // open gallery
         });
 
         return root;
@@ -168,26 +194,123 @@ public class CreateEventFragment extends Fragment {
                 start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired);
         uiEvent.setMaxEntrants(maxEntrants);
 
-        // Save to Firebase via EventService
-        eventService.createEvent(uiEvent, new IEventService.EventCallback() {
-            @Override
-            public void onSuccess(com.example.cmpuzz_events.models.event.EventEntity event) {
-                Log.d("CreateEventFragment", "Event saved to Firebase: " + event.getEventId());
-                Toast.makeText(requireContext(), "Event created successfully!", Toast.LENGTH_SHORT).show();
-                
-                // Optional: Navigate back or clear form
-                binding.etEventName.setText("");
-                binding.etEventDescription.setText("");
-                binding.toggleGeolocation.setChecked(false);
+        // CASE 1: No poster selected -> just create event as before
+        if (posterUri == null) {
+            eventService.createEvent(uiEvent, new IEventService.EventCallback() {
+                @Override
+                public void onSuccess(com.example.cmpuzz_events.models.event.EventEntity event) {
+                    Log.d("CreateEventFragment", "Event saved to Firebase (no poster): " + event.getEventId());
+                    Toast.makeText(requireContext(), "Event created successfully!", Toast.LENGTH_SHORT).show();
+                    clearForm();
+                }
+
+                @Override
+                public void onError(String error) {
+                    Log.e("CreateEventFragment", "Error saving event: " + error);
+                    Toast.makeText(requireContext(), "Failed to create event: " + error, Toast.LENGTH_LONG).show();
+                }
+            });
+            return;
+        }
+
+        // CASE 2: Poster selected -> copy to local cache, then upload
+        Log.d("CreateEventFragment", "Original posterUri = " + posterUri);
+
+        Uri uploadUri;
+
+        try {
+            // 1. Copy content:// URI into a real file in cache
+            java.io.InputStream in =
+                    requireContext().getContentResolver().openInputStream(posterUri);
+
+            if (in == null) {
+                Toast.makeText(requireContext(), "Could not open image data", Toast.LENGTH_LONG).show();
+                Log.e("CreateEventFragment", "InputStream from posterUri is null");
+                return;
             }
 
-            @Override
-            public void onError(String error) {
-                Log.e("CreateEventFragment", "Error saving event: " + error);
-                Toast.makeText(requireContext(), "Failed to create event: " + error, Toast.LENGTH_LONG).show();
+            java.io.File outFile = new java.io.File(
+                    requireContext().getCacheDir(),
+                    "event_poster_" + eventId + ".jpg"
+            );
+            java.io.OutputStream out = new java.io.FileOutputStream(outFile);
+
+            byte[] buffer = new byte[8 * 1024];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
             }
-        });
+            in.close();
+            out.flush();
+            out.close();
+
+            uploadUri = android.net.Uri.fromFile(outFile);
+            Log.d("CreateEventFragment", "Copied image to: " + uploadUri);
+
+        } catch (Exception e) {
+            Log.e("CreateEventFragment", "Failed to copy image to cache", e);
+            Toast.makeText(requireContext(), "Failed to read selected image", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+// 2. Now upload the local file
+        com.google.firebase.storage.StorageReference storageRef =
+                com.google.firebase.storage.FirebaseStorage.getInstance()
+                        .getReference()
+                        .child("event_posters/" + eventId + ".jpg");
+
+        com.google.firebase.storage.UploadTask uploadTask = storageRef.putFile(uploadUri);
+
+        uploadTask
+                .addOnSuccessListener(taskSnapshot -> {
+                    storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String downloadUrl = uri.toString();
+                        Log.d("CreateEventFragment", "Poster uploaded. URL = " + downloadUrl);
+
+                        uiEvent.setPosterUrl(downloadUrl);
+
+                        eventService.createEvent(uiEvent, new IEventService.EventCallback() {
+                            @Override
+                            public void onSuccess(com.example.cmpuzz_events.models.event.EventEntity event) {
+                                Log.d("CreateEventFragment",
+                                        "Event saved to Firebase with poster: " + event.getEventId());
+                                Toast.makeText(requireContext(),
+                                        "Event created successfully!", Toast.LENGTH_SHORT).show();
+                                clearForm();
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                Log.e("CreateEventFragment", "Error saving event: " + error);
+                                Toast.makeText(requireContext(),
+                                        "Failed to create event: " + error, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }).addOnFailureListener(e -> {
+                        Log.e("CreateEventFragment", "Failed to get download URL", e);
+                        Toast.makeText(requireContext(),
+                                "Failed to get image URL", Toast.LENGTH_LONG).show();
+                    });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("CreateEventFragment", "Image upload failed", e);
+                    Toast.makeText(requireContext(),
+                            "Image upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
     }
+
+    // helper to clean the form (optional)
+    private void clearForm() {
+        binding.etEventName.setText("");
+        binding.etEventDescription.setText("");
+        binding.toggleGeolocation.setChecked(false);
+        binding.setAttendeesInput.setText("");
+        binding.setEntrantsInput.setText("");
+        binding.tvRegistrationSummary.setText(" ");
+        binding.ivEventImage.setImageDrawable(null);
+        posterUri = null;
+    }
+
 
     private void showDatePicker() {
         Calendar calendar = Calendar.getInstance();

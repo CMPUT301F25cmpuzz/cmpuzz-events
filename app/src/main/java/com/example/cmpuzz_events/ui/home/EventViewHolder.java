@@ -2,11 +2,13 @@ package com.example.cmpuzz_events.ui.home;
 
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.ui.event.Event;
 
@@ -16,6 +18,7 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
     private final TextView tvMaxAttendees;
     private final Button btnView;
     private final Button btnDraw;
+    private final ImageView imgBanner;
 
     public EventViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -24,21 +27,37 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
         tvMaxAttendees = itemView.findViewById(R.id.tvMaxAttendees);
         btnView = itemView.findViewById(R.id.btnView);
         btnDraw = itemView.findViewById(R.id.btnDraw);
+        imgBanner = itemView.findViewById(R.id.imgBanner);   // hook up ImageView
     }
 
     public void bind(Event event, MyEventsAdapter.OnEventClickListener listener, boolean isOrganizerView) {
         tvEventName.setText(event.getTitle());
         tvDescription.setText(event.getDescription());
         tvMaxAttendees.setText("Maximum Attendees: " + event.getCapacity());
-        
+
+        // load poster image if available
+        String posterUrl = event.getPosterUrl();
+        android.util.Log.d("EventViewHolder", "bind: " + event.getTitle() +
+                " posterUrl = " + posterUrl);
+
+        if (posterUrl != null && !posterUrl.isEmpty()) {
+            Glide.with(itemView.getContext())
+                    .load(posterUrl)
+                    .placeholder(R.drawable.bg_image_placeholder)
+                    .error(R.drawable.bg_image_placeholder)
+                    .into(imgBanner);
+        } else {
+            imgBanner.setImageResource(R.drawable.bg_image_placeholder);
+        }
+
         // Show/hide Draw button based on role
         if (isOrganizerView) {
             btnDraw.setVisibility(View.VISIBLE);
         } else {
             btnDraw.setVisibility(View.GONE);
         }
-        
-        // Set click listeners
+
+        // Click listeners
         if (listener != null) {
             btnView.setOnClickListener(v -> listener.onViewEventClick(event));
             btnDraw.setOnClickListener(v -> listener.onDrawAttendeesClick(event));

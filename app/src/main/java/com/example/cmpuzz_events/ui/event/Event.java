@@ -19,6 +19,8 @@ public class Event implements Serializable {
     private boolean geolocationRequired;
     private int maxEntrants;                 // Max people who can enroll
     private List<Entrant> waitingList;
+    private String posterUrl;
+
 
     public Event(String eventId, String title, String description, int capacity,
                  Date registrationStart, Date registrationEnd,
@@ -50,5 +52,12 @@ public class Event implements Serializable {
     public void setRegistrationStart(Date date) { this.registrationStart = date; }
     public void setRegistrationEnd(Date date) { this.registrationEnd = date; }
     public void setGeolocationRequired(boolean required) { this.geolocationRequired = required; }
-    public void setMaxEntrants(int n) { this.maxEntrants = n; }
+    public void setMaxEntrants(int n) { this.maxEntrants = n; }public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
+    }
+
 }

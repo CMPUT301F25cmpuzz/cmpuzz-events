@@ -19,10 +19,6 @@ import java.util.Random;
 
 import com.example.cmpuzz_events.models.notification.Notification;
 
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.DocumentSnapshot;
-import java.util.Date;
-
 /**
  * Implementation of IEventService.
  * Handles Event CRUD operations with Firebase Firestore.
@@ -53,18 +49,22 @@ public class EventService implements IEventService {
      * Convert UI Event to EventEntity
      */
     private EventEntity convertToEntity(Event uiEvent) {
-        return new EventEntity(
-            uiEvent.getEventId(),
-            uiEvent.getTitle(),
-            uiEvent.getDescription(),
-            uiEvent.getCapacity(),
-            uiEvent.getRegistrationStart(),
-            uiEvent.getRegistrationEnd(),
-            uiEvent.getOrganizerId(),
-            uiEvent.getOrganizerName(),
-            uiEvent.isGeolocationRequired(),
-            uiEvent.getMaxEntrants()
+        EventEntity entity = new EventEntity(
+                uiEvent.getEventId(),
+                uiEvent.getTitle(),
+                uiEvent.getDescription(),
+                uiEvent.getCapacity(),
+                uiEvent.getRegistrationStart(),
+                uiEvent.getRegistrationEnd(),
+                uiEvent.getOrganizerId(),
+                uiEvent.getOrganizerName(),
+                uiEvent.isGeolocationRequired(),
+                uiEvent.getMaxEntrants()
         );
+
+        entity.setPosterUrl(uiEvent.getPosterUrl());  // carry poster
+
+        return entity;
     }
 
     /**
@@ -83,6 +83,7 @@ public class EventService implements IEventService {
             entity.isGeolocationRequired()
         );
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
+        uiEvent.setPosterUrl(entity.getPosterUrl());
         return uiEvent;
     }
 
@@ -398,10 +399,10 @@ public class EventService implements IEventService {
         getEvent(eventId, new EventCallback() {
             @Override
             public void onSuccess(EventEntity event) {
-                if (event.getMaxEntrants() == 0) {
-                    callback.onError("This event is not accepting new entrants.");
-                    return;
-                }
+//                if (event.getMaxEntrants() == 0) {
+//                    callback.onError("This event is not accepting new entrants.");
+//                    return;
+//                }
                 if (event.addToWaitlist(userId)) {
                     updateEvent(event, callback);
                 } else {
@@ -578,10 +579,10 @@ public class EventService implements IEventService {
                     return;
                 }
 
-                if (event.getMaxEntrants() == 0) {
-                    callback.onError("Event max entrants is zero; cannot draw attendees.");
-                    return;
-                }
+//                if (event.getMaxEntrants() == 0) {
+//                    callback.onError("Event max entrants is zero; cannot draw attendees.");
+//                    return;
+//                }
 
                 // Count already invited and attending users
                 int alreadyInvitedOrAttending = 0;
@@ -696,10 +697,10 @@ public class EventService implements IEventService {
                     return;
                 }
 
-                if (event.getMaxEntrants() == 0) {
-                    callback.onError("Event max entrants is zero; cannot draw replacement.");
-                    return;
-                }
+//                if (event.getMaxEntrants() == 0) {
+//                    callback.onError("Event max entrants is zero; cannot draw replacement.");
+//                    return;
+//                }
 
                 int invitedCount = event.getInvitations() != null ? event.getInvitations().size() : 0;
                 int attendeeCount = event.getAttendees() != null ? event.getAttendees().size() : 0;
@@ -815,7 +816,13 @@ public class EventService implements IEventService {
         
         entity.setCreatedAt(doc.getDate("createdAt"));
         entity.setUpdatedAt(doc.getDate("updatedAt"));
-        
+
+        // Poster URL
+        String posterUrl = doc.getString("posterUrl");
+        Log.d("EventService", "documentToEventEntity: posterUrl from Firestore = " + posterUrl);
+        if (posterUrl != null) entity.setPosterUrl(posterUrl);
+
+
         return entity;
     }
 }
