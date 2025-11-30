@@ -21,6 +21,7 @@ public class MyEventsAdapter extends RecyclerView.Adapter<EventViewHolder> {
     public interface OnEventClickListener {
         void onViewEventClick(Event event);
         void onDrawAttendeesClick(Event event);
+        void onOverflowClick(Event event, View anchorView);
     }
 
     public MyEventsAdapter(List<Event> events, boolean isOrganizerView) {

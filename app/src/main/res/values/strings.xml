@@ -60,5 +60,11 @@
     <string name="status_not_selected">Not Selected</string>
     <string name="status_pending">Pending Selection</string>
 
+    <!-- Event options -->
+    <string name="share_event">Share</string>
+    <string name="qr_code">QR Code</string>
+    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="scan_to_enroll">Scan this code to view event details and enroll</string>
+    <string name="close">Close</string>
 
 </resources>

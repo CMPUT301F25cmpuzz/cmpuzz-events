@@ -3,6 +3,7 @@ package com.example.cmpuzz_events.ui.home;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ImageButton;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,7 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
     private final Button btnView;
     private final Button btnDraw;
     private final TextView tvWaitlistCount;
+    private final ImageButton btnOverflow;
 
     public EventViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -29,6 +31,7 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
         btnView = itemView.findViewById(R.id.btnView);
         btnDraw = itemView.findViewById(R.id.btnDraw);
         tvWaitlistCount = itemView.findViewById(R.id.tvWaitlistCount);
+        btnOverflow = itemView.findViewById(R.id.btnOverflow);
     }
 
     public void bind(Event event, MyEventsAdapter.OnEventClickListener listener, boolean isOrganizerView) {
@@ -58,6 +61,7 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
         if (listener != null) {
             btnView.setOnClickListener(v -> listener.onViewEventClick(event));
             btnDraw.setOnClickListener(v -> listener.onDrawAttendeesClick(event));
+            btnOverflow.setOnClickListener(v -> listener.onOverflowClick(event, v));
         }
     }
 }
