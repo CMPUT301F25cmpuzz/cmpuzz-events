@@ -1,6 +1,7 @@
 package com.example.cmpuzz_events.ui.event;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
@@ -88,6 +89,7 @@ public class EventDetailsFragment extends Fragment {
     private FusedLocationProviderClient fusedLocationClient;
     private ActivityResultLauncher<String> imagePickerLauncher;
     private Uri selectedImageUri;
+    private ProgressDialog uploadProgressDialog;
 
     /**
      * Factory method to create a new instance of this fragment using the provided event ID.
@@ -701,7 +703,12 @@ public class EventDetailsFragment extends Fragment {
             return;
         }
         
-        Toast.makeText(getContext(), "Uploading new image...", Toast.LENGTH_SHORT).show();
+        // Show non-cancelable progress dialog
+        uploadProgressDialog = new ProgressDialog(requireContext());
+        uploadProgressDialog.setTitle("Uploading Image");
+        uploadProgressDialog.setMessage("Please wait...");
+        uploadProgressDialog.setCancelable(false);
+        uploadProgressDialog.show();
         
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
@@ -716,6 +723,9 @@ public class EventDetailsFragment extends Fragment {
                     eventService.updateEventPoster(currentEvent.getEventId(), uri.toString(), new IEventService.VoidCallback() {
                         @Override
                         public void onSuccess() {
+                            if (uploadProgressDialog != null && uploadProgressDialog.isShowing()) {
+                                uploadProgressDialog.dismiss();
+                            }
                             Toast.makeText(getContext(), "Poster updated successfully", Toast.LENGTH_SHORT).show();
                             // Reload event details to show new image
                             loadEventDetails();
@@ -723,6 +733,9 @@ public class EventDetailsFragment extends Fragment {
                         
                         @Override
                         public void onError(String error) {
+                            if (uploadProgressDialog != null && uploadProgressDialog.isShowing()) {
+                                uploadProgressDialog.dismiss();
+                            }
                             Log.e(TAG, "Error updating poster URL: " + error);
                             Toast.makeText(getContext(), "Error updating poster", Toast.LENGTH_SHORT).show();
                         }
@@ -730,6 +743,9 @@ public class EventDetailsFragment extends Fragment {
                 });
             })
             .addOnFailureListener(e -> {
+                if (uploadProgressDialog != null && uploadProgressDialog.isShowing()) {
+                    uploadProgressDialog.dismiss();
+                }
                 Log.e(TAG, "Error uploading image: " + e.getMessage());
                 Toast.makeText(getContext(), "Error uploading image", Toast.LENGTH_SHORT).show();
             });
