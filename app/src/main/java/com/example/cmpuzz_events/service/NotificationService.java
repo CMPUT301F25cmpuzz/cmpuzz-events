@@ -5,14 +5,21 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.example.cmpuzz_events.models.notification.Notification;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.android.gms.tasks.Task;
 
 public class NotificationService implements INotificationService {
     
@@ -471,4 +478,75 @@ public class NotificationService implements INotificationService {
                 return "Update regarding \"" + eventName + "\".";
         }
     }
+
+
+    /**
+     * Deletes "INVITED" notifications for a specific event from multiple user feeds.
+     *
+     * @param userIds  A list of user IDs to process.
+     * @param eventId  The specific event ID to target.
+     * @param callback Called on success or failure of the operation.
+     */
+    @Override
+    public void deleteNotificationsForUsers(List<String> userIds, String eventId, VoidCallback callback) {
+        if (userIds == null || userIds.isEmpty() || eventId == null) {
+            if (callback != null) {
+                callback.onSuccess();
+            }
+            return;
+        }
+
+        // Create a list of asynchronous tasks, one for each user to find the specific
+        // "INVITED" notification that needs to be deleted.
+        // Read this like a sql query
+        List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+        for (String userId : userIds) {
+            Task<QuerySnapshot> task = db.collection("users").document(userId).collection("notifications")
+                    .whereEqualTo("eventId", eventId)
+                    .whereEqualTo("type", Notification.NotificationType.INVITED.toString())
+                    .limit(1)
+                    .get();
+            tasks.add(task);
+        }
+
+        Tasks.whenAllSuccess(tasks)
+                .addOnSuccessListener(results -> addDeletionsToBatch(results, userIds, callback))
+                .addOnFailureListener(e -> handleFailure("Failed to query for notifications to delete.", e, callback));
+    }
+
+    private void addDeletionsToBatch(List<Object> results, List<String> userIds, VoidCallback callback) {
+        WriteBatch batch = db.batch();
+
+        // iterate through the results and add each found document to the delete batch.
+        for (Object result : results) {
+            QuerySnapshot querySnapshot = (QuerySnapshot) result;
+            if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                DocumentReference docRef = querySnapshot.getDocuments().get(0).getReference();
+                batch.delete(docRef);
+            }
+        }
+
+        // commit the batch to execute all deletions at once.
+        batch.commit()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Successfully deleted notifications for " + userIds.size() + " users.");
+                    if (callback != null) {
+                        callback.onSuccess();
+                    }
+                })
+                .addOnFailureListener(e -> handleFailure("Failed to commit batch deletion of notifications.", e, callback));
+    }
+
+    private void handleFailure(String logMessage, Exception e, VoidCallback callback) {
+        Log.e(TAG, logMessage, e);
+        if (callback != null) {
+            callback.onError(e.getMessage());
+        }
+    }
+
+
+
+
+
+
 }
