@@ -4,14 +4,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.models.user.User;
-import com.google.android.play.core.integrity.IntegrityManagerFactory;
 
 import java.util.List;
 
@@ -51,10 +53,12 @@ public class EnrolledUsersAdapter extends RecyclerView.Adapter<EnrolledUsersAdap
     }
     static class UserViewHolder extends RecyclerView.ViewHolder {
         private final TextView userName;
+        private final ImageView userAvatar;
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
             userName = itemView.findViewById(R.id.user_name);
+            userAvatar = itemView.findViewById(R.id.user_avatar);
         }
 
         public void bind(User user) {
@@ -68,6 +72,19 @@ public class EnrolledUsersAdapter extends RecyclerView.Adapter<EnrolledUsersAdap
                     displayName = user.getEmail();
                 }
                 userName.setText(displayName);
+
+                // Load and display profile image using Glide
+                if (userAvatar != null) {
+                    if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+                        Glide.with(itemView.getContext())
+                                .load(user.getProfileImageUrl())
+                                .transform(new CircleCrop())
+                                .placeholder(R.drawable.ic_profile)
+                                .into(userAvatar);
+                    } else {
+                        userAvatar.setImageResource(R.drawable.ic_profile);
+                    }
+                }
             }
         }
     }

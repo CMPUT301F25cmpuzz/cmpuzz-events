@@ -129,7 +129,7 @@ public class ProfileFragment extends Fragment {
                         Glide.with(getContext())
                                 .load(uri)
                                 .transform(new CircleCrop())
-                                .placeholder(R.drawable.bg_image_placeholder)
+                                .placeholder(R.drawable.ic_profile)
                                 .into(currentDialogProfileImageView);
                     }
                 }
@@ -158,7 +158,7 @@ public class ProfileFragment extends Fragment {
                         .placeholder(R.drawable.bg_image_placeholder)
                         .into(binding.imgProfileAvatar);
             } else {
-                binding.imgProfileAvatar.setImageResource(R.drawable.bg_image_placeholder);
+                binding.imgProfileAvatar.setImageResource(R.drawable.ic_profile);
             }
             
             binding.btnSettings.setVisibility(View.GONE);
@@ -189,7 +189,7 @@ public class ProfileFragment extends Fragment {
                         .placeholder(R.drawable.bg_image_placeholder)
                         .into(binding.imgProfileAvatar);
             } else {
-                binding.imgProfileAvatar.setImageResource(R.drawable.bg_image_placeholder);
+                binding.imgProfileAvatar.setImageResource(R.drawable.ic_profile);
             }
             
             binding.btnEditProfile.setVisibility(View.VISIBLE);
@@ -542,7 +542,7 @@ public class ProfileFragment extends Fragment {
                     .placeholder(R.drawable.bg_image_placeholder)
                     .into(imgProfilePicture);
         } else {
-            imgProfilePicture.setImageResource(R.drawable.bg_image_placeholder);
+            imgProfilePicture.setImageResource(R.drawable.ic_profile);
         }
 
         // Reset selected image URI when dialog opens
@@ -650,7 +650,7 @@ public class ProfileFragment extends Fragment {
                                         Glide.with(requireContext())
                                                 .load(profileImageUrl)
                                                 .transform(new CircleCrop())
-                                                .placeholder(R.drawable.bg_image_placeholder)
+                                                .placeholder(R.drawable.ic_profile)
                                                 .into(binding.imgProfileAvatar);
                                     }
                                     finishProfileUpdate(dialogView, dialog, fullName, email, username);
