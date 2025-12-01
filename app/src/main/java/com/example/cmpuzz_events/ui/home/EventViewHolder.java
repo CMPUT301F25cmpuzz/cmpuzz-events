@@ -63,10 +63,14 @@ public class EventViewHolder extends RecyclerView.ViewHolder {
         if (posterUrl != null && !posterUrl.isEmpty()) {
             Glide.with(itemView.getContext())
                     .load(posterUrl)
+                    .skipMemoryCache(true)  // Don't use cached version
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)  // Don't use disk cache
                     .placeholder(R.drawable.bg_image_placeholder)
                     .error(R.drawable.bg_image_placeholder)
                     .into(imgBanner);
         } else {
+            // Clear any previous image and show placeholder
+            Glide.with(itemView.getContext()).clear(imgBanner);
             imgBanner.setImageResource(R.drawable.bg_image_placeholder);
         }
 

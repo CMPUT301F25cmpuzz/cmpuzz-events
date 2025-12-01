@@ -476,10 +476,14 @@ public class EventDetailsFragment extends Fragment {
             if (posterUrl != null && !posterUrl.isEmpty()) {
                 Glide.with(requireContext())
                         .load(posterUrl)
+                        .skipMemoryCache(true)  // Don't use cached version
+                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)  // Don't use disk cache
                         .placeholder(R.drawable.bg_image_placeholder)
                         .error(R.drawable.bg_image_placeholder)
                         .into(eventImage);
             } else {
+                // Clear any previous image and show placeholder
+                Glide.with(requireContext()).clear(eventImage);
                 eventImage.setImageResource(R.drawable.bg_image_placeholder);
             }
 
@@ -695,6 +699,13 @@ public class EventDetailsFragment extends Fragment {
             return;
         }
         
+        // Show non-cancelable progress dialog
+        uploadProgressDialog = new ProgressDialog(requireContext());
+        uploadProgressDialog.setTitle("Deleting Image");
+        uploadProgressDialog.setMessage("Please wait...");
+        uploadProgressDialog.setCancelable(false);
+        uploadProgressDialog.show();
+        
         // Create ImageItem from the current event's poster
         String posterUrl = currentEvent.getPosterUrl();
         String eventId = currentEvent.getEventId();
@@ -708,20 +719,32 @@ public class EventDetailsFragment extends Fragment {
         imageItem.setName(eventId + ".jpg");
         imageItem.setReference(posterRef);
         
-        Toast.makeText(getContext(), "Deleting poster image...", Toast.LENGTH_SHORT).show();
-        
         // Use ImageService to delete the image and update events
         ImageService imageService = ImageService.getInstance();
         imageService.deleteImage(imageItem, new IImageService.VoidCallback() {
             @Override
             public void onSuccess() {
+                if (uploadProgressDialog != null && uploadProgressDialog.isShowing()) {
+                    uploadProgressDialog.dismiss();
+                }
                 Toast.makeText(getContext(), "Poster image deleted successfully", Toast.LENGTH_SHORT).show();
+                // Clear Glide cache for this image to prevent showing cached version
+                if (getContext() != null) {
+                    com.bumptech.glide.Glide.get(getContext()).clearMemory();
+                    // Also clear disk cache in background
+                    new Thread(() -> {
+                        com.bumptech.glide.Glide.get(getContext()).clearDiskCache();
+                    }).start();
+                }
                 // Reload event details to show updated state
                 loadEventDetails();
             }
             
             @Override
             public void onError(String error) {
+                if (uploadProgressDialog != null && uploadProgressDialog.isShowing()) {
+                    uploadProgressDialog.dismiss();
+                }
                 Log.e(TAG, "Error deleting poster: " + error);
                 Toast.makeText(getContext(), "Error deleting poster: " + error, Toast.LENGTH_SHORT).show();
             }
