@@ -43,6 +43,7 @@ public class EventEntity {
     private List<String> entrants;
     private boolean selectionsFinalized = false;
     private String posterUrl;
+    private Double price;                          // Event price (null if free)
 
     /**
      * Default constructor required for Firebase deserialization
@@ -126,7 +127,7 @@ public class EventEntity {
 
         map.put("entrantLocations", entrantLocations);
         map.put("selectionsFinalized", selectionsFinalized);
-
+        map.put("price", price);
 
         return map;
     }
@@ -594,6 +595,25 @@ public class EventEntity {
      */
     public void setSelectionsFinalized(boolean selectionsFinalized) {
         this.selectionsFinalized = selectionsFinalized;
+        this.updatedAt = new Date();
+    }
+
+    /**
+     * Gets event price
+     *
+     * @return stored event price (null if free)
+     */
+    public Double getPrice() {
+        return price;
+    }
+
+    /**
+     * Sets event price
+     *
+     * @param price to set price (null for free events)
+     */
+    public void setPrice(Double price) {
+        this.price = price;
         this.updatedAt = new Date();
     }
 

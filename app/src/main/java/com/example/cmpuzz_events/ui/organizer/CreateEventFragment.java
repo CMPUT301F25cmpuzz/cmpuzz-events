@@ -107,6 +107,7 @@ public class CreateEventFragment extends Fragment {
         // Enable/disable numeric inputs based on toggles
         binding.setAttendeesInput.setEnabled(binding.toggleSetAttendees.isChecked());
         binding.setEntrantsInput.setEnabled(binding.toggleMaxEntrants.isChecked());
+        binding.setPriceInput.setEnabled(binding.togglePrice.isChecked());
 
         // When "Set Attendees" toggle changes
         binding.toggleSetAttendees.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -121,6 +122,14 @@ public class CreateEventFragment extends Fragment {
             binding.setEntrantsInput.setEnabled(isChecked);
             if (!isChecked) {
                 binding.setEntrantsInput.setText("");
+            }
+        });
+
+        // When "Set Price" toggle changes
+        binding.togglePrice.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            binding.setPriceInput.setEnabled(isChecked);
+            if (!isChecked) {
+                binding.setPriceInput.setText("");
             }
         });
 
@@ -152,6 +161,7 @@ public class CreateEventFragment extends Fragment {
         // Get values from UI
         String capacityStr = binding.setAttendeesInput.getText().toString().trim();
         String maxEntrantsStr = binding.setEntrantsInput.getText().toString().trim();
+        String priceStr = binding.setPriceInput.getText().toString().trim();
 
         // Validate required fields
         if (title.isEmpty() || description.isEmpty()) {
@@ -169,9 +179,17 @@ public class CreateEventFragment extends Fragment {
 
         int capacity;
         int maxEntrants;
+        Double price = null;
         try {
             capacity = Integer.parseInt(capacityStr);
             maxEntrants = Integer.parseInt(maxEntrantsStr);
+            if (!priceStr.isEmpty()) {
+                price = Double.parseDouble(priceStr);
+                if (price < 0) {
+                    Toast.makeText(requireContext(), "Price cannot be negative", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
         } catch (NumberFormatException e) {
             Toast.makeText(requireContext(), "Please enter valid numbers", Toast.LENGTH_SHORT).show();
             return;
@@ -194,6 +212,7 @@ public class CreateEventFragment extends Fragment {
         Event uiEvent = new Event(eventId, title, description, capacity,
                 start, end, currentUser.getUid(), currentUser.getDisplayName(), geoRequired, new ArrayList<>());
         uiEvent.setMaxEntrants(maxEntrants);
+        uiEvent.setPrice(price);
 
         // CASE 1: No poster selected -> just create event as before
         if (posterUri == null) {
@@ -307,6 +326,8 @@ public class CreateEventFragment extends Fragment {
         binding.toggleGeolocation.setChecked(false);
         binding.setAttendeesInput.setText("");
         binding.setEntrantsInput.setText("");
+        binding.setPriceInput.setText("");
+        binding.togglePrice.setChecked(false);
         binding.tvRegistrationSummary.setText(" ");
         binding.ivEventImage.setImageDrawable(null);
         posterUri = null;

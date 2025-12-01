@@ -64,6 +64,7 @@ public class EventService implements IEventService {
         );
 
         entity.setPosterUrl(uiEvent.getPosterUrl());  // carry poster
+        entity.setPrice(uiEvent.getPrice());  // carry price
 
         return entity;
     }
@@ -87,6 +88,7 @@ public class EventService implements IEventService {
         uiEvent.setMaxEntrants(entity.getMaxEntrants());
         uiEvent.setEntrants(entity.getEntrants());
         uiEvent.setPosterUrl(entity.getPosterUrl());
+        uiEvent.setPrice(entity.getPrice());
         return uiEvent;
     }
 
@@ -945,6 +947,10 @@ public class EventService implements IEventService {
         String posterUrl = doc.getString("posterUrl");
         Log.d("EventService", "documentToEventEntity: posterUrl from Firestore = " + posterUrl);
         if (posterUrl != null) entity.setPosterUrl(posterUrl);
+
+        // Price
+        Double price = doc.getDouble("price");
+        if (price != null) entity.setPrice(price);
 
 
 

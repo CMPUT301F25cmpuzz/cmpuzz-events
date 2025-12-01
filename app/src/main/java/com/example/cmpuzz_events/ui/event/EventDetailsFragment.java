@@ -73,6 +73,7 @@ public class EventDetailsFragment extends Fragment {
     private TextView eventTitle;
     private TextView eventHost;
     private TextView eventAvailability;
+    private TextView eventPrice;
     private TextView datePosted;
     private TextView descriptionText;
     private MaterialButton editButton;
@@ -145,6 +146,7 @@ public class EventDetailsFragment extends Fragment {
         eventHost = root.findViewById(R.id.event_host);
         eventImage = root.findViewById(R.id.event_image);
         eventAvailability = root.findViewById(R.id.event_availability);
+        eventPrice = root.findViewById(R.id.event_price);
         datePosted = root.findViewById(R.id.date_posted);
         descriptionText = root.findViewById(R.id.description_text);
         editButton = root.findViewById(R.id.edit_button);
@@ -372,6 +374,7 @@ public class EventDetailsFragment extends Fragment {
                 );
                 currentEvent.setMaxEntrants(eventEntity.getMaxEntrants());
                 currentEvent.setPosterUrl(eventEntity.getPosterUrl());
+                currentEvent.setPrice(eventEntity.getPrice());
                 
                 displayEventDetails(eventEntity);
                 
@@ -501,6 +504,15 @@ public class EventDetailsFragment extends Fragment {
             // Display availability
             int capacity = event.getCapacity();
             eventAvailability.setText("Capacity: " + capacity);
+            
+            // Display price separately
+            Double price = event.getPrice();
+            if (price != null) {
+                eventPrice.setText("Price: $" + String.format("%.2f", price));
+            } else {
+                eventPrice.setText("Price: Free");
+            }
+            eventPrice.setVisibility(View.VISIBLE);
             
             // Check user's status and update Join button accordingly
             User currentUser = AuthManager.getInstance().getCurrentUser();

@@ -21,6 +21,7 @@ public class Event implements Serializable {
     private List<String> waitingList;
     private List<String> entrants;           // All people who signed up for the event
     private String posterUrl;
+    private Double price;                     // Event price (null if free)
 
 
     public Event(String eventId, String title, String description, int capacity,
@@ -61,6 +62,14 @@ public class Event implements Serializable {
 
     public void setPosterUrl(String posterUrl) {
         this.posterUrl = posterUrl;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
 
 }
