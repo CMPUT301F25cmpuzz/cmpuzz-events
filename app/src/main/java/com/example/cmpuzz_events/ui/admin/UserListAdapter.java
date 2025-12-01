@@ -12,6 +12,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.ui.event.OnItemClickListener;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 
 import java.util.List;
 
@@ -77,6 +80,11 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserVi
         }
 
         public void bind(User user) {
+            // 1. Always clear any previous Glide request on this ImageView
+            Glide.with(avatar.getContext()).clear(avatar);
+            // 2. Set a default placeholder immediately so recycled garbage doesn't show
+            avatar.setImageResource(R.drawable.ic_profile);
+
             if (user != null) {
                 // Display user name or username
                 String displayName = user.getDisplayName();
@@ -87,7 +95,20 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserVi
                     displayName = user.getEmail();
                 }
                 userName.setText(displayName);
-                avatar.setImageResource(R.drawable.ic_profile);
+
+                // --- Profile image logic ---
+                String profileUrl = user.getProfileImageUrl();  // adjust name if different
+
+                if (profileUrl != null && !profileUrl.isEmpty()) {
+                    Glide.with(avatar.getContext())
+                            .load(profileUrl)
+                            // cache strategy optional; you *don't* need to disable cache here
+                            .placeholder(R.drawable.ic_profile)
+                            .error(R.drawable.ic_profile)
+                            .circleCrop()
+                            .into(avatar);
+                    // If profileUrl is null/empty, we just keep the default icon we set above
+                }
             }
         }
     }
