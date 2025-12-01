@@ -186,4 +186,28 @@ public class EventEntityTest {
         assertTrue(event.getDeclined().contains("user1"));
     }
 
+    @Test
+    public void testPosterUrlDefaultIsNull() {
+        assertNull(event.getPosterUrl());
+    }
+
+    @Test
+    public void testPosterUrlSetAndGet() {
+        String url = "https://example.com/poster123.jpg";
+
+        event.setPosterUrl(url);
+
+        assertEquals(url, event.getPosterUrl());
+    }
+
+    @Test
+    public void testPosterUrlIncludedInToMap() {
+        String url = "https://example.com/poster123.jpg";
+        event.setPosterUrl(url);
+
+        Map<String, Object> map = event.toMap();
+
+        assertEquals(url, map.get("posterUrl"));
+    }
+
 }
