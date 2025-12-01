@@ -191,7 +191,7 @@ public class EventDetailsFragment extends Fragment {
             dividerBottom.setVisibility(View.VISIBLE);
             joinButton.setVisibility(View.GONE);
             viewAllEntrantsButton.setVisibility(View.GONE);
-            shareButton.setVisibility(View.VISIBLE);
+            shareButton.setVisibility(View.INVISIBLE);
             viewMapButton.setVisibility(View.VISIBLE);
             usersEnrolledTitle.setVisibility(View.VISIBLE);
             usersRecyclerView.setVisibility(View.VISIBLE);
