@@ -474,6 +474,9 @@ public class NotificationService implements INotificationService {
             case CONFIRMED:
                 return "Congratulations! Your attendance has been confirmed for \"" + eventName + 
                        "\". We look forward to seeing you at the event!";
+            case INVITATION_CANCELLED:
+                return "Unfortunately, your invitation has been cancelled for \"" + eventName +
+                        "\". You are now moved back onto the waitlist. Apologies for your inconvenience.";
             default:
                 return "Update regarding \"" + eventName + "\".";
         }

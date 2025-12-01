@@ -247,8 +247,8 @@ public interface IEventService {
      * This action is only valid if the user has not yet responded.
      *
      * @param eventId  The ID of the event.
-     * @param userId   The ID of the user whose invitation is to be canceled.
+     * @param userIds   The ID of the user whose invitation is to be canceled.
      * @param callback Callback for success or error.
      */
-    void cancelInvitation(String eventId, String userId, VoidCallback callback);
+    public void cancelInvitations(String eventId, List<String> userIds, VoidCallback callback);
 }

@@ -20,6 +20,7 @@ import com.example.cmpuzz_events.service.EventService;
 import com.example.cmpuzz_events.service.IEventService;
 import com.example.cmpuzz_events.service.INotificationService;
 import com.example.cmpuzz_events.service.NotificationService;
+import com.example.cmpuzz_events.ui.event.Event;
 
 import java.util.List;
 
@@ -176,7 +177,7 @@ public class NotificationsFragment extends Fragment {
         // Get the event to find the organizer
         eventService.getUIEventById(notification.getEventId(), new IEventService.UIEventCallback() {
             @Override
-            public void onSuccess(com.example.cmpuzz_events.ui.event.Event event) {
+            public void onSuccess(Event event) {
                 String userName = currentUser.getDisplayName() != null ? 
                                 currentUser.getDisplayName() : "A user";
                 

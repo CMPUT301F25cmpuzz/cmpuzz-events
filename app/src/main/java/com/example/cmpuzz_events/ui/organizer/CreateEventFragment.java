@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.cmpuzz_events.auth.AuthManager;
+import com.example.cmpuzz_events.models.event.EventEntity;
 import com.example.cmpuzz_events.models.user.User;
 import com.example.cmpuzz_events.ui.event.Event;
 import com.example.cmpuzz_events.databinding.CreateEventFragmentBinding;
@@ -218,7 +219,7 @@ public class CreateEventFragment extends Fragment {
         if (posterUri == null) {
             eventService.createEvent(uiEvent, new IEventService.EventCallback() {
                 @Override
-                public void onSuccess(com.example.cmpuzz_events.models.event.EventEntity event) {
+                public void onSuccess(EventEntity event) {
                     Log.d("CreateEventFragment", "Event saved to Firebase (no poster): " + event.getEventId());
                     Toast.makeText(requireContext(), "Event created successfully!", Toast.LENGTH_SHORT).show();
                     clearForm();
@@ -291,7 +292,7 @@ public class CreateEventFragment extends Fragment {
 
                         eventService.createEvent(uiEvent, new IEventService.EventCallback() {
                             @Override
-                            public void onSuccess(com.example.cmpuzz_events.models.event.EventEntity event) {
+                            public void onSuccess(EventEntity event) {
                                 Log.d("CreateEventFragment",
                                         "Event saved to Firebase with poster: " + event.getEventId());
                                 Toast.makeText(requireContext(),

@@ -363,29 +363,24 @@ public class EventActionMenuFragment extends Fragment {
                 }
 
                 final int totalToCancel = pendingInvitees.size();
-                final int[] successCount = {0};
-                final AtomicBoolean hasErrorOccurred = new AtomicBoolean(false);
 
-                // cancelling each user's invitation individually.
-                for (String userId : pendingInvitees) {
-                    eventService.cancelInvitation(eventId, userId, new IEventService.VoidCallback() {
-                        @Override
-                        public void onSuccess() {
-                            successCount[0]++;
-                            if (successCount[0] == totalToCancel && !hasErrorOccurred.get()) {
-                                handleBulkNotificationDeletion(pendingInvitees, eventId, totalToCancel);
-                            }
-                        }
+                // Cancel all invitations at once using bulk method
+                eventService.cancelInvitations(eventId, pendingInvitees, new IEventService.VoidCallback() {
+                    @Override
+                    public void onSuccess() {
+                        // Delete old INVITED notifications
+                        handleBulkNotificationDeletion(pendingInvitees, eventId, totalToCancel);
+                        
+                        // Send new INVITATION_CANCELLED notifications
+                        sendCancellationNotifications(pendingInvitees, eventEntity.getEventId(), eventEntity.getTitle());
+                    }
 
-                        @Override
-                        public void onError(String error) {
-                            if (!hasErrorOccurred.getAndSet(true)) {
-                                Log.e(TAG, "Error canceling an invitation: " + error);
-                                showToast("An error occurred while updating the event.");
-                            }
-                        }
-                    });
-                }
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "Error canceling invitations: " + error);
+                        showToast("An error occurred while canceling invitations.");
+                    }
+                });
             }
 
             @Override
@@ -416,6 +411,33 @@ public class EventActionMenuFragment extends Fragment {
                 Log.e(TAG, "Bulk deletion of notifications failed: " + error);
             }
         });
+    }
+    
+    /**
+     * Sends cancellation notifications to all users whose invitations were cancelled.
+     * @param userIds List of user IDs to notify
+     * @param eventId The event ID
+     * @param eventTitle The event title
+     */
+    private void sendCancellationNotifications(List<String> userIds, String eventId, String eventTitle) {
+        notificationService.sendNotificationsToUsers(
+            userIds,
+            eventId,
+            eventTitle,
+            Notification.NotificationType.INVITATION_CANCELLED,
+            new INotificationService.VoidCallback() {
+                @Override
+                public void onSuccess() {
+                    Log.d(TAG, "Cancellation notifications sent to " + userIds.size() + " users");
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Error sending cancellation notifications: " + error);
+                    // Don't show toast - the main operation succeeded
+                }
+            }
+        );
     }
 
 

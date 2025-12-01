@@ -21,6 +21,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.cmpuzz_events.Entrant;
 import com.example.cmpuzz_events.R;
 import com.example.cmpuzz_events.auth.AuthManager;
@@ -477,7 +478,7 @@ public class EventDetailsFragment extends Fragment {
                 Glide.with(requireContext())
                         .load(posterUrl)
                         .skipMemoryCache(true)  // Don't use cached version
-                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)  // Don't use disk cache
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)  // Don't use disk cache
                         .placeholder(R.drawable.bg_image_placeholder)
                         .error(R.drawable.bg_image_placeholder)
                         .into(eventImage);

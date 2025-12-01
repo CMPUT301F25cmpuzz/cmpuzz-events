@@ -19,6 +19,7 @@ public class Notification implements Serializable {
 
     public enum NotificationType {
         INVITED("invited"),
+        INVITATION_CANCELLED("invitation_cancelled"),
         WAITLISTED("waitlisted"),
         CANCELLED("cancelled"),
         ACCEPTED("accepted"),

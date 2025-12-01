@@ -236,7 +236,7 @@ public class EventService implements IEventService {
                         List<EventEntity> pastEvents = new ArrayList<>();
                         Date now = new Date(); // Current time
 
-                        for (com.google.firebase.firestore.QueryDocumentSnapshot document : task.getResult()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
                             EventEntity event = document.toObject(EventEntity.class);
                             event.setEventId(document.getId());
 
@@ -1007,6 +1007,59 @@ public class EventService implements IEventService {
                 event.addToWaitlist(userId);
 
                 updateEvent(event, callback);
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+    
+    @Override
+    public void cancelInvitations(String eventId, List<String> userIds, VoidCallback callback) {
+        if (userIds == null || userIds.isEmpty()) {
+            callback.onError("No users to cancel invitations for");
+            return;
+        }
+        
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                // Track how many users were actually moved
+                int movedCount = 0;
+                
+                // Move all pending invited users back to waitlist
+                for (String userId : userIds) {
+                    Invitation invitation = event.getInvitationByUserId(userId);
+                    
+                    if (invitation != null && invitation.isPending()) {
+                        event.removeInvitation(userId);
+                        event.addToWaitlist(userId);
+                        movedCount++;
+                    }
+                }
+                
+                if (movedCount == 0) {
+                    callback.onError("No pending invitations found to cancel");
+                    return;
+                }
+                
+                final int finalMovedCount = movedCount;
+                
+                // Update the event once with all changes
+                updateEvent(event, new VoidCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Successfully cancelled " + finalMovedCount + " invitations");
+                        callback.onSuccess();
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        callback.onError(error);
+                    }
+                });
             }
 
             @Override
