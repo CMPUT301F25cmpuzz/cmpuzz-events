@@ -64,6 +64,15 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 
+import android.net.Uri;
+import android.app.ProgressDialog;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
 /**
  * A fragment that displays the current user's profile information.
  * This includes their name, email, role, and a list of events they are enrolled in.
@@ -82,6 +91,10 @@ public class ProfileFragment extends Fragment {
     private User currentUser;
     private User passedUser;
     private SharedPreferences preferences;
+    private Uri selectedImageUri;
+    private ProgressDialog uploadProgressDialog;
+    private ActivityResultLauncher<String> imagePickerLauncher;
+    private android.widget.ImageView currentDialogProfileImageView;
 
     /**
      * Called to have the fragment instantiate its user interface view.
@@ -105,6 +118,24 @@ public class ProfileFragment extends Fragment {
         notificationService.setContext(requireContext().getApplicationContext());
         preferences = requireContext().getSharedPreferences("user_preferences", Context.MODE_PRIVATE);
 
+        // Setup image picker launcher (must be registered during fragment initialization)
+        imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    selectedImageUri = uri;
+                    // Update the image view immediately if we have a reference
+                    if (currentDialogProfileImageView != null && getContext() != null) {
+                        Glide.with(getContext())
+                                .load(uri)
+                                .transform(new CircleCrop())
+                                .placeholder(R.drawable.bg_image_placeholder)
+                                .into(currentDialogProfileImageView);
+                    }
+                }
+            }
+        );
+
         if(getArguments() != null)
         {
             passedUser = (User) getArguments().getSerializable("user");
@@ -118,6 +149,18 @@ public class ProfileFragment extends Fragment {
             binding.tvUserName.setText(passedUser.getDisplayName());
             binding.tvUserEmail.setText(passedUser.getEmail());
             binding.tvUserRole.setText("Role: " + passedUser.getRole().getRoleName());
+            
+            // Load profile image
+            if (passedUser.getProfileImageUrl() != null && !passedUser.getProfileImageUrl().isEmpty()) {
+                Glide.with(requireContext())
+                        .load(passedUser.getProfileImageUrl())
+                        .transform(new CircleCrop())
+                        .placeholder(R.drawable.bg_image_placeholder)
+                        .into(binding.imgProfileAvatar);
+            } else {
+                binding.imgProfileAvatar.setImageResource(R.drawable.bg_image_placeholder);
+            }
+            
             binding.btnSettings.setVisibility(View.GONE);
             binding.btnLotteryGuidelines.setVisibility(View.GONE);
             binding.btnLogout.setVisibility(View.GONE);
@@ -137,6 +180,18 @@ public class ProfileFragment extends Fragment {
             binding.tvUserName.setText(currentUser.getDisplayName());
             binding.tvUserEmail.setText(currentUser.getEmail());
             binding.tvUserRole.setText("Role: " + currentUser.getRole().getRoleName());
+            
+            // Load profile image
+            if (currentUser.getProfileImageUrl() != null && !currentUser.getProfileImageUrl().isEmpty()) {
+                Glide.with(requireContext())
+                        .load(currentUser.getProfileImageUrl())
+                        .transform(new CircleCrop())
+                        .placeholder(R.drawable.bg_image_placeholder)
+                        .into(binding.imgProfileAvatar);
+            } else {
+                binding.imgProfileAvatar.setImageResource(R.drawable.bg_image_placeholder);
+            }
+            
             binding.btnEditProfile.setVisibility(View.VISIBLE);
 
             binding.btnLogout.setVisibility(View.VISIBLE);
@@ -471,11 +526,35 @@ public class ProfileFragment extends Fragment {
         EditText etFull   = dialogView.findViewById(R.id.etFullName);
         EditText etUser   = dialogView.findViewById(R.id.etUsername);
         EditText etEmail  = dialogView.findViewById(R.id.etEmail);
+        android.widget.ImageView imgProfilePicture = dialogView.findViewById(R.id.imgProfilePicture);
+        com.google.android.material.button.MaterialButton btnUploadProfileImage = dialogView.findViewById(R.id.btnUploadProfileImage);
 
         // Pre-fill from current user
         etFull.setText(currentUser.getDisplayName());
         etUser.setText(currentUser.getUsername());
         etEmail.setText(currentUser.getEmail());
+
+        // Load and display profile image using Glide
+        if (currentUser.getProfileImageUrl() != null && !currentUser.getProfileImageUrl().isEmpty()) {
+            Glide.with(requireContext())
+                    .load(currentUser.getProfileImageUrl())
+                    .transform(new CircleCrop())
+                    .placeholder(R.drawable.bg_image_placeholder)
+                    .into(imgProfilePicture);
+        } else {
+            imgProfilePicture.setImageResource(R.drawable.bg_image_placeholder);
+        }
+
+        // Reset selected image URI when dialog opens
+        selectedImageUri = null;
+        
+        // Store reference to this dialog's ImageView so the launcher callback can update it
+        currentDialogProfileImageView = imgProfilePicture;
+        
+        // Setup upload button click listener
+        btnUploadProfileImage.setOnClickListener(v -> {
+            imagePickerLauncher.launch("image/*");
+        });
 
         // Build dialog and make the window background transparent
         AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
@@ -487,7 +566,10 @@ public class ProfileFragment extends Fragment {
         }
         dialog.show();
 
-        dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> {
+            currentDialogProfileImageView = null; // Clear reference when dialog is dismissed
+            dialog.dismiss();
+        });
 
         dialogView.findViewById(R.id.btnSave).setOnClickListener(v -> {
             String full  = etFull.getText()  != null ? etFull.getText().toString().trim()  : "";
@@ -501,27 +583,93 @@ public class ProfileFragment extends Fragment {
 
             dialogView.findViewById(R.id.btnSave).setEnabled(false);
 
-            // Firestore merge + Auth displayName + Auth email
-            profileService.updateProfile(currentUser.getUid(), full, user, email)
-                    .addOnSuccessListener(vv -> {
-                        // Update header UI
-                        binding.tvUserName.setText(full);
-                        binding.tvUserEmail.setText(email);
+            // If an image was selected, upload it first
+            if (selectedImageUri != null) {
+                uploadProfileImage(currentUser.getUid(), selectedImageUri, dialogView, dialog, full, user, email);
+            } else {
+                // No image selected, just update profile info
+                updateProfileInfo(dialogView, dialog, full, user, email, null);
+            }
+        });
+    }
 
-                        // Keep local cache consistent if your model exposes setters
-                        currentUser.setDisplayName(full);
-                        currentUser.setUsername(user);
-                        // if you have setEmail(): currentUser.setEmail(email);
+    /**
+     * Uploads the selected profile image to Firebase Storage and then updates the profile.
+     */
+    private void uploadProfileImage(String uid, Uri imageUri, View dialogView, AlertDialog dialog, 
+                                    String fullName, String username, String email) {
+        // Show progress dialog
+        uploadProgressDialog = new ProgressDialog(requireContext());
+        uploadProgressDialog.setTitle("Uploading Image");
+        uploadProgressDialog.setMessage("Please wait...");
+        uploadProgressDialog.setCancelable(false);
+        uploadProgressDialog.show();
 
-                        Snackbar.make(binding.getRoot(), "Profile updated", Snackbar.LENGTH_LONG).show();
-                        dialog.dismiss();
-                    })
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReference();
+        String filename = uid + ".jpg";
+        StorageReference profileImageRef = storageRef.child("profile_images/" + filename);
+
+        profileImageRef.putFile(imageUri)
+            .addOnSuccessListener(taskSnapshot -> {
+                // Get the download URL
+                profileImageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    if (uploadProgressDialog != null && uploadProgressDialog.isShowing()) {
+                        uploadProgressDialog.dismiss();
+                    }
+                    // Update profile with image URL
+                    updateProfileInfo(dialogView, dialog, fullName, username, email, uri.toString());
+                });
+            })
+            .addOnFailureListener(e -> {
+                if (uploadProgressDialog != null && uploadProgressDialog.isShowing()) {
+                    uploadProgressDialog.dismiss();
+                }
+                Log.e(TAG, "Error uploading image: " + e.getMessage());
+                Snackbar.make(binding.getRoot(), "Error uploading image", Snackbar.LENGTH_LONG).show();
+                dialogView.findViewById(R.id.btnSave).setEnabled(true);
+            });
+    }
+
+    /**
+     * Updates the profile information in Firestore.
+     */
+    private void updateProfileInfo(View dialogView, AlertDialog dialog, String fullName, 
+                                   String username, String email, String profileImageUrl) {
+
+        // Firestore merge + Auth displayName + Auth email
+        profileService.updateProfile(currentUser.getUid(), fullName, username, email)
+                .addOnSuccessListener(vv -> {
+                    // If profile image URL was provided, update it
+                    if (profileImageUrl != null) {
+                        profileService.updateProfileImageUrl(currentUser.getUid(), profileImageUrl)
+                                .addOnSuccessListener(v -> {
+                                    currentUser.setProfileImageUrl(profileImageUrl);
+                                    // Update profile image in UI if visible
+                                    if (binding.imgProfileAvatar != null) {
+                                        Glide.with(requireContext())
+                                                .load(profileImageUrl)
+                                                .transform(new CircleCrop())
+                                                .placeholder(R.drawable.bg_image_placeholder)
+                                                .into(binding.imgProfileAvatar);
+                                    }
+                                    finishProfileUpdate(dialogView, dialog, fullName, email, username);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Error updating profile image URL: " + e.getMessage());
+                                    // Still update other fields even if image URL update fails
+                                    finishProfileUpdate(dialogView, dialog, fullName, email, username);
+                                });
+                    } else {
+                        finishProfileUpdate(dialogView, dialog, fullName, email, username);
+                    }
+                })
                     .addOnFailureListener(e -> {
                         // Case 1: needs re-auth → show password dialog
                         if (ProfileService.isRecentLoginRequired(e)) {
                             dialogView.findViewById(R.id.btnSave).setEnabled(true);
                             dialog.dismiss();
-                            showReauthDialogAndRetry(email, full, user);
+                            showReauthDialogAndRetry(email, fullName, username);
                             return;
                         }
 
@@ -540,10 +688,10 @@ public class ProfileFragment extends Fragment {
                                     .set(up, com.google.firebase.firestore.SetOptions.merge());
 
                             // Update UI & local cache, then close dialog
-                            binding.tvUserName.setText(full);
+                            binding.tvUserName.setText(fullName);
                             binding.tvUserEmail.setText(email);
-                            currentUser.setDisplayName(full);
-                            currentUser.setUsername(user);
+                            currentUser.setDisplayName(fullName);
+                            currentUser.setUsername(username);
 
                             Snackbar.make(binding.getRoot(), "Profile updated", Snackbar.LENGTH_LONG).show();
                             dialog.dismiss();
@@ -554,7 +702,26 @@ public class ProfileFragment extends Fragment {
                                     Snackbar.LENGTH_LONG).show();
                         }
                     });
-        });
+    }
+
+    /**
+     * Completes the profile update by updating UI and closing the dialog.
+     */
+    private void finishProfileUpdate(View dialogView, AlertDialog dialog, String fullName, 
+                                    String email, String username) {
+        // Update header UI
+        binding.tvUserName.setText(fullName);
+        binding.tvUserEmail.setText(email);
+
+        // Keep local cache consistent
+        currentUser.setDisplayName(fullName);
+        currentUser.setUsername(username);
+
+        // Clear the ImageView reference
+        currentDialogProfileImageView = null;
+
+        Snackbar.make(binding.getRoot(), "Profile updated", Snackbar.LENGTH_LONG).show();
+        dialog.dismiss();
     }
 
     /**

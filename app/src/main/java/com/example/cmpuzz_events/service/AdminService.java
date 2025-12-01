@@ -70,6 +70,11 @@ public class AdminService implements IAdminService {
         user.setRole(User.UserRole.fromString(doc.getString("role")));
         user.setDisplayName(doc.getString("username"));
         user.setCreatedAt(doc.getLong("createdAt"));
+        
+        String profileImageUrl = doc.getString("profileImageUrl");
+        if (profileImageUrl != null) {
+            user.setProfileImageUrl(profileImageUrl);
+        }
 
         return user;
     }

@@ -221,6 +221,16 @@ public class AuthManager {
             user.setCreatedAt(createdAt);
         }
         
+        String profileImageUrl = doc.getString("profileImageUrl");
+        if (profileImageUrl != null) {
+            user.setProfileImageUrl(profileImageUrl);
+        }
+        
+        Boolean notificationsEnabled = doc.getBoolean("notificationsEnabled");
+        if (notificationsEnabled != null) {
+            user.setNotificationsEnabled(notificationsEnabled);
+        }
+        
         return user;
     }
 

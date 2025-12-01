@@ -29,6 +29,36 @@
             android:textStyle="bold"
             android:layout_marginBottom="14dp" />
 
+        <!-- Profile Image Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:id="@+id/imgProfilePicture"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/bg_image_placeholder"
+                android:scaleType="centerCrop"
+                android:background="@drawable/circle_background"
+                android:padding="2dp"
+                android:contentDescription="Profile picture" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUploadProfileImage"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Upload Image"
+                android:layout_marginStart="16dp"
+                app:icon="@drawable/ic_upload"
+                app:iconPadding="8dp"
+                app:iconGravity="textStart" />
+        </LinearLayout>
+
         <!-- Full name -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"

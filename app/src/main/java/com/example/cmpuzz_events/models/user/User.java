@@ -12,6 +12,7 @@ public class User implements Serializable {
     private UserRole role;
     private long createdAt;
     private boolean notificationsEnabled;
+    private String profileImageUrl;
 
     public enum UserRole {
         USER("user"),
@@ -78,6 +79,7 @@ public class User implements Serializable {
         map.put("role", role.getRoleName());
         map.put("createdAt", createdAt);
         map.put("notificationsEnabled", notificationsEnabled);
+        map.put("profileImageUrl", profileImageUrl);
         return map;
     }
 
@@ -153,5 +155,13 @@ public class User implements Serializable {
 
     public void setNotificationsEnabled(boolean notificationsEnabled) {
         this.notificationsEnabled = notificationsEnabled;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

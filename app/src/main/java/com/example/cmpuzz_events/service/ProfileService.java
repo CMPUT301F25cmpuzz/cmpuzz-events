@@ -223,4 +223,20 @@ public class ProfileService {
                     }
                 });
     }
+
+    /**
+     * Updates the profile image URL for a user in Firestore.
+     *
+     * @param uid The user ID
+     * @param profileImageUrl The URL of the profile image
+     * @return Task that completes when the update is done
+     */
+    public Task<Void> updateProfileImageUrl(@NonNull String uid, String profileImageUrl) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("profileImageUrl", profileImageUrl);
+        updates.put("updatedAt", FieldValue.serverTimestamp());
+        
+        return db.collection("users").document(uid)
+                .set(updates, SetOptions.merge());
+    }
 }
