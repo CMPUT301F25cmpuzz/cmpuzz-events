@@ -186,12 +186,6 @@
                         android:layout_weight="1"
                         android:paddingStart="12dp"
                         android:text="Set Attendees"/>
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/toggle_set_attendees"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" " />
                 </LinearLayout>
 
                 <LinearLayout

@@ -106,17 +106,8 @@ public class CreateEventFragment extends Fragment {
         });
 
         // Enable/disable numeric inputs based on toggles
-        binding.setAttendeesInput.setEnabled(binding.toggleSetAttendees.isChecked());
         binding.setEntrantsInput.setEnabled(binding.toggleMaxEntrants.isChecked());
         binding.setPriceInput.setEnabled(binding.togglePrice.isChecked());
-
-        // When "Set Attendees" toggle changes
-        binding.toggleSetAttendees.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            binding.setAttendeesInput.setEnabled(isChecked);
-            if (!isChecked) {
-                binding.setAttendeesInput.setText("");
-            }
-        });
 
         // When "Limit Max Entrants" toggle changes
         binding.toggleMaxEntrants.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -169,8 +160,8 @@ public class CreateEventFragment extends Fragment {
             Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (capacityStr.isEmpty() || maxEntrantsStr.isEmpty()) {
-            Toast.makeText(requireContext(), "Please enter attendee and entrant limits", Toast.LENGTH_SHORT).show();
+        if (capacityStr.isEmpty()) {
+            Toast.makeText(requireContext(), "Please enter attendee limit", Toast.LENGTH_SHORT).show();
             return;
         }
         if (registrationStart == null || registrationEnd == null) {
@@ -179,11 +170,29 @@ public class CreateEventFragment extends Fragment {
         }
 
         int capacity;
-        int maxEntrants;
+        int maxEntrants = 0;
         Double price = null;
         try {
+            // Capacity is always required
             capacity = Integer.parseInt(capacityStr);
-            maxEntrants = Integer.parseInt(maxEntrantsStr);
+            if (capacity <= 0) {
+                Toast.makeText(requireContext(), "Attendee limit must be greater than zero", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Only require / parse max entrants if the toggle is ON
+            if (binding.toggleMaxEntrants.isChecked()) {
+                if (maxEntrantsStr.isEmpty()) {
+                    Toast.makeText(requireContext(), "Please enter entrant limit", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                maxEntrants = Integer.parseInt(maxEntrantsStr);
+                if (maxEntrants <= 0) {
+                    Toast.makeText(requireContext(), "Entrant limit must be greater than zero", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+
             if (!priceStr.isEmpty()) {
                 price = Double.parseDouble(priceStr);
                 if (price < 0) {
@@ -192,7 +201,7 @@ public class CreateEventFragment extends Fragment {
                 }
             }
         } catch (NumberFormatException e) {
-            Toast.makeText(requireContext(), "Please enter valid numbers", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Please enter valid numeric values", Toast.LENGTH_SHORT).show();
             return;
         }
 
