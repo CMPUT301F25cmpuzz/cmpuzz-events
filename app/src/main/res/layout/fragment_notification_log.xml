@@ -7,7 +7,7 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:paddingBottom="16dp"
-    android:paddingTop="80dp">
+    android:paddingTop="16dp">
 
     <Spinner
         android:id="@+id/spinnerFilter"
