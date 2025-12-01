@@ -46,6 +46,9 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import com.example.cmpuzz_events.service.IImageService;
 import com.example.cmpuzz_events.service.ImageService;
 import com.example.cmpuzz_events.ui.admin.ImageItem;
+import com.google.android.material.imageview.ShapeableImageView;
+import com.bumptech.glide.Glide;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,6 +93,8 @@ public class EventDetailsFragment extends Fragment {
     private ActivityResultLauncher<String> imagePickerLauncher;
     private Uri selectedImageUri;
     private ProgressDialog uploadProgressDialog;
+    private ShapeableImageView eventImage;
+
 
     /**
      * Factory method to create a new instance of this fragment using the provided event ID.
@@ -138,6 +143,7 @@ public class EventDetailsFragment extends Fragment {
         // Initialize views
         eventTitle = root.findViewById(R.id.event_title);
         eventHost = root.findViewById(R.id.event_host);
+        eventImage = root.findViewById(R.id.event_image);
         eventAvailability = root.findViewById(R.id.event_availability);
         datePosted = root.findViewById(R.id.date_posted);
         descriptionText = root.findViewById(R.id.description_text);
@@ -461,6 +467,18 @@ public class EventDetailsFragment extends Fragment {
                     : "Hosted by: " + event.getOrganizerId();
             eventHost.setText(hostText);
             descriptionText.setText(event.getDescription());
+
+            // load poster image
+            String posterUrl = event.getPosterUrl();
+            if (posterUrl != null && !posterUrl.isEmpty()) {
+                Glide.with(requireContext())
+                        .load(posterUrl)
+                        .placeholder(R.drawable.bg_image_placeholder)
+                        .error(R.drawable.bg_image_placeholder)
+                        .into(eventImage);
+            } else {
+                eventImage.setImageResource(R.drawable.bg_image_placeholder);
+            }
 
             // same as in eventviewholder
             List<String> waitlist = event.getWaitlist();

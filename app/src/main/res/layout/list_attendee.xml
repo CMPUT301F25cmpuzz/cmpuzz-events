@@ -19,11 +19,12 @@
             android:id="@+id/user_avatar"
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:background="#E0E0E0"
+            android:scaleType="centerCrop"
+            android:background="@android:color/transparent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.App.CornerSize8dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.App.CircularImage"
             tools:src="@tools:sample/avatars" />
 
         <TextView

@@ -29,6 +29,7 @@ import com.example.cmpuzz_events.service.INotificationService;
 import com.example.cmpuzz_events.service.NotificationService;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.card.MaterialCardView;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -114,8 +115,12 @@ public class EventActionMenuFragment extends Fragment {
         String eventTitle = event != null ? event.getTitle() : "Unknown";
 
         // Entrants section
-        root.findViewById(R.id.cardCancelEntrants).setOnClickListener(v ->
-                showToast("Cancel Entrants for: " + eventTitle));
+        root.findViewById(R.id.cardCancelEntrants).setOnClickListener(v -> {
+            if (event != null) {
+                cancelPendingInvitations(event.getEventId());
+            }
+        });
+
 
         root.findViewById(R.id.cardViewDeclinedEntrants).setOnClickListener(v -> {
             if (event != null) {
@@ -333,6 +338,86 @@ public class EventActionMenuFragment extends Fragment {
             }
         });
     }
+    /**
+     * Cancels all pending invitations for a given event.
+     *
+     * @param eventId The ID of the event to process.
+     */
+    private void cancelPendingInvitations(String eventId) {
+        // Fetch the event to find users who haven't responded.
+        eventService.getEvent(eventId, new IEventService.EventCallback() {
+            @Override
+            public void onSuccess(EventEntity eventEntity) {
+                final List<String> pendingInvitees = new ArrayList<>();
+                if (eventEntity.getInvitations() != null) {
+                    for (com.example.cmpuzz_events.models.event.Invitation inv : eventEntity.getInvitations()) {
+                        if (inv.isPending()) {
+                            pendingInvitees.add(inv.getUserId());
+                        }
+                    }
+                }
+
+                if (pendingInvitees.isEmpty()) {
+                    showToast("No pending invitations to cancel.");
+                    return;
+                }
+
+                final int totalToCancel = pendingInvitees.size();
+                final int[] successCount = {0};
+                final AtomicBoolean hasErrorOccurred = new AtomicBoolean(false);
+
+                // cancelling each user's invitation individually.
+                for (String userId : pendingInvitees) {
+                    eventService.cancelInvitation(eventId, userId, new IEventService.VoidCallback() {
+                        @Override
+                        public void onSuccess() {
+                            successCount[0]++;
+                            if (successCount[0] == totalToCancel && !hasErrorOccurred.get()) {
+                                handleBulkNotificationDeletion(pendingInvitees, eventId, totalToCancel);
+                            }
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            if (!hasErrorOccurred.getAndSet(true)) {
+                                Log.e(TAG, "Error canceling an invitation: " + error);
+                                showToast("An error occurred while updating the event.");
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                showToast("Error fetching event details: " + error);
+            }
+        });
+    }
+
+    /**
+     * Deletes the original "INVITED" notifications for the specified users.
+     * bulk deletion for all users.
+     * @param userIds       The users whose notifications should be deleted.
+     * @param eventId       The event associated with the notifications.
+     * @param totalCanceled The count of canceled invitations for the confirmation message.
+     */
+    private void handleBulkNotificationDeletion(List<String> userIds, String eventId, int totalCanceled) {
+        notificationService.deleteNotificationsForUsers(userIds, eventId, new INotificationService.VoidCallback() {
+            @Override
+            public void onSuccess() {
+                showToast("Successfully canceled " + totalCanceled + " pending invitation(s).");
+                Log.d(TAG, "Bulk deletion of associated notifications was successful.");
+            }
+
+            @Override
+            public void onError(String error) {
+                showToast("Canceled " + totalCanceled + " invitation(s), but failed to clear all notifications.");
+                Log.e(TAG, "Bulk deletion of notifications failed: " + error);
+            }
+        });
+    }
+
 
 
 

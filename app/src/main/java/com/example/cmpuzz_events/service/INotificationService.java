@@ -79,4 +79,14 @@ public interface INotificationService {
         void onSuccess(boolean enabled);
         void onError(String error);
     }
+
+    /**
+     * Deletes invitation notifications for a list of users for a specific event.
+     * This is used when an organizer cancels pending invitations in bulk.
+     *
+     * @param userIds  A list of user IDs.
+     * @param eventId  The ID of the event associated with the notifications.
+     * @param callback Callback for success or failure of the batch operation.
+     */
+    void deleteNotificationsForUsers(List<String> userIds, String eventId, VoidCallback callback);
 }
