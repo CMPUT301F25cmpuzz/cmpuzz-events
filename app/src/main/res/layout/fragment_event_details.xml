@@ -30,8 +30,8 @@
             android:id="@+id/event_image"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:background="#E0E0E0"
             android:layout_marginTop="10dp"
+            android:background="#E0E0E0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textEventDetails"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.App.CornerSize8dp"
@@ -39,97 +39,115 @@
 
         <TextView
             android:id="@+id/event_title"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            tools:text="Event Name"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/event_image"
-            app:layout_constraintTop_toTopOf="@id/event_image" />
+            app:layout_constraintTop_toTopOf="@id/event_image"
+            tools:text="Event Name" />
 
         <TextView
             android:id="@+id/event_host"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/hosted_by"
-            tools:text="Hosted by: Cmpuzz"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/event_title"
-            app:layout_constraintTop_toBottomOf="@id/event_title" />
+            app:layout_constraintTop_toBottomOf="@id/event_title"
+            tools:text="Hosted by: Cmpuzz" />
 
         <TextView
             android:id="@+id/event_availability"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/event_status"
-            tools:text="Event Status: Open"
             app:layout_constraintStart_toStartOf="@id/event_host"
-            app:layout_constraintTop_toBottomOf="@id/event_host" />
+            app:layout_constraintTop_toBottomOf="@id/event_host"
+            tools:text="Event Status: Open" />
 
+        <TextView
+            android:id="@+id/tvWaitlistCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            app:drawableStartCompat="@drawable/ic_waitlist"
+            app:layout_constraintBottom_toBottomOf="@id/event_availability"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/event_availability"
+            app:layout_constraintTop_toTopOf="@id/event_availability"
+            tools:text="15 on Waitlist"
+            tools:visibility="visible" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/info_barrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="event_image,event_availability,tvWaitlistCount" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/edit_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
+            android:layout_marginTop="8dp"
             android:minWidth="0dp"
             android:minHeight="0dp"
-
             android:text="@string/edit"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             app:backgroundTint="@color/purple_500"
-
             app:cornerRadius="20dp"
-
             app:layout_constraintStart_toStartOf="@id/event_title"
-            app:layout_constraintTop_toBottomOf="@id/event_availability"/>
+            app:layout_constraintTop_toBottomOf="@id/info_barrier" />
 
         <Space
             android:id="@+id/button_spacer"
             android:layout_width="12dp"
             android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="@id/edit_button"
             app:layout_constraintStart_toEndOf="@id/edit_button"
-            app:layout_constraintTop_toBottomOf="@id/event_availability" />
+            app:layout_constraintTop_toTopOf="@id/edit_button" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/delete_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
             android:minWidth="0dp"
             android:minHeight="0dp"
-
             android:text="@string/delete_event"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             app:backgroundTint="@android:color/holo_red_light"
-
             app:cornerRadius="20dp"
-
+            app:layout_constraintBottom_toBottomOf="@id/edit_button"
             app:layout_constraintStart_toEndOf="@id/button_spacer"
-            app:layout_constraintTop_toBottomOf="@id/event_availability"/>
-
+            app:layout_constraintTop_toTopOf="@id/edit_button" />
 
         <TextView
             android:id="@+id/date_posted"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            tools:text="Date Posted: Dec 25, 2025"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/edit_button" />
+            app:layout_constraintTop_toBottomOf="@id/edit_button"
+            tools:text="Date Posted: Dec 25, 2025" />
 
         <TextView
             android:id="@+id/description_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            tools:text="This is the event description"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/date_posted" />
+            app:layout_constraintTop_toBottomOf="@id/date_posted"
+            tools:text="This is the event description" />
 
         <!-- Join Button for Users -->
         <com.google.android.material.button.MaterialButton
@@ -169,7 +187,7 @@
             android:layout_height="2dp"
             android:layout_marginTop="16dp"
             android:background="#000000"
-            app:layout_constraintTop_toBottomOf="@id/description_text" />
+            app:layout_constraintTop_toBottomOf="@id/view_all_entrants_button" />
 
         <TextView
             android:id="@+id/additional_actions_button"
@@ -179,10 +197,11 @@
             android:text="@string/additional_actions"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textStyle="bold"
+            android:visibility="gone"
             app:drawableEndCompat="@drawable/baseline_arrow_forward_ios_24"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/description_text" />
+            app:layout_constraintTop_toBottomOf="@id/divider_top" />
 
         <View
             android:id="@+id/divider_bottom"
@@ -190,6 +209,7 @@
             android:layout_height="2dp"
             android:layout_marginTop="8dp"
             android:background="#000000"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/additional_actions_button" />
 
         <TextView
@@ -202,7 +222,7 @@
             android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/join_button" />
+            app:layout_constraintTop_toBottomOf="@id/divider_bottom" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/share_button"
@@ -239,22 +259,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:listitem="@layout/list_attendee"
             tools:itemCount="3" />
-
-
-        <TextView
-            android:id="@+id/tvWaitlistCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="48dp"
-            android:layout_marginTop="4dp"
-            android:drawablePadding="4dp"
-            android:gravity="center_vertical"
-            android:visibility="gone"
-            app:drawableStartCompat="@drawable/ic_waitlist"
-            app:layout_constraintStart_toEndOf="@id/event_availability"
-            app:layout_constraintTop_toTopOf="@id/event_availability"
-            tools:text="15 on Waitlist"
-            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

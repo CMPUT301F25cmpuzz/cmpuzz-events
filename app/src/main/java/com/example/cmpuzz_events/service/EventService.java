@@ -984,6 +984,32 @@ public class EventService implements IEventService {
                 callback.onError(e.getMessage());
             });
     }
+
+    public void cancelInvitation(String eventId, String userId, VoidCallback callback) {
+        getEvent(eventId, new EventCallback() {
+            @Override
+            public void onSuccess(EventEntity event) {
+                Invitation invitation = event.getInvitationByUserId(userId);
+
+                if (invitation == null || !invitation.isPending()) {
+                    callback.onError("Cannot cancel: User has already responded or was not invited.");
+                    return;
+                }
+
+                // move the user from invitations back to waitlist.
+                event.removeInvitation(userId);
+                event.addToWaitlist(userId);
+
+                updateEvent(event, callback);
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
 }
 
 

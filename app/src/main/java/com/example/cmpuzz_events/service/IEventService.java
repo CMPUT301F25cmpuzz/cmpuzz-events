@@ -241,4 +241,14 @@ public interface IEventService {
      * @param callback Callback on success or error
      */
     void updateEventPoster(String eventId, String posterUrl, VoidCallback callback);
+
+    /**
+     * Cancels a pending invitation for a user, moving them back to the waitlist.
+     * This action is only valid if the user has not yet responded.
+     *
+     * @param eventId  The ID of the event.
+     * @param userId   The ID of the user whose invitation is to be canceled.
+     * @param callback Callback for success or error.
+     */
+    void cancelInvitation(String eventId, String userId, VoidCallback callback);
 }
