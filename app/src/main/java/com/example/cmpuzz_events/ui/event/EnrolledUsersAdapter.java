@@ -79,10 +79,10 @@ public class EnrolledUsersAdapter extends RecyclerView.Adapter<EnrolledUsersAdap
                         Glide.with(itemView.getContext())
                                 .load(user.getProfileImageUrl())
                                 .transform(new CircleCrop())
-                                .placeholder(R.drawable.bg_image_placeholder)
+                                .placeholder(R.drawable.ic_profile)
                                 .into(userAvatar);
                     } else {
-                        userAvatar.setImageResource(R.drawable.bg_image_placeholder);
+                        userAvatar.setImageResource(R.drawable.ic_profile);
                     }
                 }
             }

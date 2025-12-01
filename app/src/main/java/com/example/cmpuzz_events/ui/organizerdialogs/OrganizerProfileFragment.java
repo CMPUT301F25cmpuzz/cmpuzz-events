@@ -76,7 +76,7 @@ public class OrganizerProfileFragment extends Fragment {
                         Glide.with(getContext())
                                 .load(uri)
                                 .transform(new CircleCrop())
-                                .placeholder(R.drawable.bg_image_placeholder)
+                                .placeholder(R.drawable.ic_profile)
                                 .into(currentDialogProfileImageView);
                     }
                 }
@@ -146,7 +146,7 @@ public class OrganizerProfileFragment extends Fragment {
                         .placeholder(R.drawable.bg_image_placeholder)
                         .into(profileAvatarImageView);
             } else {
-                profileAvatarImageView.setImageResource(R.drawable.bg_image_placeholder);
+                profileAvatarImageView.setImageResource(R.drawable.ic_profile);
             }
         }
     }
@@ -200,7 +200,7 @@ public class OrganizerProfileFragment extends Fragment {
                     .placeholder(R.drawable.bg_image_placeholder)
                     .into(imgProfilePicture);
         } else {
-            imgProfilePicture.setImageResource(R.drawable.bg_image_placeholder);
+            imgProfilePicture.setImageResource(R.drawable.ic_profile);
         }
 
         // Reset selected image URI when dialog opens
@@ -307,7 +307,7 @@ public class OrganizerProfileFragment extends Fragment {
                                         Glide.with(requireContext())
                                                 .load(profileImageUrl)
                                                 .transform(new CircleCrop())
-                                                .placeholder(R.drawable.bg_image_placeholder)
+                                                .placeholder(R.drawable.ic_profile)
                                                 .into(profileAvatarImageView);
                                     }
                                     finishProfileUpdate(dialogView, dialog, fullName, email, username);
