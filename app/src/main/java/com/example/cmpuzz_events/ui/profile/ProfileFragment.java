@@ -167,7 +167,7 @@ public class ProfileFragment extends Fragment {
             // Bro
             if(currentUser.isAdmin())
             {
-                binding.btnEditProfile.setVisibility(View.VISIBLE);
+                binding.btnEditProfile.setVisibility(View.INVISIBLE);
                 binding.btnDeleteAccount.setVisibility(View.VISIBLE);
             } else {
                 binding.btnEditProfile.setVisibility(View.GONE);
